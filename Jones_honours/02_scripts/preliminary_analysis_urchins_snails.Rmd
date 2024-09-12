@@ -9,7 +9,6 @@ editor_options:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
 library(tidyverse)
 library(here)
 
@@ -184,3 +183,86 @@ write_csv(sn_urch_ratio_2022, "./03_clean_data/sn_urch_ratio_2022.csv")
 write_csv(sn_urch_ratio_2023, "./03_clean_data/sn_urch_ratio_2023.csv")
 ```
 
+###Plotting the sn urch data
+
+####2021
+
+```{r Urchins to snails}
+sn_urch_plot_2021 <- ggplot(sn_urch_ratio_2021, aes(x = Snails, y = Urchins))+
+  geom_point()
+ # geom_smooth(method = "lm")
+
+sn_urch_plot_2021
+```
+
+```{r Plotting the sn_urch ratio against longitude}
+sn_urch_plot_long_2021 <- ggplot(sn_urch_ratio_2021, aes(x = Longitude, 
+                                                         y = sn_urch_ratio))+
+  geom_point()+
+ geom_smooth(method = "lm")
+
+sn_urch_plot_long_2021
+```
+
+```{r Plotting the sn_urch ratio against latitude}
+sn_urch_plot_lat_2021 <- ggplot(sn_urch_ratio_2021, aes(x = Latitude, 
+                                                         y = sn_urch_ratio))+
+  geom_point()
+ # geom_smooth(method = "lm")
+
+sn_urch_plot_lat_2021
+```
+
+#####Testing 2021 without effingham west
+```{r FIltering out effingham west}
+sn_urch_2021_no_EW <- sn_urch_ratio_2021%>%
+  filter(`Site No.` != "BMSC13")
+
+sn_urch_2021_no_EW_plot <- ggplot(sn_urch_2021_no_EW, aes(x = Snails, y = Urchins))+
+  geom_point()+
+ geom_smooth(method = "lm")
+
+sn_urch_2021_no_EW_plot
+```
+
+
+####2022
+```{r Urchins to snails}
+sn_urch_plot_2022 <- ggplot(sn_urch_ratio_2022, aes(x = Snails, y = Urchins))+
+  geom_point()
+ # geom_smooth(method = "lm")
+
+sn_urch_plot_2022
+```
+
+```{r Plotting the sn_urch ratio against longitude}
+sn_urch_plot_long_2022 <- ggplot(sn_urch_ratio_2022, aes(x = Longitude, 
+                                                         y = sn_urch_ratio))+
+  geom_point()+
+ geom_smooth(method = "lm")
+
+sn_urch_plot_long_2022
+```
+
+```{r Plotting the sn_urch ratio against latitude}
+sn_urch_plot_lat_2022 <- ggplot(sn_urch_ratio_2022, aes(x = Latitude, 
+                                                         y = sn_urch_ratio))+
+  geom_point()
+ # geom_smooth(method = "lm")
+
+sn_urch_plot_lat_2021
+```
+
+####2023
+
+This needs to be done again once the 2023 data is cleaned up
+```{r Urchins to snails}
+sn_urch_plot_2023 <- ggplot(sn_urch_ratio_2023, aes(x = Snails, y = Urchins))+
+  geom_point()
+ # geom_smooth(method = "lm")
+
+sn_urch_plot_2023
+```
+
+
+###
