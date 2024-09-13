@@ -1,0 +1,56 @@
+---
+title: "Preliminary Analysis with RLS data"
+author: "Alec"
+date: "2024-09-13"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(here)
+library(lubridate)
+```
+
+#Preliminary analyses of the RLS data from Barkley Sound
+
+##Loading in the data and organizing it
+```{r Setting up the here package}
+here::here()
+```
+
+```{r Loading in the invertebrate file, include=FALSE}
+invert_data_raw <- read_csv(here("./01_raw_data/IMOS_-_National_Reef_Monitoring_Network_Sub-Facility_-_Global_mobile_macroinvertebrate_abundance_no_top.csv"))
+```
+
+```{r Cleaning up columns and converting certain columns to factors}
+factor_cols <- c("reporting_name")
+
+invert_data_clean <- invert_data_raw%>%
+  select(-c(FID, survey_id, country, area, ecoregion, realm, location,
+            survey_latitude, survey_longitude, biomass, phylum, class, order,
+            family, program))%>%
+  mutate_at(factor_cols, factor)
+```
+
+```{r Making a separate df for each year}
+invert_data_clean_2021 <- invert_data_clean%>%
+  filter(year(survey_date) == "2021")
+
+invert_data_clean_2022 <- invert_data_clean%>%
+  filter(year(survey_date) == "2022")
+
+invert_data_clean_2023 <- invert_data_clean%>%
+  filter(year(survey_date) == "2023")
+```
+
+
+```{r Summing the total numbers of }
+
+```
+
+
+
