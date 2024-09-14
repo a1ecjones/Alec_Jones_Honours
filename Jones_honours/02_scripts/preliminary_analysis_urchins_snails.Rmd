@@ -164,7 +164,40 @@ sn_urch_ratio_2023 <- data_2023_clean_for_testing%>%
          Date, vis, Direction, Time, Depth, sn_urch_ratio, Snails, Urchins)
 ```
 
+###Calculating the urch to sn ratio as well
 
+####In 2021
+```{r calculating and making a column showing the urchin to snail ratio at each site}
+urch_sn_ratio_2021 <- data_2021_clean_for_testing%>%
+   pivot_wider(names_from = Code, values_from = species_total)%>%
+  mutate(urch_sn_ratio = Mfr / Pgi,
+         Urchins = Mfr,
+         Snails = Pgi)%>%
+  select(`Site No.`, `Site Name`, Latitude, Longitude,
+         Date, vis, Direction, Time, Depth, urch_sn_ratio, Urchins, Snails)
+```
+
+
+####In 2022
+```{r calculating and making a column showing the urchin to snail ratio at each site}
+urch_sn_ratio_2022 <- data_2022_clean_for_testing%>%
+   pivot_wider(names_from = Code, values_from = species_total)%>%
+  mutate(urch_sn_ratio = Mfr / Pgi,
+         Urchins = Mfr,
+         Snails = Pgi)%>%
+  select(`Site No.`, `Site Name`, Latitude, Longitude,
+         Date, vis, Direction, Depth, urch_sn_ratio, Urchins, Snails)
+```
+####In 2023
+```{r calculating and making a column showing the urchin to snail ratio at each site}
+urch_sn_ratio_2023 <- data_2023_clean_for_testing%>%
+   pivot_wider(names_from = Code, values_from = species_total)%>%
+  mutate(urch_sn_ratio = Mfr / Pgi,
+         Urchins = Mfr,
+         Snails = Pgi)%>%
+  select(`Site No.`, `Site Name`, Latitude, Longitude,
+         Date, vis, Direction, Time, Depth, urch_sn_ratio, Urchins, Snails)
+```
 
 ###Saving the ratio data frames as .csv
 

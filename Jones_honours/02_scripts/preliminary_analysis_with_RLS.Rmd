@@ -13,6 +13,11 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(here)
 library(lubridate)
+library(sf) #for spatial data
+library(cowplot)
+library(rnaturalearth)
+library(ggspatial)
+library(ggrepel)
 ```
 
 #Preliminary analyses of the RLS data from Barkley Sound
@@ -27,7 +32,7 @@ invert_data_raw <- read_csv(here("./01_raw_data/IMOS_-_National_Reef_Monitoring_
 ```
 
 ```{r Cleaning up columns and converting certain columns to factors}
-factor_cols <- c("reporting_name")
+factor_cols <- c("site_code", "site_name", "reporting_name")
 
 invert_data_clean <- invert_data_raw%>%
   select(-c(FID, survey_id, country, area, ecoregion, realm, location,
@@ -36,21 +41,324 @@ invert_data_clean <- invert_data_raw%>%
   mutate_at(factor_cols, factor)
 ```
 
+
+```{r Summing the total numbers of animals per transect, include=FALSE}
+invert_data_final_clean <- invert_data_clean%>%
+  group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour, reporting_name)%>%
+  summarise(species_total = sum(total))
+```
+
 ```{r Making a separate df for each year}
-invert_data_clean_2021 <- invert_data_clean%>%
+invert_data_clean_2021 <- invert_data_final_clean%>%
   filter(year(survey_date) == "2021")
 
-invert_data_clean_2022 <- invert_data_clean%>%
+invert_data_clean_2022 <- invert_data_final_clean%>%
   filter(year(survey_date) == "2022")
 
-invert_data_clean_2023 <- invert_data_clean%>%
+invert_data_clean_2023 <- invert_data_final_clean%>%
   filter(year(survey_date) == "2023")
 ```
 
-
-```{r Summing the total numbers of }
-
+```{r Writing a .csv for the clean data with the counts of each species/transect}
+write_csv(invert_data_final_clean, here("./03_clean_data/invert_data_final_clean.csv"))
 ```
 
 
 
+
+##Calculating urch to sn ratio and getting rid of other species
+```{r Loading in the new clean df and making sure the right columns are factors, include=FALSE}
+invert_data_final_clean <- read_csv(here("./03_clean_data/invert_data_final_clean.csv"))
+
+factor_cols <- c("site_code", "site_name", "reporting_name")
+
+invert_data_final_clean <- invert_data_final_clean%>%
+  mutate_at(factor_cols, factor)
+```
+
+```{r removing other species and calculating urchin ratio}
+ urch_sn_ratio_RLS <- invert_data_final_clean%>%
+  pivot_wider(names_from = reporting_name, values_from = species_total)%>%
+  mutate(urch_sn_ratio = `Mesocentrotus franciscanus` / `Pomaulax gibberosus`,
+         Urchins = `Mesocentrotus franciscanus`,
+         Turban_Snails = `Pomaulax gibberosus`)%>%
+  select(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour, urch_sn_ratio, Urchins, Turban_Snails)
+```
+
+
+##Making some visualizations of the urch_sn ratio and correlation between urch and sn
+
+```{r Making theme for all subsequent figures}
+theme.figure <- function (){
+  theme_bw(base_size = 12) +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12, face = "plain"),
+    legend.text = element_text(size = 10, face = "plain"),
+    legend.title = element_text(size = 14, face = "bold")) 
+}
+
+```
+
+###Overall across years
+```{r Plotting urch against sn overall and colouring by year}
+(urch_sn_plot <- ggplot(urch_sn_ratio_RLS, aes(x = Turban_Snails, y = Urchins,
+                                               colour = as.factor(year(survey_date))))+
+  geom_point()+
+  theme.figure()+
+  labs(colour = "Year"))
+ #geom_smooth(method = "lm")
+```
+
+###In 2021
+```{r Plotting number of urchins vs snails in 2021}
+(urch_sn_plot_2021 <-ggplot(urch_sn_ratio_RLS%>%
+                              filter(year(survey_date) == "2021"),
+  aes(x = Turban_Snails, y = Urchins))+
+  geom_point()+
+  theme.figure())
+ #geom_smooth(method = "lm")
+```
+
+###In 2022
+```{r Plotting number of urchins vs snails in 2022}
+(urch_sn_plot_2022 <-ggplot(urch_sn_ratio_RLS%>%
+                              filter(year(survey_date) == "2022"),
+  aes(x = Turban_Snails, y = Urchins))+
+  geom_point()+
+  theme.figure())
+ #geom_smooth(method = "lm")
+```
+
+###In 2023
+```{r Plotting number of urchins vs snails in 2023}
+(urch_sn_plot_2023 <-ggplot(urch_sn_ratio_RLS%>%
+                              filter(year(survey_date) == "2023"),
+  aes(x = Turban_Snails, y = Urchins))+
+  geom_point()+
+  theme.figure())
+ #geom_smooth(method = "lm")
+```
+
+
+
+
+##Making a map and plotting the urch sn ratio on top
+
+###Doing the set up for the base layer and map characteristics
+```{r Loading in the base layer}
+VI_base_layer <- read_sf(dsn = here("./01_raw_data/canada_sf_data", ""), 
+                         stringsAsFactors = F)
+VI_base_layer_sf <- st_as_sf(VI_base_layer)
+
+#ggplot(VI_base_layer_sf)+
+  #geom_sf()
+
+```
+
+```{r Specifying the projection we want to use for our data}
+st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
+```
+
+```{r Making the range for the map}
+#first need to specify the range of the map
+lat_min = min(urch_sn_ratio_RLS$latitude) - 0.05
+lat_max = max(urch_sn_ratio_RLS$latitude) + 0.05
+
+long_min = min(urch_sn_ratio_RLS$longitude) - 0.05
+long_max = max(urch_sn_ratio_RLS$longitude) + 0.05
+```
+
+
+###Making a site map
+
+```{r Making a df with just one of each site}
+site_map_data <- invert_data_final_clean%>%
+  distinct(site_code, site_name, latitude, longitude)
+```
+
+
+```{r Making the map with the site names, fig.width=7.5, fig.height=5.5}
+(RLS_site_name_map <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  labs(x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
+  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+geom_label_repel(
+    data = site_map_data, 
+    mapping = aes(x = longitude, y = latitude, label = site_name), 
+    size = 2,
+   # box.padding = 0.35,  # Add padding between labels and points
+  #  point.padding = 0.5, # Add padding between points and text
+    segment.color = 'grey50', # Line from label to point
+    max.overlaps = 15      # Adjust maximum number of overlaps
+  ))
+```
+
+```{r Making the map with the site codes, fig.width=7.5, fig.height=5.5}
+(RLS_site_code_map <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  labs(x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
+  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+geom_label_repel(
+    data = site_map_data, 
+    mapping = aes(x = longitude, y = latitude, label = site_code), 
+    size = 2,
+   # box.padding = 0.35,  # Add padding between labels and points
+  #  point.padding = 0.5, # Add padding between points and text
+    segment.color = 'grey50', # Line from label to point
+    max.overlaps = 15      # Adjust maximum number of overlaps
+  ))
+```
+
+
+###Making maps of the urch to sn ratio for each year
+
+```{r Making the plot with the urch to sn ratio on the map 2021}
+(urch_sn_ratio_map_2021 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
+             size = 2,) + 
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
+             shape = 1, size = 2,colour = "black")+
+  scale_color_gradient(low = "#35A7FF", high = "#FF5A5F" ) +
+  labs(title = "2021", x = " \nLongitude", y = "Latitude\n ", color = "Urchin to Snail Ratio") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
+  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+ # geom_label(data = urch_sn_ratio_RLS, 
+             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
+
+```
+
+```{r Making the plot with the urch to sn ratio on the map 2022}
+(urch_sn_ratio_map_2022 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
+             size = 2,) + 
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
+             shape = 1, size = 2,colour = "black")+
+  scale_color_gradient(low = "#35A7FF", high = "#FF5A5F" ) +
+  labs(title = "2022", x = " \nLongitude", y = "Latitude\n ", color = "Urchin to Snail Ratio") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
+  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+ # geom_label(data = urch_sn_ratio_RLS, 
+             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
+
+```
+
+```{r Making the plot with the urch to sn ratio on the map 2023}
+(urch_sn_ratio_map_2023 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
+             size = 2,) + 
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
+             shape = 1, size = 2,colour = "black")+
+  scale_color_gradient(low = "#35A7FF", high = "#FF5A5F" ) +
+  labs(title = "2023", x = " \nLongitude", y = "Latitude\n ", color = "Urchin to Snail Ratio") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
+  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+ # geom_label(data = urch_sn_ratio_RLS, 
+             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
+
+```
+
+
+###Saving all of the figures so far
+```{r Saving the site name map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/site_name_map.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+RLS_site_name_map
+
+dev.off()
+```
+
+```{r Saving the site code map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/site_code_map.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+RLS_site_code_map
+
+dev.off()
+```
+
+```{r Saving the 2021 urch sn ratio map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/urch_sn_ratio_map_2021.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_sn_ratio_map_2021
+
+dev.off()
+```
+
+```{r Saving the 2022 urch sn ratio map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/urch_sn_ratio_map_2022.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_sn_ratio_map_2022
+
+dev.off()
+```
+
+```{r Saving the 2023 urch sn ratio map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/urch_sn_ratio_map_2023.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_sn_ratio_map_2023
+
+dev.off()
+```
