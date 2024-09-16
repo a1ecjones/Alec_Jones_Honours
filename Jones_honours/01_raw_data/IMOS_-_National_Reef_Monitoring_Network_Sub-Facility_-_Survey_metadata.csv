@@ -1,0 +1,161 @@
+# data_column_name,cf_standard_name,long_name,imos_vocabulary_name,unit_name,unit_short_name
+# abundance,number_concentration_of_biological_taxon_in_sea_water,taxonomic level abundance,Abundance of biota,,
+# area,,state/territory where the survey was conducted,,,
+# avg_rugosity,,average roughness of the floor surface,,,
+# biomass,,estimated biomass,,Grams,g
+# block,,number of the block ,,,
+# category,,sub-class of the annotation schema,,,
+# class,biological_taxon_name,identification of the biotic elements to the scientific classification group,Biotic taxonomic identification,,
+# common_class_name,,common name of the taxonomic rank,,,
+# common_family_name,,common name of the taxonomic rank,,,
+# common_name,,common name of the taxonomic rank,,,
+# common_phylum_name,,common name of the taxonomic rank,,,
+# country,,country where the survey was conducted,,,
+# currents,,currents index,,,
+# depth,depth,,Depth below surface of the water body,Metres,m                                                                                                             
+# direction,,compass direction,True bearing,,
+# ecoregion,,ecological region where the survey was conducted,,,
+# family,biological_taxon_name,identification of the biotic elements to the scientific classification group,Biotic taxonomic identification,,
+# frequency,,rarity index frequency of the species,,,
+# genus,biological_taxon_name,identification of the biotic elements to the scientific classification group,Biotic taxonomic identification,,
+# has pqs catalogued in db,,survey has Photos Quadrats catalogued in database,,,
+# has pq scores in db,,survey has Photo Quadrat scores in database,,,
+# has rugosity scores in db,,survey has rugosity scores in database,,,
+# hour,time,local time of sample collection,,,
+# latest surveydate for site,,latest survey date at the site,,,
+# latitude,latitude,,Latitude north,Degrees,deg                                                                                                           
+# lat_zone,,latitudinal zone (eg. tropical/temperate/polar),,,
+# location,,city/council where the survey was conducted,,,
+# longitude,longitude,,Longitude east,Degrees,deg                                                                                                           
+# major_category,,class of the annotation schema,,,
+# max_length,,maximum length of the species,,Centimetres,cm
+# max_rugosity,,maximum roughness of the floor surface,,,
+# method,,identifier for method applied to collect the observation,,,
+# methods,,list of methods applied to collect the survey observations,,,
+# mpa,,Marine Protected Area,,,
+# num_points,,number of points associated to the observed item,,,
+# old_site_codes,,previous codes of the site, now updated to [site_code],,,
+# order,biological_taxon_name,identification of the biotic elements to the scientific classification group,Biotic taxonomic identification,,
+# percent_cover,,percentage of the surface covered by the observed item,,Percent,%                                                                                                             
+# phylum,biological_taxon_name,identification of the biotic elements to the scientific classification group,Biotic taxonomic identification,,
+# pq_zip_url,,url for the Photo Quadrat zip file,,,
+# program,,acronym identifying the program(s) - RLS or ATRC,,,
+# programs,,acronym identifying the program(s) - RLS or ATRC,,,
+# province,,ecological province where the survey was collected,,,
+# quadrat,,Quadrat number,,,
+# range,,rarity index range of the species,,Kilometres,km
+# realm,,realm where the survey was conducted,,,
+# recorded_species_name,biological_taxon_name,identification of the biotic elements to the scientific classification group,Biotic taxonomic identification,,
+# relief,,relief index,,,
+# reporting_name,,reporting name for the observed species,,,
+# resolution,,annotation schema,,,
+# site_code,,code for the survey site,,,
+# site_name,,name of the survey site,,,
+# size_class,,size class,,Centimetres,cm
+# slope,,slope index,,,
+# species_id,,species identifier,,,
+# species_name,biological_taxon_name,identification of the biotic elements to the scientific classification group,Biotic taxonomic identification,,
+# superseded_ids,,species identifier of the superseded species,,,
+# superseded_names,,name of the superseded species,,,
+# surface,,type of substrate,,,
+# survey_date,,local date,,Date,yyyy-mm-dd
+# survey_id,,survey identification number,,,
+# survey_latitude,latitude,,Latitude north,Degrees,deg                                                                                                           
+# survey_longitude,longitude,,Longitude east,Degrees,deg                                                                                                           
+# survey_notes,,additional notes about the survey,,,
+# taxon,biological_taxon_name,identification of the biotic elements to the scientific classification group,Biotic taxonomic identification,,
+# total,,total number of observations,,,
+# total_points,,total number of point counted in the Quadrat,,,
+# visibility,,the distance in water at which something can be seen,,Metres,m                                                                                                             
+# wave_exposure,,wave exposure index,,,
+
+FID,survey_id,country,area,location,site_code,site_name,latitude,longitude,depth,survey_date,latest_surveydate_for_site,has_pq_scores_in_db,has_rugosity_scores_in_db,has_pqs_catalogued_in_db,visibility,hour,direction,survey_latitude,survey_longitude,avg_rugosity,max_rugosity,surface,program,pq_zip_url,old_site_codes,methods,geom
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e6c,923400139,Canada,British Columbia,Vancouver Island,BMSC13,Effingham West,48.87,-125.31,4.8,2021-05-04,false,false,false,true,4,10:30:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923400139/zip/,,"0, 1, 2",POINT (-125.30999755859375 48.869998931884766)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e6b,923401182,Canada,British Columbia,Vancouver Island,BMSC13,Effingham West,48.87,-125.31,4.5,2022-04-26,true,false,false,true,2,10:20:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923401182/zip/,,"0, 1, 2",POINT (-125.30999755859375 48.869998931884766)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e6a,923401180,Canada,British Columbia,Vancouver Island,BMSC14,Effingham Archipelago,48.88,-125.3,7,2022-04-26,true,false,false,true,2,14:10:00,SE,,,,,,RLS,http://rls.tpac.org.au/pq/923401180/zip/,,"0, 1, 2",POINT (-125.30000305175781 48.880001068115234)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e69,923400148,Canada,British Columbia,Vancouver Island,BMSC14,Effingham Archipelago,48.88,-125.3,6,2021-05-04,false,false,false,true,4,13:00:00,SE,,,,,,RLS,http://rls.tpac.org.au/pq/923400148/zip/,,"0, 1, 2",POINT (-125.30000305175781 48.880001068115234)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e68,923400158,Canada,British Columbia,Vancouver Island,BMSC15,Raymond Kelp Rock,48.88,-125.31,7,2021-05-04,false,false,false,true,2,14:30:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923400158/zip/,,"0, 1, 2",POINT (-125.30999755859375 48.880001068115234)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e67,923401202,Canada,British Columbia,Vancouver Island,BMSC15,Raymond Kelp Rock,48.88,-125.31,7.5,2022-04-26,true,false,false,true,3,12:10:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923401202/zip/,,"0, 1, 2",POINT (-125.30999755859375 48.880001068115234)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e66,923401184,Canada,British Columbia,Vancouver Island,BMSC16,Faber Islets,48.89,-125.3,5.5,2022-04-27,true,false,false,true,2,12:40:00,NW,,,,,,RLS,http://rls.tpac.org.au/pq/923401184/zip/,,"0, 1, 2",POINT (-125.30000305175781 48.88999938964844)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e65,923400152,Canada,British Columbia,Vancouver Island,BMSC16,Faber Islets,48.89,-125.3,6,2021-05-05,false,false,false,true,3,10:35:00,NW,,,,,,RLS,http://rls.tpac.org.au/pq/923400152/zip/,,"0, 1, 2",POINT (-125.30000305175781 48.88999938964844)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e64,923400151,Canada,British Columbia,Vancouver Island,BMSC17,Wouwer Channel,48.87,-125.36,5,2021-05-05,false,false,false,true,3,12:45:00,NE,,,,,,RLS,http://rls.tpac.org.au/pq/923400151/zip/,,"0, 1, 2",POINT (-125.36000061035156 48.869998931884766)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e63,923401183,Canada,British Columbia,Vancouver Island,BMSC17,Wouwer Channel,48.87,-125.36,5,2022-04-27,true,false,false,true,2,10:40:00,NE,,,,,,RLS,http://rls.tpac.org.au/pq/923401183/zip/,,"0, 1, 2",POINT (-125.36000061035156 48.869998931884766)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e62,923400145,Canada,British Columbia,Vancouver Island,BMSC18,Eussen Rock,48.91,-125.27,7.5,2021-05-05,false,false,false,true,4,14:45:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923400145/zip/,,"0, 1, 2",POINT (-125.2699966430664 48.90999984741211)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e61,923401196,Canada,British Columbia,Vancouver Island,BMSC18,Eussen Rock,48.91,-125.27,7.5,2022-04-27,true,false,false,true,2,14:40:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923401196/zip/,,"0, 1, 2",POINT (-125.2699966430664 48.90999984741211)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e60,923401203,Canada,British Columbia,Vancouver Island,BMSC1,Dodger Channel,48.83,-125.2,5.5,2022-05-04,false,false,false,true,3,10:15:00,NE,,,,,,RLS,http://rls.tpac.org.au/pq/923401203/zip/,,"0, 1, 2",POINT (-125.19999694824219 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e5f,923402221,Canada,British Columbia,Vancouver Island,BMSC1,Dodger Channel,48.83,-125.2,8,2023-05-15,true,false,false,true,1,09:54:00,N,,,,,,RLS,http://rls.tpac.org.au/pq/923402221/zip/,,"0, 1, 2",POINT (-125.19999694824219 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e5e,923402227,Canada,British Columbia,Vancouver Island,BMSC1,Dodger Channel,48.83,-125.2,5.5,2023-05-15,true,false,false,true,1,09:54:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923402227/zip/,,"0, 1, 2",POINT (-125.19999694824219 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e5d,923400149,Canada,British Columbia,Vancouver Island,BMSC1,Dodger Channel,48.83,-125.2,6.5,2021-04-26,false,false,false,true,2,12:17:00,NE,48.83,-125.2,,,,RLS,http://rls.tpac.org.au/pq/923400149/zip/,,"0, 1, 2",POINT (-125.2 48.83)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e5c,923401189,Canada,British Columbia,Vancouver Island,BMSC1,Dodger Channel,48.83,-125.2,4.7,2022-05-04,false,false,false,true,3,10:15:00,NE,,,,,,RLS,http://rls.tpac.org.au/pq/923401189/zip/,,"0, 1, 2",POINT (-125.19999694824219 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e5b,923400156,Canada,British Columbia,Vancouver Island,BMSC1,Dodger Channel,48.83,-125.2,5.5,2021-04-26,false,false,false,true,2,10:30:00,NE,,,,,,RLS,http://rls.tpac.org.au/pq/923400156/zip/,,"0, 1, 2",POINT (-125.19999694824219 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e5a,923400157,Canada,British Columbia,Vancouver Island,BMSC19,Ed King SW Pyramid,48.83,-125.22,8,2021-05-06,false,false,false,true,2,10:40:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923400157/zip/,,"0, 1, 2",POINT (-125.22000122070312 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e59,923401194,Canada,British Columbia,Vancouver Island,BMSC19,Ed King SW Pyramid,48.83,-125.22,8,2022-04-29,false,false,false,true,3,09:45:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923401194/zip/,,"0, 1, 2",POINT (-125.22000122070312 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e58,923402231,Canada,British Columbia,Vancouver Island,BMSC19,Ed King SW Pyramid,48.83,-125.22,6.5,2023-05-10,true,false,false,true,2,10:15:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923402231/zip/,,"0, 1, 2",POINT (-125.22000122070312 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e57,923400146,Canada,British Columbia,Vancouver Island,BMSC2,Kirby,48.85,-125.2,4.5,2021-04-27,false,false,false,true,4,10:30:00,N,,,,,,RLS,http://rls.tpac.org.au/pq/923400146/zip/,,"0, 1, 2",POINT (-125.19999694824219 48.849998474121094)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e56,923402235,Canada,British Columbia,Vancouver Island,BMSC2,Kirby,48.85,-125.2,7,2023-05-09,true,false,false,true,2,13:30:00,,,,,,,RLS,http://rls.tpac.org.au/pq/923402235/zip/,,"0, 1, 2",POINT (-125.19999694824219 48.849998474121094)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e55,923402232,Canada,British Columbia,Vancouver Island,BMSC20,Ed King East,48.84,-125.21,6.5,2023-05-10,true,false,false,true,3,12:35:00,NW,,,,,,RLS,http://rls.tpac.org.au/pq/923402232/zip/,,"0, 1, 2",POINT (-125.20999908447266 48.84000015258789)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e54,923400140,Canada,British Columbia,Vancouver Island,BMSC20,Ed King East,48.84,-125.21,7,2021-05-06,false,false,false,true,2,12:20:00,NW,,,,,,RLS,http://rls.tpac.org.au/pq/923400140/zip/,,"0, 1, 2",POINT (-125.20999908447266 48.84000015258789)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e53,923401200,Canada,British Columbia,Vancouver Island,BMSC20,Ed King East,48.84,-125.21,6.5,2022-04-29,false,false,false,true,4,11:30:00,NW,,,,,,RLS,http://rls.tpac.org.au/pq/923401200/zip/,,"0, 1, 2",POINT (-125.20999908447266 48.84000015258789)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e52,923402373,Canada,British Columbia,Vancouver Island,BMSC31,Dodger Channel 2,48.83,-125.19,2,2023-06-09,true,false,false,false,2,10:30:00,NNE,48.83,-125.19,,,,RLS,,KCCA3,"0, 1, 2",POINT (-125.19 48.83)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e51,923402379,Canada,British Columbia,Vancouver Island,BMSC33,Ed King East Inside,48.84,-125.21,2,2023-06-06,true,false,false,false,2,10:20:00,SE,,,,,,RLS,,KCCA7,"0, 1, 2",POINT (-125.20999908447266 48.84000015258789)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e50,923400143,Canada,British Columbia,Vancouver Island,BMSC5,Taylor Rock,48.83,-125.2,6.5,2021-04-28,false,false,false,true,4,14:50:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923400143/zip/,,"0, 1, 2",POINT (-125.19999694824219 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e4f,923401192,Canada,British Columbia,Vancouver Island,BMSC5,Taylor Rock,48.83,-125.2,6,2022-05-04,false,false,false,true,4,12:45:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923401192/zip/,,"0, 1, 2",POINT (-125.19999694824219 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e4e,923401191,Canada,British Columbia,Vancouver Island,BMSC5,Taylor Rock,48.83,-125.2,6.2,2022-05-04,false,false,false,true,3,12:40:00,SE,,,,,,RLS,http://rls.tpac.org.au/pq/923401191/zip/,,"0, 1, 2",POINT (-125.19999694824219 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e4d,923402224,Canada,British Columbia,Vancouver Island,BMSC5,Taylor Rock,48.83,-125.2,5.5,2023-05-15,true,false,false,true,1,12:18:00,S,,,,,,RLS,http://rls.tpac.org.au/pq/923402224/zip/,,"0, 1, 2",POINT (-125.19999694824219 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e4c,923402237,Canada,British Columbia,Vancouver Island,BMSC5,Taylor Rock,48.83,-125.2,8,2023-05-15,true,false,false,true,1,12:18:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923402237/zip/,,"1, 2",POINT (-125.19999694824219 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e4b,923402377,Canada,British Columbia,Vancouver Island,BMKC1,Dixon Bay 2,48.85,-125.12,6,2023-05-29,true,false,false,false,2,07:40:00,SW,,,,,,RLS,,,"0, 1, 2",POINT (-125.12000274658203 48.849998474121094)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e4a,923402371,Canada,British Columbia,Vancouver Island,BMKC2,Tzartus 116 R,48.9,-125.08,3,2023-06-10,true,false,false,false,3,10:05:00,NNE,,,,,,RLS,,,"0, 1, 2",POINT (-125.08000183105469 48.900001525878906)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e49,923402378,Canada,British Columbia,Vancouver Island,BMSC10,Ross Islets Slug Island,48.87,-125.16,2.7,2023-06-14,true,false,false,false,4,10:14:00,E,48.87,-125.16,,,,RLS,,KCCA1,"0, 1, 2",POINT (-125.16 48.87)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e48,923400141,Canada,British Columbia,Vancouver Island,BMSC10,Ross Islets Slug Island,48.87,-125.16,4,2021-04-30,false,false,false,true,4,12:50:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923400141/zip/,KCCA1,"0, 1, 2",POINT (-125.16000366210938 48.869998931884766)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e47,923401199,Canada,British Columbia,Vancouver Island,BMSC10,Ross Islets Slug Island,48.87,-125.16,5,2022-05-05,false,false,false,true,2,11:10:00,E,,,,,,RLS,http://rls.tpac.org.au/pq/923401199/zip/,KCCA1,"0, 1, 2",POINT (-125.16000366210938 48.869998931884766)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e46,923402228,Canada,British Columbia,Vancouver Island,BMSC10,Ross Islets Slug Island,48.87,-125.16,4,2023-05-09,false,false,false,true,2,10:23:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923402228/zip/,KCCA1,"0, 1, 2",POINT (-125.16000366210938 48.869998931884766)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e45,923401190,Canada,British Columbia,Vancouver Island,BMSC11,Wizard Island South,48.86,-125.16,4,2022-05-03,false,false,false,true,3,09:59:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923401190/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e44,923402241,Canada,British Columbia,Vancouver Island,BMSC11,Wizard Island South,48.86,-125.16,7.5,2023-05-16,true,false,false,true,2,10:07:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923402241/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e43,923400142,Canada,British Columbia,Vancouver Island,BMSC11,Wizard Island South,48.86,-125.16,5.5,2021-05-03,false,false,false,true,7,10:30:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923400142/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e42,923402242,Canada,British Columbia,Vancouver Island,BMSC11,Wizard Island South,48.86,-125.16,5.5,2023-05-16,true,false,false,true,1,10:12:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923402242/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e41,923401181,Canada,British Columbia,Vancouver Island,BMSC11,Wizard Island South,48.86,-125.16,8.5,2022-05-03,false,false,false,false,3,09:50:00,SW,,,,,,RLS,,,"0, 1, 2",POINT (-125.16000366210938 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e40,923402234,Canada,British Columbia,Vancouver Island,BMSC12,Wizard Island North,48.86,-125.16,6.5,2023-05-16,true,false,false,true,1,12:54:00,N,,,,,,RLS,http://rls.tpac.org.au/pq/923402234/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e3f,923401185,Canada,British Columbia,Vancouver Island,BMSC12,Wizard Island North,48.86,-125.16,9,2022-05-03,false,false,false,true,3,12:50:00,NE,,,,,,RLS,http://rls.tpac.org.au/pq/923401185/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e3e,923402220,Canada,British Columbia,Vancouver Island,BMSC12,Wizard Island North,48.86,-125.16,9,2023-05-16,true,false,false,true,2,12:50:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923402220/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e3d,923401195,Canada,British Columbia,Vancouver Island,BMSC12,Wizard Island North,48.86,-125.16,5,2022-05-03,false,false,false,true,3,12:15:00,NE,,,,,,RLS,http://rls.tpac.org.au/pq/923401195/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e3c,923400155,Canada,British Columbia,Vancouver Island,BMSC12,Wizard Island North,48.86,-125.16,5.5,2021-05-03,false,false,false,true,6,12:20:00,NE,,,,,,RLS,http://rls.tpac.org.au/pq/923400155/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e3b,923401197,Canada,British Columbia,Vancouver Island,BMSC21,Dixon SW,48.85,-125.12,4.5,2022-04-25,false,false,false,true,2,12:30:00,E,,,,,,RLS,http://rls.tpac.org.au/pq/923401197/zip/,,"0, 1, 2",POINT (-125.12000274658203 48.849998474121094)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e3a,923402248,Canada,British Columbia,Vancouver Island,BMSC21,Dixon SW,48.85,-125.12,6,2023-05-08,true,false,false,true,2,13:00:00,E,,,,,,RLS,http://rls.tpac.org.au/pq/923402248/zip/,,"0, 1, 2",POINT (-125.12000274658203 48.849998474121094)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e39,923400147,Canada,British Columbia,Vancouver Island,BMSC21,Dixon SW,48.85,-125.12,5,2021-05-20,false,false,false,true,0,10:40:00,E,,,,,,RLS,http://rls.tpac.org.au/pq/923400147/zip/,,"0, 1, 2",POINT (-125.12000274658203 48.849998474121094)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e38,923400150,Canada,British Columbia,Vancouver Island,BMSC22,Dixon Inside,48.85,-125.12,6.5,2021-05-20,false,false,false,true,1,12:55:00,E,,,,,,RLS,http://rls.tpac.org.au/pq/923400150/zip/,,"0, 1, 2",POINT (-125.12000274658203 48.849998474121094)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e37,923401201,Canada,British Columbia,Vancouver Island,BMSC22,Dixon Inside,48.85,-125.12,8.3,2022-04-25,false,false,false,true,2,10:50:00,E,,,,,,RLS,http://rls.tpac.org.au/pq/923401201/zip/,,"0, 1, 2",POINT (-125.12000274658203 48.849998474121094)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e36,923402245,Canada,British Columbia,Vancouver Island,BMSC22,Dixon Inside,48.85,-125.12,5.5,2023-05-08,true,false,false,true,3,10:14:00,E,,,,,,RLS,http://rls.tpac.org.au/pq/923402245/zip/,,"0, 1, 2",POINT (-125.12000274658203 48.849998474121094)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e35,923401179,Canada,British Columbia,Vancouver Island,BMSC23,Aguilar Point,48.84,-125.14,6.5,2022-05-06,false,false,false,true,3,09:30:00,NE,,,,,,RLS,http://rls.tpac.org.au/pq/923401179/zip/,,"0, 1, 2",POINT (-125.13999938964844 48.84000015258789)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e34,923402225,Canada,British Columbia,Vancouver Island,BMSC23,Aguilar Point,48.84,-125.14,7,2023-05-11,true,false,false,true,3,12:22:00,N,,,,,,RLS,http://rls.tpac.org.au/pq/923402225/zip/,,"0, 1, 2",POINT (-125.13999938964844 48.84000015258789)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e33,923402246,Canada,British Columbia,Vancouver Island,BMSC25,Goby Town,48.84,-125.14,5.5,2023-05-18,true,false,false,true,4,13:20:00,S,,,,,,RLS,http://rls.tpac.org.au/pq/923402246/zip/,,"0, 1, 2",POINT (-125.13999938964844 48.84000015258789)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e32,923402244,Canada,British Columbia,Vancouver Island,BMSC25,Goby Town,48.84,-125.14,5.7,2023-05-18,true,false,false,true,4,13:20:00,NW,,,,,,RLS,http://rls.tpac.org.au/pq/923402244/zip/,,"0, 1, 2",POINT (-125.13999938964844 48.84000015258789)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e31,923402222,Canada,British Columbia,Vancouver Island,BMSC26,Hosie South,48.91,-125.04,9.5,2023-05-19,true,false,false,true,4,10:22:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923402222/zip/,,"0, 1, 2",POINT (-125.04000091552734 48.90999984741211)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e30,923402229,Canada,British Columbia,Vancouver Island,BMSC26,Hosie South,48.91,-125.04,10,2023-05-19,true,false,false,true,3,10:17:00,NE,,,,,,RLS,http://rls.tpac.org.au/pq/923402229/zip/,,"0, 1, 2",POINT (-125.04000091552734 48.90999984741211)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e2f,923402247,Canada,British Columbia,Vancouver Island,BMSC27,San Jose North Island,48.9,-125.06,9,2023-05-19,true,false,false,true,3,13:24:00,N,,,,,,RLS,http://rls.tpac.org.au/pq/923402247/zip/,,"0, 1, 2",POINT (-125.05999755859375 48.900001525878906)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e2e,923402243,Canada,British Columbia,Vancouver Island,BMSC27,San Jose North Island,48.9,-125.06,7,2023-05-19,true,false,false,true,3,13:24:00,NW,,,,,,RLS,http://rls.tpac.org.au/pq/923402243/zip/,,"0, 1, 2",POINT (-125.05999755859375 48.900001525878906)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e2d,923402238,Canada,British Columbia,Vancouver Island,BMSC28,Swiss Boy,48.92,-125.13,11,2023-05-18,true,false,false,true,6,10:27:00,SE,,,,,,RLS,http://rls.tpac.org.au/pq/923402238/zip/,,"0, 1, 2",POINT (-125.12999725341797 48.91999816894531)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e2c,923402239,Canada,British Columbia,Vancouver Island,BMSC28,Swiss Boy,48.92,-125.13,7.5,2023-05-18,true,false,false,true,6,10:30:00,NE,,,,,,RLS,http://rls.tpac.org.au/pq/923402239/zip/,,"0, 1, 2",POINT (-125.12999725341797 48.91999816894531)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e2b,923402236,Canada,British Columbia,Vancouver Island,BMSC3,Ohiat,48.86,-125.18,7.5,2023-05-12,true,false,false,true,1,12:40:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923402236/zip/,,"0, 1, 2",POINT (-125.18000030517578 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e2a,923400138,Canada,British Columbia,Vancouver Island,BMSC3,Ohiat,48.86,-125.18,5.5,2021-04-27,false,false,false,true,5,12:39:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923400138/zip/,,"0, 1, 2",POINT (-125.18000030517578 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e29,923401188,Canada,British Columbia,Vancouver Island,BMSC3,Ohiat,48.86,-125.18,6.5,2022-05-05,false,false,false,true,3,13:45:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923401188/zip/,,"0, 1, 2",POINT (-125.18000030517578 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e28,923402376,Canada,British Columbia,Vancouver Island,BMSC32,Less Dangerous Bay,48.88,-125.09,3.2,2023-06-13,true,false,false,false,3,08:56:00,NE,,,,,,RLS,,KCCA6,"0, 1, 2",POINT (-125.08999633789062 48.880001068115234)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e27,923400153,Canada,British Columbia,Vancouver Island,BMSC4,Kii xin,48.82,-125.18,7.5,2021-04-28,false,false,false,true,2,12:30:00,NE,,,,,,RLS,http://rls.tpac.org.au/pq/923400153/zip/,,"0, 1, 2",POINT (-125.18000030517578 48.81999969482422)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e26,923402230,Canada,British Columbia,Vancouver Island,BMSC4,Kii xin,48.82,-125.18,8.5,2023-05-12,true,false,false,true,2,10:07:00,N,,,,,,RLS,http://rls.tpac.org.au/pq/923402230/zip/,,"0, 1, 2",POINT (-125.18000030517578 48.81999969482422)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e25,923402219,Canada,British Columbia,Vancouver Island,BMSC6,Baeria Rocks South Island,48.95,-125.16,5.5,2023-05-17,true,false,false,true,5,10:20:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923402219/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.95000076293945)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e24,923402240,Canada,British Columbia,Vancouver Island,BMSC6,Baeria Rocks South Island,48.95,-125.16,10,2023-05-17,true,false,false,true,5,10:25:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923402240/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.95000076293945)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e23,923400154,Canada,British Columbia,Vancouver Island,BMSC6,Baeria Rocks South Island,48.95,-125.16,7,2021-04-29,false,false,false,true,8,10:30:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923400154/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.95000076293945)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e22,923401187,Canada,British Columbia,Vancouver Island,BMSC6,Baeria Rocks South Island,48.95,-125.16,9,2022-04-28,false,false,false,true,2,12:30:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923401187/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.95000076293945)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e21,923401198,Canada,British Columbia,Vancouver Island,BMSC6,Baeria Rocks South Island,48.95,-125.16,6.5,2022-04-28,false,false,false,true,2,10:40:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923401198/zip/,,"0, 1, 2",POINT (-125.16000366210938 48.95000076293945)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e20,923400137,Canada,British Columbia,Vancouver Island,BMSC7,Baeria Rocks North Island Southside,48.95,-125.15,5,2021-04-29,true,false,false,true,6,13:10:00,SE,,,,,,RLS,http://rls.tpac.org.au/pq/923400137/zip/,,"0, 1, 2",POINT (-125.1500015258789 48.95000076293945)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e1f,923402223,Canada,British Columbia,Vancouver Island,BMSC8,Baeria Rocks North Island Northside,48.96,-125.15,7.5,2023-05-17,true,false,false,true,5,13:00:00,W,,,,,,RLS,http://rls.tpac.org.au/pq/923402223/zip/,,"1, 2",POINT (-125.1500015258789 48.959999084472656)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e1e,923402226,Canada,British Columbia,Vancouver Island,BMSC8,Baeria Rocks North Island Northside,48.96,-125.15,9,2023-05-17,true,false,false,true,5,13:02:00,S,,,,,,RLS,http://rls.tpac.org.au/pq/923402226/zip/,,"0, 1, 2",POINT (-125.1500015258789 48.959999084472656)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e1d,923400136,Canada,British Columbia,Vancouver Island,BMSC8,Baeria Rocks North Island Northside,48.96,-125.15,9,2021-04-29,false,false,false,true,6,15:20:00,SE,,,,,,RLS,http://rls.tpac.org.au/pq/923400136/zip/,,"0, 1, 2",POINT (-125.1500015258789 48.959999084472656)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e1c,923401186,Canada,British Columbia,Vancouver Island,BMSC8,Baeria Rocks North Island Northside,48.96,-125.15,6,2022-04-28,false,false,false,true,3,14:25:00,SE,,,,,,RLS,http://rls.tpac.org.au/pq/923401186/zip/,,"0, 1, 2",POINT (-125.1500015258789 48.959999084472656)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e1b,923400144,Canada,British Columbia,Vancouver Island,BMSC9,Eagle Bay,48.83,-125.15,6,2021-04-30,false,false,false,true,3,10:30:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923400144/zip/,,"0, 1, 2",POINT (-125.1500015258789 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e1a,923401193,Canada,British Columbia,Vancouver Island,BMSC9,Eagle Bay,48.83,-125.15,6.5,2022-05-02,false,false,false,true,3,13:45:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923401193/zip/,,"0, 1, 2",POINT (-125.1500015258789 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e19,923402233,Canada,British Columbia,Vancouver Island,BMSC9,Eagle Bay,48.83,-125.15,6,2023-05-11,true,false,false,true,2,09:38:00,SW,,,,,,RLS,http://rls.tpac.org.au/pq/923402233/zip/,,"0, 1, 2",POINT (-125.1500015258789 48.83000183105469)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e18,923402372,Canada,British Columbia,Vancouver Island,KCCA11,Ross Islets 2,48.87,-125.16,3.5,2023-06-12,true,false,false,false,2,10:30:00,SE,,,,,,RLS,,,"0, 1, 2",POINT (-125.16000366210938 48.869998931884766)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e17,923402370,Canada,British Columbia,Vancouver Island,KCCA13,Second Beach South,48.82,-125.18,4.9,2023-06-07,true,false,false,false,2,09:44:00,SSE,,,,,,RLS,,,"0, 1, 2",POINT (-125.18000030517578 48.81999969482422)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e16,923402380,Canada,British Columbia,Vancouver Island,KCCA19,Wizard Island North Kelp,48.86,-125.16,5.5,2023-06-08,true,false,false,false,1,10:30:00,SW,,,,,,RLS,,,"0, 1, 2",POINT (-125.16000366210938 48.86000061035156)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e15,923402375,Canada,British Columbia,Vancouver Island,KCCA20,Nanat Bay,48.88,-125.08,5.5,2023-05-30,true,false,false,false,3,09:23:00,WSW,,,,,,RLS,,,"0, 1, 2",POINT (-125.08000183105469 48.880001068115234)
+ep_survey_list_public_data.fid-54e28aac_191fc324609_-7e14,923402374,Canada,British Columbia,Vancouver Island,KCCA23,Flemming 114,48.89,-125.11,10,2023-05-28,true,false,false,false,1,10:15:00,NE,,,,,,RLS,,,"0, 1, 2",POINT (-125.11000061035156 48.88999938964844)
