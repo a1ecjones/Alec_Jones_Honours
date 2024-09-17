@@ -18,6 +18,7 @@ library(cowplot)
 library(rnaturalearth)
 library(ggspatial)
 library(ggrepel)
+library(waver)
 ```
 
 #Preliminary analyses of the RLS data from Barkley Sound
@@ -147,7 +148,7 @@ theme.figure <- function (){
 
 
 
-##Making a map and plotting the urch sn ratio on top
+##Making maps of the data in Barkley Sound
 
 ###Doing the set up for the base layer and map characteristics
 ```{r Loading in the base layer}
@@ -289,6 +290,7 @@ geom_label_repel(
 
 ```
 
+
 ```{r Making the plot with the urch to sn ratio on the map 2023}
 (urch_sn_ratio_map_2023 <- ggplot()+
     geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
@@ -317,7 +319,176 @@ geom_label_repel(
 ```
 
 
+###Plotting the urchin counts on the map
+```{r Plot with urchin counts on map 2021}
+(urch_counts_map_2021 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = Urchins),
+             size = 2,) + 
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = Urchins),
+             shape = 1, size = 2,colour = "black")+
+  scale_color_gradient(low = "#35A7FF", high = "#FF5A5F" ) +
+  labs(title = "2021", x = " \nLongitude", y = "Latitude\n ", color = "Urchin Counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
+  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+ # geom_label(data = urch_sn_ratio_RLS, 
+             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
+```
+
+
+```{r Plot with Urchin counts 2022}
+(urch_counts_map_2022 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = Urchins),
+             size = 2,) + 
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = Urchins),
+             shape = 1, size = 2,colour = "black")+
+  scale_color_gradient(low = "#35A7FF", high = "#FF5A5F" ) +
+  labs(title = "2022", x = " \nLongitude", y = "Latitude\n ", color = "Urchin Counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
+  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+ # geom_label(data = urch_sn_ratio_RLS, 
+             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
+```
+
+
+
+```{r Plot of Urchin counts 2023}
+(urch_counts_map_2023 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = Urchins),
+             size = 2,) + 
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = Urchins),
+             shape = 1, size = 2,colour = "black")+
+  scale_color_gradient(low = "#35A7FF", high = "#FF5A5F" ) +
+  labs(title = "2023", x = " \nLongitude", y = "Latitude\n ", color = "Urchin Counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
+  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+ # geom_label(data = urch_sn_ratio_RLS, 
+             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
+```
+
+
+
+###Plotting the snail counts on the map
+
+```{r Plot of snail counts 2021}
+(snail_counts_map_2021 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = Turban_Snails),
+             size = 2,) + 
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = Turban_Snails),
+             shape = 1, size = 2,colour = "black")+
+  scale_color_gradient(low = "#35A7FF", high = "#FF5A5F" ) +
+  labs(title = "2021", x = " \nLongitude", y = "Latitude\n ", color = "Red Turban Snail Counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
+  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+ # geom_label(data = urch_sn_ratio_RLS, 
+             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
+```
+
+
+```{r Plot of Snail counts 2022}
+(snail_counts_map_2022 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = Turban_Snails),
+             size = 2,) + 
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = Turban_Snails),
+             shape = 1, size = 2,colour = "black")+
+  scale_color_gradient(low = "#35A7FF", high = "#FF5A5F" ) +
+  labs(title = "2022", x = " \nLongitude", y = "Latitude\n ", color = "Red Turban Snail Counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
+  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+ # geom_label(data = urch_sn_ratio_RLS, 
+             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
+```
+
+
+```{r Plot of Snail counts 2023}
+(snail_counts_map_2023 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = Turban_Snails),
+             size = 2,) + 
+  geom_point(data = urch_sn_ratio_RLS%>%
+               filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = Turban_Snails),
+             shape = 1, size = 2,colour = "black")+
+  scale_color_gradient(low = "#35A7FF", high = "#FF5A5F" ) +
+  labs(title = "2023", x = " \nLongitude", y = "Latitude\n ", color = "Red Turban Snail Counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
+  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+ # geom_label(data = urch_sn_ratio_RLS, 
+             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
+```
+
+
 ###Saving all of the figures so far
+
+####Site maps
 ```{r Saving the site name map, fig.width=7.5, fig.height=5.5, include=FALSE}
 png(filename = here("./04_plots/site_name_map.png"), width = 7.5, height = 5.5, 
     units = "in", pointsize = 15, res = 600)
@@ -336,6 +507,8 @@ RLS_site_code_map
 dev.off()
 ```
 
+
+####Urch Sn ratio maps
 ```{r Saving the 2021 urch sn ratio map, fig.width=7.5, fig.height=5.5, include=FALSE}
 png(filename = here("./04_plots/urch_sn_ratio_map_2021.png"), width = 7.5, height = 5.5, 
     units = "in", pointsize = 15, res = 600)
@@ -359,6 +532,65 @@ png(filename = here("./04_plots/urch_sn_ratio_map_2023.png"), width = 7.5, heigh
     units = "in", pointsize = 15, res = 600)
 
 urch_sn_ratio_map_2023
+
+dev.off()
+```
+
+
+####Urch counts maps
+```{r Saving the 2021 urch counts map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/urch_counts_map_2021.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_counts_map_2021
+
+dev.off()
+```
+
+```{r Saving the 2022 urch counts map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/urch_counts_map_2022.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_counts_map_2022
+
+dev.off()
+```
+
+```{r Saving the 2023 urch counts map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/urch_counts_map_2023.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_counts_map_2023
+
+dev.off()
+```
+
+
+####Snail counts maps
+```{r Saving the 2021 snail counts map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/snail_counts_map_2021.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+snail_counts_map_2021
+
+dev.off()
+```
+
+```{r Saving the 2022 snail counts map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/snail_counts_map_2022.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+snail_counts_map_2022
+
+dev.off()
+```
+
+
+```{r Saving the 2023 snail counts map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/snail_counts_map_2023.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+snail_counts_map_2023
 
 dev.off()
 ```
