@@ -1,12 +1,12 @@
 site_code,site_name,latitude,longitude,survey_date,depth,visibility,hour,reporting_name,species_total
-BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,07:40:00,Crassadoma gigantea,2
-BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,07:40:00,Dermasterias imbricata,3
-BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,07:40:00,Evasterias troschelii,10
-BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,07:40:00,Orthasterias koehleri,15
-BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,07:40:00,Patiria miniata,14
-BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,07:40:00,Pomaulax gibberosus,7
-BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,07:40:00,Pugettia producta,9
-BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,07:40:00,Pycnopodia helianthoides,12
+BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,7:40:00,Crassadoma gigantea,2
+BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,7:40:00,Dermasterias imbricata,3
+BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,7:40:00,Evasterias troschelii,10
+BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,7:40:00,Orthasterias koehleri,15
+BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,7:40:00,Patiria miniata,14
+BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,7:40:00,Pomaulax gibberosus,7
+BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,7:40:00,Pugettia producta,9
+BMKC1,Dixon Bay 2,48.85,-125.12,2023-05-29,6,2,7:40:00,Pycnopodia helianthoides,12
 BMKC2,Tzartus 116 R,48.9,-125.08,2023-06-10,3,3,10:05:00,Ceratostoma foliatum,1
 BMKC2,Tzartus 116 R,48.9,-125.08,2023-06-10,3,3,10:05:00,Dermasterias imbricata,27
 BMKC2,Tzartus 116 R,48.9,-125.08,2023-06-10,3,3,10:05:00,Evasterias troschelii,1
@@ -95,56 +95,56 @@ BMSC1,Dodger Channel,48.83,-125.2,2022-05-04,5.5,3,10:15:00,Pycnopodia heliantho
 BMSC1,Dodger Channel,48.83,-125.2,2022-05-04,5.5,3,10:15:00,Solaster dawsoni,1
 BMSC1,Dodger Channel,48.83,-125.2,2022-05-04,5.5,3,10:15:00,Strongylocentrotus droebachiensis,1
 BMSC1,Dodger Channel,48.83,-125.2,2022-05-04,5.5,3,10:15:00,Stylasterias forreri,13
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Acanthodoris hudsoni,2
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Acmaea mitra,50
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Apostichopus californicus,10
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Calliostoma ligatum,2
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Cancer productus,1
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Ceratostoma foliatum,12
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Chorilia longipes,1
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Decapoda spp.,19
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Dermasterias imbricata,9
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Diodora aspera,2
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Dirona albolineata,1
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Evasterias troschelii,4
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Haliotis kamtschatkana,18
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Henricia spp.,1
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Hermissenda crassicornis,27
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Mesocentrotus franciscanus,405
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Oregonia gracilis,2
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Orthasterias koehleri,6
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Pagurus hemphilli,6
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Patiria miniata,3
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Pisaster ochraceus,6
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Pomaulax gibberosus,134
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Pycnopodia helianthoides,11
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Scyra acutifrons,1
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Strongylocentrotus purpuratus,1
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Stylasterias forreri,3
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,09:54:00,Triopha modesta,1
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Acmaea mitra,47
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Apostichopus californicus,11
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Ceratostoma foliatum,28
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Crassadoma gigantea,2
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Decapoda spp.,17
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Dermasterias imbricata,10
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Dirona albolineata,3
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Doris montereyensis,1
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Doris odhneri,1
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Evasterias troschelii,13
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Haliotis kamtschatkana,17
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Henricia leviuscula,4
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Henricia spp.,2
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Hermissenda crassicornis,29
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Megathura crenulata,1
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Mesocentrotus franciscanus,236
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Orthasterias koehleri,15
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Patiria miniata,56
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Pomaulax gibberosus,118
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Pycnopodia helianthoides,7
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Scyra acutifrons,1
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Strongylocentrotus droebachiensis,1
-BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,09:54:00,Stylasterias forreri,12
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Acanthodoris hudsoni,2
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Acmaea mitra,50
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Apostichopus californicus,10
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Calliostoma ligatum,2
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Cancer productus,1
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Ceratostoma foliatum,12
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Chorilia longipes,1
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Decapoda spp.,19
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Dermasterias imbricata,9
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Diodora aspera,2
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Dirona albolineata,1
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Evasterias troschelii,4
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Haliotis kamtschatkana,18
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Henricia spp.,1
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Hermissenda crassicornis,27
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Mesocentrotus franciscanus,405
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Oregonia gracilis,2
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Orthasterias koehleri,6
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Pagurus hemphilli,6
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Patiria miniata,3
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Pisaster ochraceus,6
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Pomaulax gibberosus,134
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Pycnopodia helianthoides,11
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Scyra acutifrons,1
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Strongylocentrotus purpuratus,1
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Stylasterias forreri,3
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,5.5,1,9:54:00,Triopha modesta,1
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Acmaea mitra,47
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Apostichopus californicus,11
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Ceratostoma foliatum,28
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Crassadoma gigantea,2
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Decapoda spp.,17
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Dermasterias imbricata,10
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Dirona albolineata,3
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Doris montereyensis,1
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Doris odhneri,1
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Evasterias troschelii,13
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Haliotis kamtschatkana,17
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Henricia leviuscula,4
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Henricia spp.,2
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Hermissenda crassicornis,29
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Megathura crenulata,1
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Mesocentrotus franciscanus,236
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Orthasterias koehleri,15
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Patiria miniata,56
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Pomaulax gibberosus,118
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Pycnopodia helianthoides,7
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Scyra acutifrons,1
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Strongylocentrotus droebachiensis,1
+BMSC1,Dodger Channel,48.83,-125.2,2023-05-15,8,1,9:54:00,Stylasterias forreri,12
 BMSC10,Ross Islets Slug Island,48.87,-125.16,2021-04-30,4,4,12:50:00,Acmaea mitra,4
 BMSC10,Ross Islets Slug Island,48.87,-125.16,2021-04-30,4,4,12:50:00,Apostichopus californicus,96
 BMSC10,Ross Islets Slug Island,48.87,-125.16,2021-04-30,4,4,12:50:00,Cancer productus,2
@@ -244,50 +244,50 @@ BMSC11,Wizard Island South,48.86,-125.16,2021-05-03,5.5,7,10:30:00,Romaleon ante
 BMSC11,Wizard Island South,48.86,-125.16,2021-05-03,5.5,7,10:30:00,Stylasterias forreri,1
 BMSC11,Wizard Island South,48.86,-125.16,2021-05-03,5.5,7,10:30:00,Triopha modesta,1
 BMSC11,Wizard Island South,48.86,-125.16,2021-05-03,5.5,7,10:30:00,Tritonia festiva,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Acanthodoris hudsoni,2
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Acmaea mitra,6
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Apostichopus californicus,62
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Bolinopsis infundibulum,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Cadlina luteomarginata,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Cancer productus,2
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Ceratostoma foliatum,7
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Crassadoma gigantea,6
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Decapoda spp.,5
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Dermasterias imbricata,19
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Diaulula odonoghuei,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Dirona albolineata,10
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Glebocarcinus oregonensis,3
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Haliotis kamtschatkana,3
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Henricia pumila,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Henricia spp.,9
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Hermissenda crassicornis,79
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Mediaster aequalis,3
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Mesocentrotus franciscanus,959
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Mitrocoma cellularia,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Montereina nobilis,2
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Nucella lamellosa,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Orthasterias koehleri,36
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Pagurus hemphilli,3
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Polycera tricolor,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Pomaulax gibberosus,254
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,09:59:00,Stylasterias forreri,2
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Acmaea mitra,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Apostichopus californicus,11
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Ceratostoma foliatum,3
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Crassadoma gigantea,18
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Dendronotus iris,4
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Dermasterias imbricata,6
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Diaulula sandiegensis,4
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Diodora aspera,2
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Doris montereyensis,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Evasterias troschelii,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Henricia spp.,8
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Mesocentrotus franciscanus,97
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Orthasterias koehleri,22
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Patiria miniata,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Polycera tricolor,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Pteraster tesselatus,1
-BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,09:50:00,Scyra acutifrons,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Acanthodoris hudsoni,2
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Acmaea mitra,6
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Apostichopus californicus,62
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Bolinopsis infundibulum,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Cadlina luteomarginata,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Cancer productus,2
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Ceratostoma foliatum,7
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Crassadoma gigantea,6
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Decapoda spp.,5
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Dermasterias imbricata,19
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Diaulula odonoghuei,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Dirona albolineata,10
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Glebocarcinus oregonensis,3
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Haliotis kamtschatkana,3
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Henricia pumila,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Henricia spp.,9
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Hermissenda crassicornis,79
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Mediaster aequalis,3
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Mesocentrotus franciscanus,959
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Mitrocoma cellularia,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Montereina nobilis,2
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Nucella lamellosa,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Orthasterias koehleri,36
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Pagurus hemphilli,3
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Polycera tricolor,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Pomaulax gibberosus,254
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,4,3,9:59:00,Stylasterias forreri,2
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Acmaea mitra,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Apostichopus californicus,11
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Ceratostoma foliatum,3
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Crassadoma gigantea,18
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Dendronotus iris,4
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Dermasterias imbricata,6
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Diaulula sandiegensis,4
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Diodora aspera,2
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Doris montereyensis,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Evasterias troschelii,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Henricia spp.,8
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Mesocentrotus franciscanus,97
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Orthasterias koehleri,22
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Patiria miniata,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Polycera tricolor,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Pteraster tesselatus,1
+BMSC11,Wizard Island South,48.86,-125.16,2022-05-03,8.5,3,9:50:00,Scyra acutifrons,1
 BMSC11,Wizard Island South,48.86,-125.16,2023-05-16,5.5,1,10:12:00,Acmaea mitra,3
 BMSC11,Wizard Island South,48.86,-125.16,2023-05-16,5.5,1,10:12:00,Apostichopus californicus,9
 BMSC11,Wizard Island South,48.86,-125.16,2023-05-16,5.5,1,10:12:00,Cancer productus,1
@@ -695,27 +695,27 @@ BMSC19,Ed King SW Pyramid,48.83,-125.22,2021-05-06,8,2,10:40:00,Pomaulax gibbero
 BMSC19,Ed King SW Pyramid,48.83,-125.22,2021-05-06,8,2,10:40:00,Pycnopodia helianthoides,2
 BMSC19,Ed King SW Pyramid,48.83,-125.22,2021-05-06,8,2,10:40:00,Scyra acutifrons,1
 BMSC19,Ed King SW Pyramid,48.83,-125.22,2021-05-06,8,2,10:40:00,Strongylocentrotus purpuratus,33
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Acmaea mitra,33
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Apostichopus californicus,18
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Ceratostoma foliatum,40
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Crassadoma gigantea,6
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Decapoda spp.,27
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Dermasterias imbricata,25
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Diaulula sandiegensis,3
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Diodora aspera,8
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Doris montereyensis,3
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Doris odhneri,2
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Haliotis kamtschatkana,15
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Henricia leviuscula,1
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Henricia pumila,2
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Mediaster aequalis,1
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Mesocentrotus franciscanus,327
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Orthasterias koehleri,5
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Patiria miniata,17
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Pisaster ochraceus,34
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Pomaulax gibberosus,1
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Scyra acutifrons,1
-BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,09:45:00,Strongylocentrotus purpuratus,25
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Acmaea mitra,33
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Apostichopus californicus,18
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Ceratostoma foliatum,40
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Crassadoma gigantea,6
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Decapoda spp.,27
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Dermasterias imbricata,25
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Diaulula sandiegensis,3
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Diodora aspera,8
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Doris montereyensis,3
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Doris odhneri,2
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Haliotis kamtschatkana,15
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Henricia leviuscula,1
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Henricia pumila,2
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Mediaster aequalis,1
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Mesocentrotus franciscanus,327
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Orthasterias koehleri,5
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Patiria miniata,17
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Pisaster ochraceus,34
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Pomaulax gibberosus,1
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Scyra acutifrons,1
+BMSC19,Ed King SW Pyramid,48.83,-125.22,2022-04-29,8,3,9:45:00,Strongylocentrotus purpuratus,25
 BMSC19,Ed King SW Pyramid,48.83,-125.22,2023-05-10,6.5,2,10:15:00,Acmaea mitra,22
 BMSC19,Ed King SW Pyramid,48.83,-125.22,2023-05-10,6.5,2,10:15:00,Apostichopus californicus,23
 BMSC19,Ed King SW Pyramid,48.83,-125.22,2023-05-10,6.5,2,10:15:00,Cancer productus,1
@@ -945,33 +945,33 @@ BMSC22,Dixon Inside,48.85,-125.12,2023-05-08,5.5,3,10:14:00,Pisaster ochraceus,1
 BMSC22,Dixon Inside,48.85,-125.12,2023-05-08,5.5,3,10:14:00,Pomaulax gibberosus,37
 BMSC22,Dixon Inside,48.85,-125.12,2023-05-08,5.5,3,10:14:00,Scyra acutifrons,1
 BMSC22,Dixon Inside,48.85,-125.12,2023-05-08,5.5,3,10:14:00,Triopha modesta,1
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Acmaea mitra,21
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Apostichopus californicus,41
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Cancer productus,1
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Ceratostoma foliatum,121
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Chlamys hastata,2
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Crassadoma gigantea,8
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Decapoda spp.,5
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Dermasterias imbricata,21
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Diaulula odonoghuei,1
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Diaulula sandiegensis,1
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Diodora aspera,19
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Doris montereyensis,1
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Evasterias troschelii,1
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Glebocarcinus oregonensis,3
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Haliotis kamtschatkana,21
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Henricia spp.,15
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Mesocentrotus franciscanus,495
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Montereina nobilis,1
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Orthasterias koehleri,17
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Pandalus gurneyi,1
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Patiria miniata,19
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Pisaster ochraceus,2
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Pomaulax gibberosus,4
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Scyra acutifrons,8
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Strongylocentrotus purpuratus,2
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Stylasterias forreri,1
-BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,09:30:00,Triopha modesta,1
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Acmaea mitra,21
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Apostichopus californicus,41
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Cancer productus,1
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Ceratostoma foliatum,121
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Chlamys hastata,2
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Crassadoma gigantea,8
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Decapoda spp.,5
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Dermasterias imbricata,21
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Diaulula odonoghuei,1
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Diaulula sandiegensis,1
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Diodora aspera,19
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Doris montereyensis,1
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Evasterias troschelii,1
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Glebocarcinus oregonensis,3
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Haliotis kamtschatkana,21
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Henricia spp.,15
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Mesocentrotus franciscanus,495
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Montereina nobilis,1
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Orthasterias koehleri,17
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Pandalus gurneyi,1
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Patiria miniata,19
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Pisaster ochraceus,2
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Pomaulax gibberosus,4
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Scyra acutifrons,8
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Strongylocentrotus purpuratus,2
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Stylasterias forreri,1
+BMSC23,Aguilar Point,48.84,-125.14,2022-05-06,6.5,3,9:30:00,Triopha modesta,1
 BMSC23,Aguilar Point,48.84,-125.14,2023-05-11,7,3,12:22:00,Acmaea mitra,19
 BMSC23,Aguilar Point,48.84,-125.14,2023-05-11,7,3,12:22:00,Apostichopus californicus,33
 BMSC23,Aguilar Point,48.84,-125.14,2023-05-11,7,3,12:22:00,Cadlina luteomarginata,1
@@ -1281,19 +1281,19 @@ BMSC31,Dodger Channel 2,48.83,-125.19,2023-06-09,2,2,10:30:00,Pisaster ochraceus
 BMSC31,Dodger Channel 2,48.83,-125.19,2023-06-09,2,2,10:30:00,Pomaulax gibberosus,141
 BMSC31,Dodger Channel 2,48.83,-125.19,2023-06-09,2,2,10:30:00,Pugettia producta,13
 BMSC31,Dodger Channel 2,48.83,-125.19,2023-06-09,2,2,10:30:00,Pycnopodia helianthoides,1
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Apostichopus californicus,7
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Cancer productus,11
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Crassadoma gigantea,2
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Dermasterias imbricata,15
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Diodora aspera,1
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Evasterias troschelii,9
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Limacia cockerelli,1
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Mesocentrotus franciscanus,8
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Orthasterias koehleri,1
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Patiria miniata,86
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Pomaulax gibberosus,3
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Pugettia gracilis,1
-BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,08:56:00,Pycnopodia helianthoides,2
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Apostichopus californicus,7
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Cancer productus,11
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Crassadoma gigantea,2
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Dermasterias imbricata,15
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Diodora aspera,1
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Evasterias troschelii,9
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Limacia cockerelli,1
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Mesocentrotus franciscanus,8
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Orthasterias koehleri,1
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Patiria miniata,86
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Pomaulax gibberosus,3
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Pugettia gracilis,1
+BMSC32,Less Dangerous Bay,48.88,-125.09,2023-06-13,3.2,3,8:56:00,Pycnopodia helianthoides,2
 BMSC33,Ed King East Inside,48.84,-125.21,2023-06-06,2,2,10:20:00,Acmaea mitra,32
 BMSC33,Ed King East Inside,48.84,-125.21,2023-06-06,2,2,10:20:00,Apostichopus californicus,8
 BMSC33,Ed King East Inside,48.84,-125.21,2023-06-06,2,2,10:20:00,Ceratostoma foliatum,6
@@ -1692,34 +1692,34 @@ BMSC9,Eagle Bay,48.83,-125.15,2022-05-02,6.5,3,13:45:00,Pomaulax gibberosus,1
 BMSC9,Eagle Bay,48.83,-125.15,2022-05-02,6.5,3,13:45:00,Scyra acutifrons,10
 BMSC9,Eagle Bay,48.83,-125.15,2022-05-02,6.5,3,13:45:00,Strongylocentrotus purpuratus,2
 BMSC9,Eagle Bay,48.83,-125.15,2022-05-02,6.5,3,13:45:00,Triopha modesta,2
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Acmaea mitra,45
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Apostichopus californicus,15
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Ceratostoma foliatum,62
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Crassadoma gigantea,50
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Decapoda spp.,1
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Dermasterias imbricata,20
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Diaulula odonoghuei,2
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Diaulula sandiegensis,5
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Diodora aspera,43
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Dirona albolineata,1
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Doris montereyensis,1
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Doris odhneri,2
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Enteroctopus dofleini,1
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Evasterias troschelii,7
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Haliotis kamtschatkana,67
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Henricia spp.,23
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Mesocentrotus franciscanus,291
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Montereina nobilis,5
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Orthasterias koehleri,4
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Pagurus hemphilli,1
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Pandalus danae,1
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Patiria miniata,71
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Pisaster ochraceus,2
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Pteraster tesselatus,1
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Scyra acutifrons,8
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Strongylocentrotus droebachiensis,2
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Strongylocentrotus purpuratus,3
-BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,09:38:00,Triopha modesta,2
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Acmaea mitra,45
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Apostichopus californicus,15
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Ceratostoma foliatum,62
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Crassadoma gigantea,50
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Decapoda spp.,1
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Dermasterias imbricata,20
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Diaulula odonoghuei,2
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Diaulula sandiegensis,5
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Diodora aspera,43
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Dirona albolineata,1
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Doris montereyensis,1
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Doris odhneri,2
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Enteroctopus dofleini,1
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Evasterias troschelii,7
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Haliotis kamtschatkana,67
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Henricia spp.,23
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Mesocentrotus franciscanus,291
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Montereina nobilis,5
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Orthasterias koehleri,4
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Pagurus hemphilli,1
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Pandalus danae,1
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Patiria miniata,71
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Pisaster ochraceus,2
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Pteraster tesselatus,1
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Scyra acutifrons,8
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Strongylocentrotus droebachiensis,2
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Strongylocentrotus purpuratus,3
+BMSC9,Eagle Bay,48.83,-125.15,2023-05-11,6,2,9:38:00,Triopha modesta,2
 KCCA11,Ross Islets 2,48.87,-125.16,2023-06-12,3.5,2,10:30:00,Acmaea mitra,3
 KCCA11,Ross Islets 2,48.87,-125.16,2023-06-12,3.5,2,10:30:00,Apostichopus californicus,16
 KCCA11,Ross Islets 2,48.87,-125.16,2023-06-12,3.5,2,10:30:00,Cancer productus,2
@@ -1739,30 +1739,30 @@ KCCA11,Ross Islets 2,48.87,-125.16,2023-06-12,3.5,2,10:30:00,Pugettia gracilis,5
 KCCA11,Ross Islets 2,48.87,-125.16,2023-06-12,3.5,2,10:30:00,Pugettia producta,3
 KCCA11,Ross Islets 2,48.87,-125.16,2023-06-12,3.5,2,10:30:00,Pycnopodia helianthoides,1
 KCCA11,Ross Islets 2,48.87,-125.16,2023-06-12,3.5,2,10:30:00,Stylasterias forreri,2
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Acmaea mitra,5
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Antiopella fusca,6
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Apostichopus californicus,3
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Cadlina luteomarginata,4
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Ceratostoma foliatum,12
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Decapoda spp.,9
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Dermasterias imbricata,21
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Dirona albolineata,4
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Evasterias troschelii,1
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Haliotis kamtschatkana,20
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Henricia pumila,6
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Henricia spp.,12
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Heptacarpus stylus,8
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Hermissenda crassicornis,25
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Lophopanopeus bellus,20
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Mesocentrotus franciscanus,268
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Nucella lamellosa,3
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Oregonia gracilis,2
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Orthasterias koehleri,15
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Phyllolithodes papillosus,2
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Pisaster ochraceus,12
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Pugettia gracilis,1
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Pycnopodia helianthoides,2
-KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,09:44:00,Strongylocentrotus purpuratus,4
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Acmaea mitra,5
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Antiopella fusca,6
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Apostichopus californicus,3
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Cadlina luteomarginata,4
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Ceratostoma foliatum,12
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Decapoda spp.,9
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Dermasterias imbricata,21
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Dirona albolineata,4
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Evasterias troschelii,1
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Haliotis kamtschatkana,20
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Henricia pumila,6
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Henricia spp.,12
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Heptacarpus stylus,8
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Hermissenda crassicornis,25
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Lophopanopeus bellus,20
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Mesocentrotus franciscanus,268
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Nucella lamellosa,3
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Oregonia gracilis,2
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Orthasterias koehleri,15
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Phyllolithodes papillosus,2
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Pisaster ochraceus,12
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Pugettia gracilis,1
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Pycnopodia helianthoides,2
+KCCA13,Second Beach South,48.82,-125.18,2023-06-07,4.9,2,9:44:00,Strongylocentrotus purpuratus,4
 KCCA19,Wizard Island North Kelp,48.86,-125.16,2023-06-08,5.5,1,10:30:00,Apostichopus californicus,49
 KCCA19,Wizard Island North Kelp,48.86,-125.16,2023-06-08,5.5,1,10:30:00,Ceratostoma foliatum,1
 KCCA19,Wizard Island North Kelp,48.86,-125.16,2023-06-08,5.5,1,10:30:00,Crassadoma gigantea,5
@@ -1780,19 +1780,19 @@ KCCA19,Wizard Island North Kelp,48.86,-125.16,2023-06-08,5.5,1,10:30:00,Patiria 
 KCCA19,Wizard Island North Kelp,48.86,-125.16,2023-06-08,5.5,1,10:30:00,Pomaulax gibberosus,35
 KCCA19,Wizard Island North Kelp,48.86,-125.16,2023-06-08,5.5,1,10:30:00,Pycnopodia helianthoides,3
 KCCA19,Wizard Island North Kelp,48.86,-125.16,2023-06-08,5.5,1,10:30:00,Strongylocentrotus droebachiensis,3
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Apostichopus californicus,4
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Cancer productus,2
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Ceratostoma foliatum,3
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Dermasterias imbricata,7
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Evasterias troschelii,2
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Henricia spp.,1
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Orthasterias koehleri,1
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Patiria miniata,11
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Polycera tricolor,1
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Pomaulax gibberosus,3
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Pugettia producta,10
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Pycnopodia helianthoides,26
-KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,09:23:00,Scyra acutifrons,1
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Apostichopus californicus,4
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Cancer productus,2
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Ceratostoma foliatum,3
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Dermasterias imbricata,7
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Evasterias troschelii,2
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Henricia spp.,1
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Orthasterias koehleri,1
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Patiria miniata,11
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Polycera tricolor,1
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Pomaulax gibberosus,3
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Pugettia producta,10
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Pycnopodia helianthoides,26
+KCCA20,Nanat Bay,48.88,-125.08,2023-05-30,5.5,3,9:23:00,Scyra acutifrons,1
 KCCA23,Flemming 114,48.89,-125.11,2023-05-28,10,1,10:15:00,Acmaea mitra,6
 KCCA23,Flemming 114,48.89,-125.11,2023-05-28,10,1,10:15:00,Apostichopus californicus,7
 KCCA23,Flemming 114,48.89,-125.11,2023-05-28,10,1,10:15:00,Cancer productus,1

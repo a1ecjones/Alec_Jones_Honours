@@ -78,6 +78,8 @@ invert_data_final_clean <- invert_data_final_clean%>%
   mutate_at(factor_cols, factor)
 ```
 
+
+
 ```{r removing other species and calculating urchin ratio}
  urch_sn_ratio_RLS <- invert_data_final_clean%>%
   pivot_wider(names_from = reporting_name, values_from = species_total)%>%
