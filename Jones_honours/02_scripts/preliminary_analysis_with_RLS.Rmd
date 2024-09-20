@@ -19,6 +19,7 @@ library(rnaturalearth)
 library(ggspatial)
 library(ggrepel)
 library(waver)
+library(vcd)
 ```
 
 #Preliminary analyses of the RLS data from Barkley Sound
@@ -596,3 +597,60 @@ snail_counts_map_2023
 
 dev.off()
 ```
+
+
+###
+
+##Checking data for normality etc.
+
+###Urchin data
+```{r Testing urchin counts for normality}
+hist(urch_sn_ratio_RLS$Urchins)
+
+shapiro.test(urch_sn_ratio_RLS$Urchins)
+```
+The urchin counts are not normal based on visual test and on shapiro-wilks test.
+
+```{r Chi-square testing to see if urchin data follows Poisson}
+urch_temp_poisson_test <- urch_sn_ratio_RLS%>%
+  select(-c(urch_sn_ratio, Turban_Snails))%>%
+  na.omit
+
+hist(urch_temp_poisson_test$Urchins)
+
+lambda <- mean(urch_temp_poisson_test$Urchins)
+
+observed <- table(factor(urch_temp_poisson_test$Urchins,
+                         levels = min(urch_temp_poisson_test$Urchins):max(urch_temp_poisson_test$Urchins)))
+
+expected <- dpois(min(urch_temp_poisson_test$Urchins):max(urch_temp_poisson_test$Urchins),
+                  lambda) * length(urch_temp_poisson_test$Urchins)
+
+chisq.test(observed, p = expected, rescale.p = TRUE)
+```
+
+```{r Using vcd package to visually assess whether the data is poisson}
+distplot(urch_temp_poisson_test$Urchins, type = "poisson")
+```
+
+The poissonness plot shows that the counts approximately follow the poisson
+distribution.
+
+###Snail data
+```{r Testing snail counts for normality}
+hist(urch_sn_ratio_RLS$Turban_Snails, n = 20)
+
+shapiro.test(urch_sn_ratio_RLS$Turban_Snails)
+```
+The snail counts are not normal based on visual test and on shapiro-wilks test.
+
+```{r Using vcd package to visually assess if the data is poisson}
+snail_temp_poisson_test <- urch_sn_ratio_RLS%>%
+  select(-c(urch_sn_ratio, Urchins))%>%
+  na.omit
+
+distplot(snail_temp_poisson_test$Turban_Snails)
+```
+
+The snail data appears to somewhat follow a poisson distribution.
+
