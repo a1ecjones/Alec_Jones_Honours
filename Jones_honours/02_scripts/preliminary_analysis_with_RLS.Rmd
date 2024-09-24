@@ -20,6 +20,7 @@ library(ggspatial)
 library(ggrepel)
 library(waver)
 library(vcd)
+library(sp)
 ```
 
 #Preliminary analyses of the RLS data from Barkley Sound
@@ -599,7 +600,6 @@ dev.off()
 ```
 
 
-###
 
 ##Checking data for normality etc.
 
@@ -668,5 +668,21 @@ hist(urch_sn_ratio_temp_poisson$urch_sn_ratio, n = 20)
 
 ```{r Poissonness plot of urch sn ratio}
 distplot(urch_sn_ratio_temp_poisson$urch_sn_ratio)
+```
+
+
+
+##Calculating fetch for the sites
+
+```{r Converting site coordinates into spatial points file type}
+site_coordinates <- site_map_data%>%
+  select(c(latitude, longitude))
+
+site_sp <- st_as_sf(site_coordinates, coords = c("longitude", "latitude"), crs = 4326)
+bearings <- seq(200, 250, by = 5)
+```
+
+```{r Calculating the fetch for the points}
+test_fetch_df <- fetch_len_multi(site_sp, bearings, dmax = 10000, shoreline = VI_base_layer_sf, projected = TRUE)
 ```
 
