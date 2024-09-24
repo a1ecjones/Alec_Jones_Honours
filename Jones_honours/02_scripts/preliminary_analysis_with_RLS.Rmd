@@ -630,11 +630,12 @@ chisq.test(observed, p = expected, rescale.p = TRUE)
 ```
 
 ```{r Using vcd package to visually assess whether the data is poisson}
-distplot(urch_temp_poisson_test$Urchins, type = "poisson")
+(urch_poissonness_plot <- distplot(urch_temp_poisson_test$Urchins, type = "poisson"))
 ```
 
 The poissonness plot shows that the counts approximately follow the poisson
 distribution.
+
 
 ###Snail data
 ```{r Testing snail counts for normality}
@@ -653,4 +654,19 @@ distplot(snail_temp_poisson_test$Turban_Snails)
 ```
 
 The snail data appears to somewhat follow a poisson distribution.
+
+###Urch sn ratio
+```{r Making a dataset with no na for now}
+urch_sn_ratio_temp_poisson <- urch_sn_ratio_RLS%>%
+  na.omit()
+```
+
+
+```{r Histogram of urch sn ratio}
+hist(urch_sn_ratio_temp_poisson$urch_sn_ratio, n = 20)
+```
+
+```{r Poissonness plot of urch sn ratio}
+distplot(urch_sn_ratio_temp_poisson$urch_sn_ratio)
+```
 
