@@ -686,3 +686,25 @@ bearings <- seq(200, 250, by = 5)
 test_fetch_df <- fetch_len_multi(site_sp, bearings, dmax = 10000, shoreline = VI_base_layer_sf, projected = TRUE)
 ```
 
+##Making a plot for the presentation
+```{r}
+fake_data <- read_csv(here("./01_raw_data/fake_data.csv"))
+```
+
+```{r Making a plot with the fake data}
+(fake_data_plot <- ggplot(fake_data, aes(x = Explanatory, y = Response))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  theme.figure())
+```
+
+
+```{r Saving the plot}
+png(filename = here("./04_plots/fake_data_plot.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+fake_data_plot
+
+dev.off()
+```
+
