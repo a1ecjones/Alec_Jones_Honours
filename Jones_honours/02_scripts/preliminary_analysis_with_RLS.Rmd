@@ -21,6 +21,7 @@ library(ggrepel)
 library(waver)
 library(vcd)
 library(sp)
+library(viridisLite)
 ```
 
 #Preliminary analyses of the RLS data from Barkley Sound
@@ -85,11 +86,12 @@ invert_data_final_clean <- invert_data_final_clean%>%
 ```{r removing other species and calculating urchin ratio}
  urch_sn_ratio_RLS <- invert_data_final_clean%>%
   pivot_wider(names_from = reporting_name, values_from = species_total)%>%
-  mutate(urch_sn_ratio = `Mesocentrotus franciscanus` / `Pomaulax gibberosus`,
-         Urchins = `Mesocentrotus franciscanus`,
+  mutate(Urchins = `Mesocentrotus franciscanus`,
          Turban_Snails = `Pomaulax gibberosus`)%>%
   select(site_code, site_name, latitude, longitude, survey_date, depth, 
-           visibility, hour, urch_sn_ratio, Urchins, Turban_Snails)
+           visibility, hour, Urchins, Turban_Snails)%>%
+  replace(is.na(.), 0)%>%
+  mutate(urch_sn_ratio = log10((Urchins +1) / (Turban_Snails + 1)))
 ```
 
 
@@ -219,8 +221,8 @@ geom_label_repel(
            ylim = c(lat_min, lat_max)) +
   labs(x = " \nLongitude", y = "Latitude\n ") +
   theme.figure() +
-  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
-  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
   annotation_north_arrow(
     location = "tr",
     which_north = "true",
@@ -238,6 +240,41 @@ geom_label_repel(
 ```
 
 
+```{r Making map with just the points}
+(RLS_site_point_map <- ggplot()+
+       geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  labs(x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering)+ 
+    geom_point(data = urch_sn_ratio_RLS, mapping = aes(x = longitude, y = latitude),
+             size = 3, colour = "#29AF7FFF") + 
+  geom_point(data = urch_sn_ratio_RLS, mapping = aes(x = longitude, y = latitude),
+             shape = 1, size = 3,colour = "black"))
+```
+
+
+```{r Making the inset map}
+(van_isl_map <- ggplot(VI_base_layer_sf) +
+  geom_sf() +
+  coord_sf(ylim = c(48, 52), xlim = c(-129, -122)) +
+  theme.figure() +
+ # geom_rect(xmin = long_min, xmax = long_max, ymin = lat_min, ymax = lat_max,
+            #color = "red", fill = NA, linewidth = 1) +
+  labs(x = "Longitude", y = "Latitude") +
+    theme(axis.text = element_text(size = 14))+
+  scale_x_continuous(breaks = c(-128, -125, -122)) +
+  scale_y_continuous(breaks = c(48, 50, 52)))
+```
+
+
+
 ###Making maps of the urch to sn ratio for each year
 
 ```{r Making the plot with the urch to sn ratio on the map 2021}
@@ -247,15 +284,15 @@ geom_label_repel(
            ylim = c(lat_min, lat_max)) +
   geom_point(data = urch_sn_ratio_RLS%>%
                filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
-             size = 2,) + 
+             size = 3,) + 
   geom_point(data = urch_sn_ratio_RLS%>%
                filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
-             shape = 1, size = 2,colour = "black")+
-  scale_color_gradient(low = "#35A7FF", high = "#FF5A5F" ) +
-  labs(title = "2021", x = " \nLongitude", y = "Latitude\n ", color = "Urchin to Snail Ratio") +
+             shape = 1, size = 3,colour = "black")+
+  scale_color_viridis_c() +
+  labs(title = "2021", x = " \nLongitude", y = "Latitude\n ", color = "Log Urchin to Snail Ratio") +
   theme.figure() +
-  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
-  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
   annotation_north_arrow(
     location = "tr",
     which_north = "true",
@@ -274,15 +311,15 @@ geom_label_repel(
            ylim = c(lat_min, lat_max)) +
   geom_point(data = urch_sn_ratio_RLS%>%
                filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
-             size = 2,) + 
+             size = 3,) + 
   geom_point(data = urch_sn_ratio_RLS%>%
                filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
-             shape = 1, size = 2,colour = "black")+
-  scale_color_gradient(low = "#35A7FF", high = "#FF5A5F" ) +
-  labs(title = "2022", x = " \nLongitude", y = "Latitude\n ", color = "Urchin to Snail Ratio") +
+             shape = 1, size = 3,colour = "black")+
+  scale_color_viridis_c() +
+  labs(title = "2022", x = " \nLongitude", y = "Latitude\n ", color = " Log Urchin to Snail Ratio") +
   theme.figure() +
-  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
-  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
   annotation_north_arrow(
     location = "tr",
     which_north = "true",
@@ -302,15 +339,15 @@ geom_label_repel(
            ylim = c(lat_min, lat_max)) +
   geom_point(data = urch_sn_ratio_RLS%>%
                filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
-             size = 2,) + 
+             size = 3,) + 
   geom_point(data = urch_sn_ratio_RLS%>%
                filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
-             shape = 1, size = 2,colour = "black")+
-  scale_color_gradient(low = "#35A7FF", high = "#FF5A5F" ) +
-  labs(title = "2023", x = " \nLongitude", y = "Latitude\n ", color = "Urchin to Snail Ratio") +
+             shape = 1, size = 3,colour = "black")+
+  scale_color_viridis_c() +
+  labs(title = "2023", x = " \nLongitude", y = "Latitude\n ", color = " Log Urchin to Snail Ratio") +
   theme.figure() +
-  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1)) +
-  scale_y_continuous(breaks = c(48.8, 48.85, 48.9))+
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
   annotation_north_arrow(
     location = "tr",
     which_north = "true",
@@ -511,6 +548,24 @@ RLS_site_code_map
 dev.off()
 ```
 
+
+```{r Saving the site point map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/site_point_map.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+RLS_site_point_map
+
+dev.off()
+```
+
+```{r Saving the Vancouver Island map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/van_isl_map.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+van_isl_map
+
+dev.off()
+```
 
 ####Urch Sn ratio maps
 ```{r Saving the 2021 urch sn ratio map, fig.width=7.5, fig.height=5.5, include=FALSE}
