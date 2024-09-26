@@ -253,9 +253,9 @@ geom_label_repel(
     location = "tr",
     which_north = "true",
     style = north_arrow_fancy_orienteering)+ 
-    geom_point(data = urch_sn_ratio_RLS, mapping = aes(x = longitude, y = latitude),
+    geom_point(data = site_map_data, mapping = aes(x = longitude, y = latitude),
              size = 3, colour = "#29AF7FFF") + 
-  geom_point(data = urch_sn_ratio_RLS, mapping = aes(x = longitude, y = latitude),
+  geom_point(data = site_map_data, mapping = aes(x = longitude, y = latitude),
              shape = 1, size = 3,colour = "black"))
 ```
 
