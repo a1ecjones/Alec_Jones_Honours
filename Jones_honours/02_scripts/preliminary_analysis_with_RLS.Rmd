@@ -763,3 +763,20 @@ fake_data_plot
 dev.off()
 ```
 
+
+
+##Making an example of yearly fluctuations
+```{r Saving in the fake year data}
+year_flux_data <- read_csv(here("./01_raw_data/example_year_data.csv"))
+```
+
+```{r}
+(year_flux_snails <- ggplot()+
+  geom_point(year_flux_data, mapping = aes(x = year, y = Urchins),
+             size = 4)+
+labs(x = " \nYear", y = "Counts\n ") +
+  theme.figure()+
+   theme(axis.title = element_text(size = 18, face = "bold"),
+    axis.text = element_text(size = 18, face = "plain")))
+```
+
