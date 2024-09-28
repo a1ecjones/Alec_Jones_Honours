@@ -741,7 +741,7 @@ bearings <- seq(200, 250, by = 5)
 test_fetch_df <- fetch_len_multi(site_sp, bearings, dmax = 10000, shoreline = VI_base_layer_sf, projected = TRUE)
 ```
 
-##Making a plot for the presentation
+##Making plots for the presentation
 ```{r}
 fake_data <- read_csv(here("./01_raw_data/fake_data.csv"))
 ```
@@ -763,6 +763,57 @@ fake_data_plot
 dev.off()
 ```
 
+
+```{r Making fake data for predicted results of fetch}
+x1 <- seq(100, 900, by = 100)
+y1 <- seq(-1, 3 , by = 0.5)
+predicted_data <- cbind(x1, y1)
+```
+
+```{r Plotting fake data for fetch}
+(predicted_plot <- ggplot(predicted_data, aes(x = x1, y = y1))+
+  geom_point()+
+           geom_smooth(method = "lm")+
+  theme.figure()+
+   labs(x = "Kelp abundance", y = "Log urchin to snail ratio")+
+   theme(axis.title = element_text(size = 18, face = "bold"),
+    axis.text = element_text(size = 18, face = "plain")))
+```
+
+
+
+```{r Making fake data for substrate type, include=FALSE}
+fake_substrate_type_data <- read_csv(here("./01_raw_data/example_year_data.csv"))
+fake_substrate_type_data$substrate <- as.factor(fake_substrate_type_data$substrate)
+levels(fake_substrate_type_data$substrate) <- list(Sand = "Sand", 
+                                                   `Loose rocks` = "Loose rocks",
+                                                   `Solid rock` = "Solid rock")
+```
+
+```{r Plotting the fake substrate data}
+(fake_substrate_plot <- ggplot(fake_substrate_type_data, aes(x = substrate, y = urchin))+
+   geom_boxplot()+
+   theme.figure()+
+   labs(x = "\nSubstrate type", y = "Log urchin to snail ratio\n")+
+      theme(axis.title = element_text(size = 18, face = "bold"),
+    axis.text = element_text(size = 18, face = "plain")))
+```
+
+
+
+```{r Making fake kelp data, include=FALSE}
+fake_kelp_data <- read_csv(here("./01_raw_data/example_year_data.csv"))
+```
+
+```{r Plotting the fake kelp data}
+(fake_kelp_plot <- ggplot(fake_kelp_data, aes(x = kelp, y = urchin))+
+  geom_point()+
+           geom_smooth(method = "lm")+
+   labs(x = "\nKelp abundance (n/m2)", y = "Log urchin to snail ratio\n")+
+   theme.figure()+
+   theme(axis.title = element_text(size = 18, face = "bold"),
+    axis.text = element_text(size = 18, face = "plain")))
+```
 
 
 ##Making an example of yearly fluctuations
