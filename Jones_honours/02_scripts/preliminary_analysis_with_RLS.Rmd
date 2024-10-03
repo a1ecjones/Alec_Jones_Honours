@@ -727,14 +727,32 @@ distplot(urch_sn_ratio_temp_poisson$urch_sn_ratio)
 
 
 
+
 ##Calculating fetch for the sites
 
-```{r Converting site coordinates into spatial points file type}
+```{r Making a df of the site coordinates and adjusting the coordinates of sites on land}
 site_coordinates <- site_map_data%>%
-  select(c(latitude, longitude))
+  select(c(latitude, longitude))%>%
+  # mutate(latitude = if_else(row_number() == 7, 48.9, latitude))%>%
+  mutate(longitude = if_else(row_number() == 7, 48.9, longitude))%>%
+    # mutate(latitude = if_else(row_number() == 9, 48.9, latitude))%>%
+  mutate(longitude = if_else(row_number() == 9, 48.9, longitude))%>%
+    # mutate(latitude = if_else(row_number() == 12, 48.9, latitude))%>%
+  mutate(longitude = if_else(row_number() == 12, 48.9, longitude))%>%
+    # mutate(latitude = if_else(row_number() == 14, 48.9, latitude))%>%
+  mutate(longitude = if_else(row_number() == 14, 48.9, longitude))%>%
+    # mutate(latitude = if_else(row_number() == 24, 48.9, latitude))%>%
+  mutate(longitude = if_else(row_number() == 24, 48.9, longitude))%>%
+    # mutate(latitude = if_else(row_number() == 32, 48.9, latitude))%>%
+  mutate(longitude = if_else(row_number() == 32, 48.9, longitude))%>%
+```
 
+Sites 7, 9, 12, 14, 24, 32 need to be shifted
+
+
+```{r Converting site coordinates into spatial points file type}
 site_sp <- st_as_sf(site_coordinates, coords = c("longitude", "latitude"), crs = 4326)
-bearings <- seq(200, 250, by = 5)
+bearings <- seq(1, 360, by = 1)
 ```
 
 ```{r Calculating the fetch for the points}
@@ -816,7 +834,7 @@ fake_kelp_data <- read_csv(here("./01_raw_data/example_year_data.csv"))
 ```
 
 
-##Making an example of yearly fluctuations
+###Making an example of yearly fluctuations
 ```{r Saving in the fake year data}
 year_flux_data <- read_csv(here("./01_raw_data/example_year_data.csv"))
 ```
