@@ -752,12 +752,11 @@ Sites 7, 9, 12, 14, 24, 32 need to be shifted
 
 ```{r Converting site coordinates into spatial points file type}
 site_sp <- st_as_sf(site_coordinates_corrected, coords = c("longitude", "latitude"), crs = 4326)
-#bearings <- seq(1, 360, by = 1)
-bearings <- c(1)
+bearings <- seq(1, 360, by = 1)
 ```
 
 ```{r Calculating the fetch for the points}
-test_fetch_df <- fetch_len_multi(site_sp, bearings, dmax = 10000, shoreline = VI_base_layer_sf, projected = TRUE)
+fetch_df <- fetch_len_multi(site_sp, bearings, dmax = 30000, shoreline = VI_base_layer_sf, projected = TRUE)
 ```
 
 ##Making plots for the presentation
