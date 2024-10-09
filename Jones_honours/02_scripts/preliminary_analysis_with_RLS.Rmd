@@ -733,18 +733,18 @@ distplot(urch_sn_ratio_temp_poisson$urch_sn_ratio)
 ```{r Making a df of the site coordinates and adjusting the coordinates of sites on land}
 site_coordinates_corrected <- site_map_data%>%
   select(c(latitude, longitude))%>%
-  # mutate(latitude = if_else(row_number() == 7, 48.9, latitude))%>%
- # mutate(longitude = if_else(row_number() == 7, 48.9, longitude))%>%
+ mutate(latitude = if_else(row_number() == 7, 48.869, latitude))%>%
+ mutate(longitude = if_else(row_number() == 7, -125.319, longitude))%>%
       mutate(latitude = if_else(row_number() == 9, 48.88, latitude))%>%
       mutate(longitude = if_else(row_number() == 9, -125.312, longitude))%>%
-     mutate(latitude = if_else(row_number() == 12, 48.911, latitude))%>%
- # mutate(longitude = if_else(row_number() == 12, 48.9, longitude))%>%
-    # mutate(latitude = if_else(row_number() == 14, 48.9, latitude))%>%
- # mutate(longitude = if_else(row_number() == 14, 48.9, longitude))%>%
-    # mutate(latitude = if_else(row_number() == 24, 48.9, latitude))%>%
- # mutate(longitude = if_else(row_number() == 24, 48.9, longitude))%>%
-    # mutate(latitude = if_else(row_number() == 32, 48.9, latitude))%>%
-#  mutate(longitude = if_else(row_number() == 32, 48.9, longitude))%>%
+  mutate(latitude = if_else(row_number() == 12, 48.911, latitude))%>%
+  mutate(longitude = if_else(row_number() == 12, -125.270, longitude))%>%
+     mutate(latitude = if_else(row_number() == 14, 48.851, latitude))%>%
+     mutate(longitude = if_else(row_number() == 14, -125.199, longitude))%>%
+  mutate(latitude = if_else(row_number() == 24, 48.829, latitude))%>%
+  mutate(longitude = if_else(row_number() == 24, -125.19, longitude))%>%
+     mutate(latitude = if_else(row_number() == 32, 48.831, latitude))%>%
+     mutate(longitude = if_else(row_number() == 32, -125.152, longitude))
 ```
 
 Sites 7, 9, 12, 14, 24, 32 need to be shifted
@@ -752,7 +752,8 @@ Sites 7, 9, 12, 14, 24, 32 need to be shifted
 
 ```{r Converting site coordinates into spatial points file type}
 site_sp <- st_as_sf(site_coordinates_corrected, coords = c("longitude", "latitude"), crs = 4326)
-bearings <- seq(1, 360, by = 1)
+#bearings <- seq(1, 360, by = 1)
+bearings <- c(1)
 ```
 
 ```{r Calculating the fetch for the points}
