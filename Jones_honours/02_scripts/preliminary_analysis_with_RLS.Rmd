@@ -728,8 +728,9 @@ distplot(urch_sn_ratio_temp_poisson$urch_sn_ratio)
 
 
 
-##Calculating fetch for the sites
+##Wave exposure calculations
 
+###Calculating fetch for each of the sites
 ```{r Making a df of the site coordinates and adjusting the coordinates of sites on land}
 site_coordinates_corrected <- site_map_data%>%
   select(c(latitude, longitude))%>%
@@ -758,6 +759,9 @@ bearings <- seq(1, 360, by = 1)
 ```{r Calculating the fetch for the points}
 fetch_df <- fetch_len_multi(site_sp, bearings, dmax = 30000, shoreline = VI_base_layer_sf, projected = TRUE)
 ```
+
+
+###Using the compass rose to visualize the fetch for each site
 
 ##Making plots for the presentation
 ```{r}
