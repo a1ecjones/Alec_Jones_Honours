@@ -178,11 +178,11 @@ st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 
 ```{r Making the range for the map}
 #first need to specify the range of the map
-lat_min = min(urch_sn_ratio_RLS$latitude) - 0.05
+lat_min = min(urch_sn_ratio_RLS$latitude) - 0.01
 lat_max = max(urch_sn_ratio_RLS$latitude) + 0.05
 
-long_min = min(urch_sn_ratio_RLS$longitude) - 0.05
-long_max = max(urch_sn_ratio_RLS$longitude) + 0.05
+long_min = min(urch_sn_ratio_RLS$longitude) - 0.2
+long_max = max(urch_sn_ratio_RLS$longitude) + 0.1
 ```
 
 
@@ -245,6 +245,15 @@ geom_label_repel(
 ```
 
 
+```{r Making a data frame of the boat launch sites}
+launch_lat <- c(48.878415, 48.828809, 49.012965, 48.946169)
+launch_long <- c(-125.046749, -125.127513, -125.360924, -125.547637)
+names <- c("Poat Nook", "Grappler Inlet", "Toquart Bay", "Ucluelet")
+launch_df <- tibble(launch_long, launch_lat, names)
+```
+
+
+
 ```{r Making map with just the points}
 (RLS_site_point_map <- ggplot()+
        geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
@@ -252,8 +261,8 @@ geom_label_repel(
            ylim = c(lat_min, lat_max)) +
   labs(x = " \nLongitude", y = "Latitude\n ") +
   theme.figure() +
-  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
-  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  #scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
   annotation_north_arrow(
     location = "tr",
     which_north = "true",
@@ -261,7 +270,11 @@ geom_label_repel(
     geom_point(data = site_map_data, mapping = aes(x = longitude, y = latitude),
              size = 3, colour = "#29AF7FFF") + 
   geom_point(data = site_map_data, mapping = aes(x = longitude, y = latitude),
-             shape = 1, size = 3,colour = "black"))
+             shape = 1, size = 3,colour = "black")+
+      geom_point(data = launch_df, mapping = aes(x = launch_long, y = launch_lat),
+                 size = 3, colour = "#FDE725FF")+
+      geom_point(data = launch_df, mapping = aes(x = launch_long, y = launch_lat),
+                shape = 1, size = 3, colour = "black"))
 ```
 
 
