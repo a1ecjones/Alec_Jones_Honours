@@ -100,6 +100,45 @@ invert_data_final_clean <- invert_data_final_clean%>%
   mutate(urch_sn_ratio = log10((Urchins +1) / (Turban_Snails + 1)))
 ```
 
+##Totalling up the fish counts
+
+```{r Loading in the fish data}
+fish_data_raw <- read_csv(here("./01_raw_data/IMOS_-_National_Reef_Monitoring_Network_Sub-Facility_-_Global_reef_fish_abundance_and_biomass_no_top.csv"))
+```
+
+```{r Cleaning up the fish data and totalling by species and transect}
+#fish_factor_cols <- c("site_code", "site_name", "class", "order", "family", "species_name", "reporting_name")
+
+fish_data_clean <- fish_data_raw%>%
+     mutate_at(fish_factor_cols, factor)
+
+  
+  
+  group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour, reporting_name)%>%
+  summarise(species_total = sum(total))%>%
+  filter(class == "Actinopterygii")
+```
+
+```{r Making a rockfish total for each site}
+rockfish_data <- fish_data_raw%>%
+   mutate_at(fish_factor_cols, factor)%>%
+filter(order == "Scorpaeniformes")%>%
+  group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour, reporting_name)%>%
+  summarise(species_total = sum(total))
+
+```
+
+```{r}
+rockfish_total_data <- rockfish_data%>%
+    group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour)%>%
+  summarise(total = sum(species_total))
+```
+
+
+
 ##Making some visualizations of the urch_sn ratio and correlation between urch and sn
 
 ```{r Making theme for all subsequent figures}
@@ -179,10 +218,16 @@ st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 ```{r Making the range for the map}
 #first need to specify the range of the map
 lat_min = min(urch_sn_ratio_RLS$latitude) - 0.01
-lat_max = max(urch_sn_ratio_RLS$latitude) + 0.05
+lat_max = max(urch_sn_ratio_RLS$latitude) + 0.01
 
-long_min = min(urch_sn_ratio_RLS$longitude) - 0.2
-long_max = max(urch_sn_ratio_RLS$longitude) + 0.1
+long_min = min(urch_sn_ratio_RLS$longitude) - 0.01
+long_max = max(urch_sn_ratio_RLS$longitude) + 0.01
+
+lat_min_launch = min(urch_sn_ratio_RLS$latitude) - 0.01
+lat_max_launch = max(urch_sn_ratio_RLS$latitude) + 0.05
+
+long_min_launch = min(urch_sn_ratio_RLS$longitude) - 0.2
+long_max_launch = max(urch_sn_ratio_RLS$longitude) + 0.1
 ```
 
 
@@ -254,11 +299,11 @@ launch_df <- tibble(launch_long, launch_lat, names)
 
 
 
-```{r Making map with just the points}
+```{r Making map with just the points and the boat launches}
 (RLS_site_point_map <- ggplot()+
        geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
-    coord_sf(xlim = c(long_min, long_max),
-           ylim = c(lat_min, lat_max)) +
+    coord_sf(xlim = c(long_min_launch, long_max_launch),
+           ylim = c(lat_min_launch, lat_max_launch)) +
   labs(x = " \nLongitude", y = "Latitude\n ") +
   theme.figure() +
   #scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
@@ -317,9 +362,6 @@ launch_df <- tibble(launch_long, launch_lat, names)
     style = north_arrow_fancy_orienteering
   ) +
   annotation_scale(location = "br"))
- # geom_label(data = urch_sn_ratio_RLS, 
-             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
-
 ```
 
 ```{r Making the plot with the urch to sn ratio on the map 2022}
@@ -513,8 +555,7 @@ launch_df <- tibble(launch_long, launch_lat, names)
     style = north_arrow_fancy_orienteering
   ) +
   annotation_scale(location = "br"))
- # geom_label(data = urch_sn_ratio_RLS, 
-             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
+
 ```
 
 
@@ -540,8 +581,7 @@ launch_df <- tibble(launch_long, launch_lat, names)
     style = north_arrow_fancy_orienteering
   ) +
   annotation_scale(location = "br"))
- # geom_label(data = urch_sn_ratio_RLS, 
-             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
+
 ```
 
 
@@ -567,10 +607,82 @@ launch_df <- tibble(launch_long, launch_lat, names)
     style = north_arrow_fancy_orienteering
   ) +
   annotation_scale(location = "br"))
- # geom_label(data = urch_sn_ratio_RLS, 
-             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
 ```
 
+
+###Plotting the fish counts on the map
+
+```{r Plotting the total scorpaeniformes for each transect in 2021}
+(mobile_fish_count_2021 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = rockfish_total_data%>%
+               filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = total),
+             size = 3,) + 
+  geom_point(data = rockfish_total_data%>%
+               filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = total),
+             shape = 1, size = 3,colour = "black")+
+  scale_color_viridis_c() +
+  labs(title = "2021", x = " \nLongitude", y = "Latitude\n ", color = "Scorpaeniformes counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Plotting the total scorpaeniformes for each transect in 2022}
+(mobile_fish_count_2022 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = rockfish_total_data%>%
+               filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = total),
+             size = 3,) + 
+  geom_point(data = rockfish_total_data%>%
+               filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = total),
+             shape = 1, size = 3,colour = "black")+
+  scale_color_viridis_c() +
+  labs(title = "2022", x = " \nLongitude", y = "Latitude\n ", color = "Scorpaeniformes counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Plotting the total scorpaeniformes for each transect in 2022}
+(mobile_fish_count_2023 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = rockfish_total_data%>%
+               filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = total),
+             size = 3,) + 
+  geom_point(data = rockfish_total_data%>%
+               filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = total),
+             shape = 1, size = 3,colour = "black")+
+  scale_color_viridis_c() +
+  labs(title = "2023", x = " \nLongitude", y = "Latitude\n ", color = "Scorpaeniformes counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
 
 ###Saving all of the figures so far
 
