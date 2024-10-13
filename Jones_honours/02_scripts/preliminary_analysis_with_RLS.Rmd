@@ -106,18 +106,16 @@ invert_data_final_clean <- invert_data_final_clean%>%
 fish_data_raw <- read_csv(here("./01_raw_data/IMOS_-_National_Reef_Monitoring_Network_Sub-Facility_-_Global_reef_fish_abundance_and_biomass_no_top.csv"))
 ```
 
+
+
 ```{r Cleaning up the fish data and totalling by species and transect}
 #fish_factor_cols <- c("site_code", "site_name", "class", "order", "family", "species_name", "reporting_name")
 
 fish_data_clean <- fish_data_raw%>%
-     mutate_at(fish_factor_cols, factor)
-
-  
-  
-  group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
-           visibility, hour, reporting_name)%>%
-  summarise(species_total = sum(total))%>%
-  filter(class == "Actinopterygii")
+     mutate_at(fish_factor_cols, factor)%>%
+    group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
+        visibility, hour, reporting_name)%>%
+ summarise(species_total = sum(total))
 ```
 
 ```{r Making a rockfish total for each site}
@@ -610,10 +608,13 @@ launch_df <- tibble(launch_long, launch_lat, names)
 ```
 
 
-###Plotting the fish counts on the map
+
+##Plotting the fish counts
+
+###Plotting the scorpaeniformes fish counts on the map
 
 ```{r Plotting the total scorpaeniformes for each transect in 2021}
-(mobile_fish_count_2021 <- ggplot()+
+(scorp_fish_count_2021 <- ggplot()+
     geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
@@ -637,7 +638,7 @@ launch_df <- tibble(launch_long, launch_lat, names)
 ```
 
 ```{r Plotting the total scorpaeniformes for each transect in 2022}
-(mobile_fish_count_2022 <- ggplot()+
+(scorp_fish_count_2022 <- ggplot()+
     geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
@@ -660,8 +661,8 @@ launch_df <- tibble(launch_long, launch_lat, names)
   annotation_scale(location = "br"))
 ```
 
-```{r Plotting the total scorpaeniformes for each transect in 2022}
-(mobile_fish_count_2023 <- ggplot()+
+```{r Plotting the total scorpaeniformes for each transect in 2023}
+(scorp_fish_count_2023 <- ggplot()+
     geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
@@ -683,6 +684,34 @@ launch_df <- tibble(launch_long, launch_lat, names)
   ) +
   annotation_scale(location = "br"))
 ```
+###Plotting the goby counts
+
+```{r Plotting the goby counts in 2021}
+(goby_fish_count_2021 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = fish_data_clean%>%
+               filter(reporting_name == "Rhinogobiops nicholsii",
+                      year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = species_total),
+             size = 3,) + 
+  geom_point(data = fish_data_clean%>%
+               filter(reporting_name == "Rhinogobiops nicholsii",
+                      year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = species_total),
+             shape = 1, size = 3,colour = "black")+
+  scale_color_viridis_c() +
+  labs(title = "2021", x = " \nLongitude", y = "Latitude\n ", color = "Blackeye goby counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
 
 ###Saving all of the figures so far
 
