@@ -54,8 +54,87 @@ invert_data_final_clean <- invert_data_clean%>%
 ```
 
 ```{r Correcting the lat and long to be correct}
-#invert_data_final_clean <- invert_data_final_clean%>%
+invert_data_final_clean <- invert_data_final_clean%>%
+ mutate(latitude = if_else(site_code == "BMSC1", 48.82894897, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC1", -125.1975708, longitude))%>%
   
+   mutate(latitude = if_else(site_code == "BMSC2", 48.85039902, latitude))%>%
+   mutate(longitude = if_else(site_code == "BMSC2", -125.1987686, longitude))%>%
+  
+ mutate(latitude = if_else(site_code == "BMSC3", 48.85558319, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC3", -125.1837997, longitude))%>%
+  
+   mutate(latitude = if_else(site_code == "BMSC4", 48.81511688, latitude))%>%
+   mutate(longitude = if_else(site_code == "BMSC4", -125.1753311, longitude))%>%
+  
+ mutate(latitude = if_else(site_code == "BMSC5", 48.82733154, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC5", -125.1966019, longitude))%>%
+  
+   mutate(latitude = if_else(site_code == "BMSC6", 48.95023346, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC6", -125.1555481, longitude))%>%
+  
+  #  mutate(latitude = if_else(site_code == "BMSC7", 48.95023346, latitude))%>%
+# mutate(longitude = if_else(site_code == "BMSC7", -125.1555481, longitude))%>%
+  
+    mutate(latitude = if_else(site_code == "BMSC8", 48.95508194, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC8", -125.1533737, longitude))%>%
+  
+    mutate(latitude = if_else(site_code == "BMSC9", 48.83478928, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC9", -125.1470261, longitude))%>%
+  
+ mutate(latitude = if_else(site_code == "BMSC10", 48.87051773, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC10", -125.160347, longitude))%>%
+  
+ mutate(latitude = if_else(site_code == "BMSC11", 48.85746765, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC11", -125.1582336, longitude))%>%
+  
+  mutate(latitude = if_else(site_code == "BMSC12", 48.858284, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC12", -125.1609192, longitude))%>%
+  
+mutate(latitude = if_else(site_code == "BMSC13", 48.8650322, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC13", -125.3137207, longitude))%>%
+  
+mutate(latitude = if_else(site_code == "BMSC14", 48.87908173, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC14", -125.2974014, longitude))%>%
+  
+ mutate(latitude = if_else(site_code == "BMSC15", 48.88028336, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC15", -125.3128815, longitude))%>% 
+  
+ mutate(latitude = if_else(site_code == "BMSC16", 48.89070129, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC16", -125.300499, longitude))%>% 
+  
+ mutate(latitude = if_else(site_code == "BMSC17", 48.86548233, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC17", -125.3614807, longitude))%>% 
+  
+mutate(latitude = if_else(site_code == "BMSC18", 48.91161728, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC18", -125.2670364, longitude))%>% 
+  
+ mutate(latitude = if_else(site_code == "BMSC19", 48.82860184, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC19", -125.2212982, longitude))%>%  
+  
+ mutate(latitude = if_else(site_code == "BMSC20", 48.83566666, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC20", -125.214798, longitude))%>%  
+  
+mutate(latitude = if_else(site_code == "BMSC21", 48.85205078, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC21", -125.1235657, longitude))%>%    
+  
+ mutate(latitude = if_else(site_code == "BMSC22", 48.85426712, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC22", -125.1170349, longitude))%>%    
+  
+  mutate(latitude = if_else(site_code == "BMSC23", 48.837589, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC23", -125.144145, longitude))%>%     
+  
+    mutate(latitude = if_else(site_code == "BMSC24", 48.916073, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC24", -125.131174, longitude))%>%
+  
+     mutate(latitude = if_else(site_code == "BMSC24", 48.916073, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC24", -125.131174, longitude))%>%
+  
+      mutate(latitude = if_else(site_code == "BMSC25", 48.838595, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC25", -125.135015, longitude))%>% 
+  
+        mutate(latitude = if_else(site_code == "BMSC26", 48.9071, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC26", -125.037017, longitude))%>% 
 ```
 
 
