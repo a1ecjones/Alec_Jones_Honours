@@ -54,7 +54,7 @@ invert_data_final_clean <- invert_data_clean%>%
 ```
 
 ```{r Correcting the lat and long to be correct}
-invert_data_final_clean <- invert_data_final_clean%>%
+invert_data_final_clean_updated_lat_long <- invert_data_final_clean%>%
  mutate(latitude = if_else(site_code == "BMSC1", 48.82894897, latitude))%>%
  mutate(longitude = if_else(site_code == "BMSC1", -125.1975708, longitude))%>%
   
@@ -73,8 +73,8 @@ invert_data_final_clean <- invert_data_final_clean%>%
    mutate(latitude = if_else(site_code == "BMSC6", 48.95023346, latitude))%>%
  mutate(longitude = if_else(site_code == "BMSC6", -125.1555481, longitude))%>%
   
-  #  mutate(latitude = if_else(site_code == "BMSC7", 48.95023346, latitude))%>%
-# mutate(longitude = if_else(site_code == "BMSC7", -125.1555481, longitude))%>%
+  mutate(latitude = if_else(site_code == "BMSC7", 48.954644, latitude))%>%
+  mutate(longitude = if_else(site_code == "BMSC7", -125.153993, longitude))%>%
   
     mutate(latitude = if_else(site_code == "BMSC8", 48.95508194, latitude))%>%
  mutate(longitude = if_else(site_code == "BMSC8", -125.1533737, longitude))%>%
@@ -135,6 +135,10 @@ mutate(latitude = if_else(site_code == "BMSC21", 48.85205078, latitude))%>%
   
         mutate(latitude = if_else(site_code == "BMSC26", 48.9071, latitude))%>%
  mutate(longitude = if_else(site_code == "BMSC26", -125.037017, longitude))%>% 
+  
+     mutate(latitude = if_else(site_code == "BMSC27", 48.901183, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC27", -125.060433, longitude))
+  
 ```
 
 
@@ -301,7 +305,7 @@ long_min = min(urch_sn_ratio_RLS$longitude) - 0.01
 long_max = max(urch_sn_ratio_RLS$longitude) + 0.01
 
 lat_min_launch = min(urch_sn_ratio_RLS$latitude) - 0.01
-lat_max_launch = max(urch_sn_ratio_RLS$latitude) + 0.05
+lat_max_launch = max(urch_sn_ratio_RLS$latitude) + 0.06
 
 long_min_launch = min(urch_sn_ratio_RLS$longitude) - 0.2
 long_max_launch = max(urch_sn_ratio_RLS$longitude) + 0.1
@@ -1074,27 +1078,27 @@ Add in the proper lat and long for each of the sites
 ###Calculating fetch for each of the sites
 ```{r Making a df of the site coordinates and adjusting the coordinates of sites on land}
 site_coordinates_corrected <- site_map_data%>%
-  select(c(latitude, longitude))%>%
- mutate(latitude = if_else(row_number() == 7, 48.869, latitude))%>%
- mutate(longitude = if_else(row_number() == 7, -125.319, longitude))%>%
-      mutate(latitude = if_else(row_number() == 9, 48.88, latitude))%>%
-      mutate(longitude = if_else(row_number() == 9, -125.312, longitude))%>%
-  mutate(latitude = if_else(row_number() == 12, 48.911, latitude))%>%
-  mutate(longitude = if_else(row_number() == 12, -125.270, longitude))%>%
-     mutate(latitude = if_else(row_number() == 14, 48.851, latitude))%>%
-     mutate(longitude = if_else(row_number() == 14, -125.199, longitude))%>%
-  mutate(latitude = if_else(row_number() == 24, 48.829, latitude))%>%
-  mutate(longitude = if_else(row_number() == 24, -125.19, longitude))%>%
-     mutate(latitude = if_else(row_number() == 32, 48.831, latitude))%>%
-     mutate(longitude = if_else(row_number() == 32, -125.152, longitude))
+  select(c(latitude, longitude))
+ #mutate(latitude = if_else(row_number() == 7, 48.869, latitude))%>%
+# mutate(longitude = if_else(row_number() == 7, -125.319, longitude))%>%
+ #     mutate(latitude = if_else(row_number() == 9, 48.88, latitude))%>%
+  #    mutate(longitude = if_else(row_number() == 9, -125.312, longitude))%>%
+  #mutate(latitude = if_else(row_number() == 12, 48.911, latitude))%>%
+  #mutate(longitude = if_else(row_number() == 12, -125.270, longitude))%>%
+   #  mutate(latitude = if_else(row_number() == 14, 48.851, latitude))%>%
+    # mutate(longitude = if_else(row_number() == 14, -125.199, longitude))%>%
+#  mutate(latitude = if_else(row_number() == 24, 48.829, latitude))%>%
+ # mutate(longitude = if_else(row_number() == 24, -125.19, longitude))%>%
+  #   mutate(latitude = if_else(row_number() == 32, 48.831, latitude))%>%
+   #  mutate(longitude = if_else(row_number() == 32, -125.152, longitude))
 ```
 
-Sites 7, 9, 12, 14, 24, 32 need to be shifted
+Sites 3, 13, 14, 15, 16, 24, 27, 29, 32 need to be shifted
 
 
 ```{r Converting site coordinates into spatial points file type}
 site_sp <- st_as_sf(site_coordinates_corrected, coords = c("longitude", "latitude"), crs = 4326)
-bearings <- seq(1, 360, by = 1)
+bearings <- seq(1, 1, by = 1)
 ```
 
 ```{r Calculating the fetch for the points}
