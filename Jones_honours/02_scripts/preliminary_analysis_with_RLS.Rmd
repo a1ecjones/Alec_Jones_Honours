@@ -176,7 +176,7 @@ invert_data_final_clean <- invert_data_final_clean%>%
 
 
 ```{r removing other species and calculating urchin ratio}
- urch_sn_ratio_RLS <- invert_data_final_clean%>%
+ urch_sn_ratio_RLS <- invert_data_final_clean_updated_lat_long%>%
   pivot_wider(names_from = reporting_name, values_from = species_total)%>%
   mutate(Urchins = `Mesocentrotus franciscanus`,
          Turban_Snails = `Pomaulax gibberosus`)%>%
@@ -348,6 +348,7 @@ geom_label_repel(
   ))
 ```
 
+
 ```{r Making the map with the site codes, fig.width=7.5, fig.height=5.5}
 (RLS_site_code_map <- ggplot()+
     geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
@@ -431,7 +432,7 @@ launch_df <- tibble(launch_long, launch_lat, names)
            ylim = c(lat_min, lat_max)) +
   geom_point(data = urch_sn_ratio_RLS%>%
                filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
-             size = 3,) + 
+             size = 3) + 
   geom_point(data = urch_sn_ratio_RLS%>%
                filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
              shape = 1, size = 3,colour = "black")+
@@ -446,6 +447,7 @@ launch_df <- tibble(launch_long, launch_lat, names)
     style = north_arrow_fancy_orienteering
   ) +
   annotation_scale(location = "br"))
+
 ```
 
 ```{r Making the plot with the urch to sn ratio on the map 2022}
@@ -1229,6 +1231,37 @@ test_fetch_2024_all_sites_plot
 
 dev.off()
 ```
+
+
+###2024 urch sn ratio plot
+
+need to separate the sites because there are multiple sites that were sampled twice at different depths so they are covering
+each other
+```{r Making the plot with the urch to sn ratio on the map 2024}
+(urch_sn_ratio_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_RLS_2024%>%
+               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
+             size = 3,) + 
+  geom_point(data = urch_sn_ratio_RLS_2024%>%
+               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
+             shape = 1, size = 3,colour = "black")+
+  scale_color_viridis_c() +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", color = " Log Urchin to Snail Ratio") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+
+```
+
 
 ##Making plots for the presentation
 ```{r}
