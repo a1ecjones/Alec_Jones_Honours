@@ -301,11 +301,11 @@ st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 
 ```{r Making the range for the map}
 #first need to specify the range of the map
-lat_min = min(urch_sn_ratio_RLS$latitude) - 0.01
-lat_max = max(urch_sn_ratio_RLS$latitude) + 0.01
+lat_min = min(urch_sn_ratio_RLS$latitude) - 0.05
+lat_max = max(urch_sn_ratio_RLS$latitude) + 0.05
 
-long_min = min(urch_sn_ratio_RLS$longitude) - 0.01
-long_max = max(urch_sn_ratio_RLS$longitude) + 0.01
+long_min = min(urch_sn_ratio_RLS$longitude) - 0.05
+long_max = max(urch_sn_ratio_RLS$longitude) + 0.05
 
 lat_min_launch = min(urch_sn_ratio_RLS$latitude) - 0.01
 lat_max_launch = max(urch_sn_ratio_RLS$latitude) + 0.06
@@ -1183,7 +1183,10 @@ fetch_df_2024 <- as.data.frame(fetch_df_2024)
 
 fetch_df_2024$site_code <- site_code
 
-fetch_df_2024_final <- fetch_df_2024[, c(361, seq(1, 360, by = 1))]
+fetch_df_2024$latitude <- site_coordinates_corrected_2024$latitude
+fetch_df_2024$longitude <- site_coordinates_corrected_2024$longitude
+
+fetch_df_2024_final <- fetch_df_2024[, c(361, 362, 363, seq(1, 360, by = 1))]
 ```
 
 ```{r Converting the data into long format}
@@ -1194,6 +1197,7 @@ fetch_2024_long <- fetch_df_2024_final %>%
                names_prefix = "degree")       # Remove "degree" prefix from column names if needed
 
 ```
+
 
 ###Plotting the fetch for just one site as a test
 ```{r}
@@ -1230,6 +1234,75 @@ png(filename = here("./04_plots/test_fetch_2024_all_sites_plot.png"), width = 15
 test_fetch_2024_all_sites_plot
 
 dev.off()
+```
+
+
+###Plotting the fetch for all of the sites in a way to better visualize where they are
+```{r Creating a function to make a fetch plot for each site}
+create_fetch_plot <- function(site_data, site_code) {
+  ggplot(site_data, aes(x = as.numeric(degree), y = fetch,
+                            fill = fetch)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(start = 0) +
+  scale_x_continuous(limits = c(0, 360), breaks = seq(0, 360, by = 45)) +
+  scale_fill_viridis_c()+
+  theme_void()+
+  ggtitle(site_code)
+}
+```
+
+
+```{r Extracting the plots for each individual site}
+site_codes <- unique(fetch_2024_long$site_code) #extracting a list of unique site codes
+
+#Create a named list of fetch plots for each site
+fetch_plots <- lapply(site_codes, function(site) {
+  #filter fetch_2024_long to get data for this specific site
+  site_data <- fetch_2024_long%>%
+    filter(site_code == site)
+  
+  #call the function to create the fetch plot for this site
+  create_fetch_plot(site_data, site)
+})
+
+names(fetch_plots) <- site_codes
+```
+
+
+```{r Making the base map plot}
+(map_plot <- ggplot() +
+  geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey") +
+  coord_sf(xlim = c(long_min, long_max), ylim = c(lat_min, lat_max)) +
+  labs(x = "Longitude", y = "Latitude")+
+   theme.figure()+
+     scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+     annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+
+```
+
+
+```{r Looping through to embed each site plot on the map}
+for (site in site_codes) {
+  site_coords_for_plot <- site_coordinates_corrected_2024 %>% 
+    filter(site_code == site) %>% 
+    select(longitude, latitude)
+
+map_plot <- map_plot +
+    annotation_custom(grob = ggplotGrob(fetch_plots[[site]]),  # Convert the plot to a grob
+                      xmin = site_coords_for_plot$longitude - 0.02,     # Adjust xmin/xmax and ymin/ymax for size
+                      xmax = site_coords_for_plot$longitude + 0.02,
+                      ymin = site_coords_for_plot$latitude - 0.02,
+                      ymax = site_coords_for_plot$latitude + 0.02)
+}
+
+# Print the final map with embedded plots
+map_plot
 ```
 
 
