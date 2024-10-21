@@ -223,8 +223,8 @@ rockfish_total_data <- rockfish_data%>%
 
 
 
-##Making some visualizations of the urch_sn ratio and correlation between urch and sn
 
+##Making a theme for all subsequent figures
 ```{r Making theme for all subsequent figures}
 theme.figure <- function (){
   theme_bw(base_size = 12) +
@@ -239,6 +239,7 @@ theme.figure <- function (){
 
 ```
 
+##Making some visualizations of the urch_sn ratio and correlation between urch and sn
 ###Overall across years
 ```{r Plotting urch against sn overall and colouring by year}
 (urch_sn_plot <- ggplot(urch_sn_ratio_RLS, aes(x = Turban_Snails, y = Urchins,
@@ -1203,9 +1204,9 @@ fetch_2024_long <- fetch_df_2024_final %>%
 ```{r}
 ggplot(fetch_2024_long %>% filter(site_code == "BMSC1"), aes(x = as.numeric(degree), y = fetch,
                                                              fill = fetch)) +
-  geom_bar(stat = "identity", width = 1) +
+  geom_bar(stat = "identity", position = "identity") +
   coord_polar(start = 0) +  # Convert to polar coordinates
-  scale_x_continuous(limits = c(0, 360), breaks = seq(0, 360, by = 45)) +  # Optional: Compass degree labels
+  scale_x_continuous(limits = c(0, 360.5), breaks = seq(45, 360, by = 45)) +  # Optional: Compass degree labels
   scale_fill_viridis_c() +
   labs(title = "Fetch Plot for BMSC1", x = "Compass Degrees", y = "Fetch (m)") +
   theme_minimal()
@@ -1218,7 +1219,7 @@ ggplot(fetch_2024_long %>% filter(site_code == "BMSC1"), aes(x = as.numeric(degr
                             fill = fetch)) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar(start = 0) +
-  scale_x_continuous(limits = c(0, 360), breaks = seq(0, 360, by = 45)) +
+  scale_x_continuous(limits = c(0, 360.5), breaks = seq(45, 360, by = 45)) +
   scale_fill_viridis_c()+
   labs(title = "Fetch Plot for All Sites", x = "Compass Degrees", y = "Fetch (m)",
        fill = "Fetch (m)") +
@@ -1241,12 +1242,13 @@ dev.off()
 ```{r Creating a function to make a fetch plot for each site}
 create_fetch_plot <- function(site_data, site_code) {
   ggplot(site_data, aes(x = as.numeric(degree), y = fetch,
-                            fill = fetch)) +
+                        fill = fetch)) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar(start = 0) +
-  scale_x_continuous(limits = c(0, 360), breaks = seq(0, 360, by = 45)) +
+  scale_x_continuous(limits = c(0, 360.5), breaks = seq(45, 360, by = 45)) +
   scale_fill_viridis_c()+
-  theme_void()+
+  theme_minimal()+
+    theme(legend.position = "none")
   ggtitle(site_code)
 }
 ```
@@ -1287,23 +1289,56 @@ names(fetch_plots) <- site_codes
 ```
 
 
-```{r Looping through to embed each site plot on the map}
-for (site in site_codes) {
-  site_coords_for_plot <- site_coordinates_corrected_2024 %>% 
-    filter(site_code == site) %>% 
-    select(longitude, latitude)
+```{r Making the plot with all of the fetch plots on the map}
+fetch_plots <- list()
 
-map_plot <- map_plot +
-    annotation_custom(grob = ggplotGrob(fetch_plots[[site]]),  # Convert the plot to a grob
-                      xmin = site_coords_for_plot$longitude - 0.02,     # Adjust xmin/xmax and ymin/ymax for size
-                      xmax = site_coords_for_plot$longitude + 0.02,
-                      ymin = site_coords_for_plot$latitude - 0.02,
-                      ymax = site_coords_for_plot$latitude + 0.02)
+# Example for generating fetch plots for each site
+for (site in unique(fetch_2024_long$site_code)) {
+  print(paste("Processing site:", site))
+  
+  site_data <- fetch_2024_long%>%
+    filter(site_code == site)
+  
+ fetch_plot <- ggplot(site_data, 
+                      aes(x = as.numeric(degree), y = fetch)) +
+  geom_bar(stat = "identity", width = 0.9, position = "identity") +
+  coord_polar(start = 0) +  # Convert to polar coordinates
+  scale_x_continuous(limits = c(0, 360.5), breaks = seq(45, 360, by = 45)) +  # Optional: Compass degree labels
+  #scale_fill_viridis_c() +
+  labs(title = paste("Fetch for", site)) +
+  theme_minimal()
+  
+  # Store the plot in the list
+  fetch_plots[[site]] <- fetch_plot
 }
 
-# Print the final map with embedded plots
-map_plot
+# Overlay each fetch plot on the main map
+for (site in names(fetch_plots)) {
+      print(fetch_plots[[site]]) 
+  longitude <- fetch_2024_long$longitude[fetch_2024_long$site_code == site][1]  # Example to get the longitude
+  latitude <- fetch_2024_long$latitude[fetch_2024_long$site_code == site][1]    # Example to get the latitude
+  
+  map_plot <- map_plot + 
+    annotation_custom(
+      ggplotGrob(fetch_plots[[site]]),
+      xmin = longitude - 0.01,  # Adjust as needed for spacing
+      xmax = longitude + 0.01,
+      ymin = latitude - 0.01,
+      ymax = latitude + 0.01
+    )
+}
 ```
+
+```{r, fig.width=20, fig.height=20}
+# Finalize and display the combined plot
+print(map_plot)
+```
+
+```{r}
+map_plot1 <- map_plot+
+  geom_boxplot()
+```
+
 
 
 ###2024 urch sn ratio plot
