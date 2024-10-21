@@ -1334,11 +1334,6 @@ for (site in names(fetch_plots)) {
 print(map_plot)
 ```
 
-```{r}
-map_plot1 <- map_plot+
-  geom_boxplot()
-```
-
 
 
 ###2024 urch sn ratio plot
