@@ -319,7 +319,7 @@ long_max_launch = max(urch_sn_ratio_RLS$longitude) + 0.1
 ###Making a site map
 
 ```{r Making a df with just one of each site}
-site_map_data <- invert_data_final_clean%>%
+site_map_data <- invert_data_final_clean_updated_lat_long%>%
   distinct(site_code, site_name, latitude, longitude)
 ```
 
@@ -1271,6 +1271,9 @@ names(fetch_plots) <- site_codes
 ```
 
 
+####Making the base map and site code map
+
+#####Base map
 ```{r Making the base map plot}
 (map_plot <- ggplot() +
   geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey") +
@@ -1287,6 +1290,122 @@ names(fetch_plots) <- site_codes
   annotation_scale(location = "br"))
 
 ```
+
+
+```{r Saving the base map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/base_map_plot.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+map_plot
+
+dev.off()
+```
+
+
+#####Site code map
+
+#####Making data frame with just one site for each site
+```{r}
+site_data_2024_final <- site_data_2024%>%
+  ungroup%>%
+  select(site_code, latitude, longitude)%>%
+  distinct()
+
+```
+
+
+
+```{r Making the map with the site codes 2024, fig.width=7.5, fig.height=5.5}
+(RLS_site_code_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  labs(x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  )+
+geom_label(
+    data = site_data_2024_final, 
+    mapping = aes(x = longitude, y = latitude, label = site_code), 
+    size = 2
+   # box.padding = 0.35,  # Add padding between labels and points
+  #  point.padding = 0.5, # Add padding between points and text
+   # segment.color = 'grey50', # Line from label to point
+   # max.overlaps = 15      # Adjust maximum number of overlaps
+  ))
+```
+
+#####Saving the 2024 site code map
+
+```{r Saving the base map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/RLS_site_code_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+RLS_site_code_map_2024
+
+dev.off()
+```
+
+####Making the combined plot with the fetch plots on the map
+
+#####Making all the individual fetch plots
+```{r}
+
+fetch_plots <- list()
+
+# Example for generating fetch plots for each site
+for (site in unique(fetch_2024_long$site_code)) {
+  
+  site_data <- fetch_2024_long%>%
+    filter(site_code == site)
+  
+ fetch_plot <- ggplot(site_data, 
+                      aes(x = as.numeric(degree), y = fetch)) +
+  geom_bar(stat = "identity", width = 1, position = "identity", fill = "#3CBB75FF") +
+  coord_polar(start = 0) +  # Convert to polar coordinates
+  scale_x_continuous(limits = c(0, 360.5), breaks = seq(45, 360, by = 45)) +  # Optional: Compass degree labels
+  #scale_fill_viridis_c() +
+  #labs(title = paste("Fetch for", site)) +
+  theme_minimal() +
+   theme(axis.title.y = element_blank(),
+         axis.title.x = element_blank(),  # Remove x-axis label (degrees)
+      axis.text.x = element_blank(),   # Remove x-axis text
+      axis.text.y = element_blank(),   # Remove y-axis text
+      axis.ticks.x = element_blank(),  # Remove x-axis ticks
+      axis.ticks.y = element_blank()   # Remove y-axis ticks
+    )
+  
+  
+  # Store the plot in the list
+  fetch_plots[[site]] <- fetch_plot
+}
+
+print(fetch_plots[[site]])
+
+# Loop through each site and save the plot
+for (site in names(fetch_plots)) {
+  # Generate the file name based on the site name
+  file_name <- paste0("fetch_plot_", site, ".png")  # You can change the file format to .pdf or .jpeg if needed
+  
+  # Save the plot for each site
+  ggsave(filename = file_name, 
+         plot = fetch_plots[[site]],  # The plot to save
+         path = here("./04_plots"),
+         width = 6, height = 6,  # Adjust the size of the saved plot
+         units = "in",  # Size units (inches in this case)
+         dpi = 300)  # Adjust the resolution
+}
+```
+
+
+
+
+
 
 
 ```{r Making the plot with all of the fetch plots on the map}
