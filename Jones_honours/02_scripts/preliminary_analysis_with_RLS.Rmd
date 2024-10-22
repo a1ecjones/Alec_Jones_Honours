@@ -1164,6 +1164,9 @@ site_coordinates_corrected_2024 <- site_coords_2024%>%
 
 ###Setup for using the waver package
 
+
+
+
 ```{r Converting site coordinates into spatial points file type 2024}
 site_sp_2024 <- st_as_sf(site_coordinates_corrected_2024, coords = c("longitude", "latitude"), crs = 4326)
 bearings <- seq(1, 360, by = 1)
@@ -1455,18 +1458,18 @@ print(map_plot)
 
 
 
-###2024 urch sn ratio plot
+##2024 urch sn ratio plot
 
 need to separate the sites because there are multiple sites that were sampled twice at different depths so they are covering
 each other
-```{r Making the plot with the urch to sn ratio on the map 2024}
+```{r Making the plot with the urch to sn ratio on the map 2024, fig.height= 12, fig.width= 10}
 (urch_sn_ratio_map_2024 <- ggplot()+
     geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
-  geom_point(data = urch_sn_ratio_RLS_2024%>%
+  geom_jitter(data = urch_sn_ratio_RLS_2024%>%
                filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
-             size = 3,) + 
+             size = 3, height = 0.005, width = 0.005) + 
   geom_point(data = urch_sn_ratio_RLS_2024%>%
                filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
              shape = 1, size = 3,colour = "black")+
