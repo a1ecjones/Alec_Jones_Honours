@@ -1096,7 +1096,7 @@ RLS_data_2024_clean <- RLS_data_2024%>%
          hour = Time,
          total = Total)%>%
    mutate_at(factor_cols, factor)%>%
-   mutate(longitude = if_else(site_code == "BMSC2", -125.19876860, longitude))%>%
+   mutate(longitude = if_else(site_code == "BMSC2", -125.19876860, longitude))%>% # one point at kirby had the lat for both lat and long
    group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
            visibility, hour, Code)%>%
   summarise(species_total = sum(total))
@@ -1110,8 +1110,11 @@ RLS_data_2024_clean <- RLS_data_2024%>%
   select(site_code, site_name, latitude, longitude, survey_date, depth, 
            visibility, hour, Urchins, Turban_Snails)%>%
   replace(is.na(.), 0)%>%
-  mutate(urch_sn_ratio = log10((Urchins +1) / (Turban_Snails + 1)))%>%
-  mutate(survey_date = dmy(survey_date))
+  mutate(urch_sn_ratio = log10((Urchins +1) / (Turban_Snails + 1)),
+         survey_date = dmy(survey_date),
+         stand_urchins = Urchins / 709,
+         stand_snails = Turban_Snails / 645,
+         std_urch_sn_ratio = log((stand_urchins + 0.1) / (stand_snails + 0.1)))
 ```
 
 
@@ -1468,13 +1471,10 @@ each other
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
   geom_jitter(data = urch_sn_ratio_RLS_2024%>%
-               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
-             size = 3, height = 0.005, width = 0.005) + 
-  geom_point(data = urch_sn_ratio_RLS_2024%>%
-               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
-             shape = 1, size = 3,colour = "black")+
-  scale_color_viridis_c() +
-  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", color = " Log Urchin to Snail Ratio") +
+               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, fill = urch_sn_ratio), 
+              shape = 21, size = 3, height = 0.005, width = 0.005) + 
+  scale_fill_viridis_c() +
+  labs(title = "2024 Jittered Points", x = " \nLongitude", y = "Latitude\n ", fill = " Log Urchin to Snail Ratio") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -1484,7 +1484,177 @@ each other
     style = north_arrow_fancy_orienteering
   ) +
   annotation_scale(location = "br"))
+```
 
+```{r Making the plot with the standardized urch to sn ratio on the map in 2024, fig.height= 12, fig.width= 10}
+(stand_urch_sn_ratio_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_jitter(data = urch_sn_ratio_RLS_2024%>%
+               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, fill = std_urch_sn_ratio), 
+              shape = 21, size = 3, height = 0.005, width = 0.005) + 
+  scale_fill_viridis_c() +
+  labs(title = "2024 Jittered Points", x = " \nLongitude", y = "Latitude\n ", fill = "Log St. Urchin to Snail Ratio") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+
+###Saving the 2024 urch sn ratio plot
+```{r Saving the 2024 urch sn ratio plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/urch_sn_ratio_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_sn_ratio_map_2024
+
+dev.off()
+```
+
+```{r Saving the 2024 urch sn ratio plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/stand_urch_sn_ratio_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+stand_urch_sn_ratio_map_2024
+
+dev.off()
+```
+
+##Urchin and snail counts plots 2024
+
+###Urchin plots
+```{r Making the plot with the urch counts on the map 2024, fig.height= 12, fig.width= 10}
+(urch_count_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_jitter(data = urch_sn_ratio_RLS_2024%>%
+               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, fill = Urchins), 
+              shape = 21, size = 3, height = 0.005, width = 0.005) + 
+  scale_fill_viridis_c() +
+  labs(title = "2024 Jittered Points", x = " \nLongitude", y = "Latitude\n ", fill = " Urchin Counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+
+```{r Making the plot with the standardized urch counts on the map 2024, fig.height= 12, fig.width= 10}
+(stand_urch_count_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_jitter(data = urch_sn_ratio_RLS_2024%>%
+               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, fill = stand_urchins), 
+              shape = 21, size = 3, height = 0.005, width = 0.005) + 
+  scale_fill_viridis_c() +
+  labs(title = "2024 Jittered Points", x = " \nLongitude", y = "Latitude\n ", fill = " Standardized Urchin Counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+
+####Saving the urchin counts plots
+```{r Saving the urchin counts plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/urch_count_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_count_map_2024
+
+dev.off()
+```
+
+```{r Saving the standardized urchin counts plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/stand_urch_count_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+stand_urch_count_map_2024
+
+dev.off()
+```
+
+###Snail plots
+
+```{r Making the plot with the snail counts on the map 2024, fig.height= 12, fig.width= 10}
+(snail_count_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_jitter(data = urch_sn_ratio_RLS_2024%>%
+               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, fill = Turban_Snails), 
+              shape = 21, size = 3, height = 0.005, width = 0.005) + 
+  scale_fill_viridis_c() +
+  labs(title = "2024 Jittered Points", x = " \nLongitude", y = "Latitude\n ", fill = " Turban Snail Counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+
+```{r Making the plot with the standardized snail counts on the map 2024, fig.height= 12, fig.width= 10}
+(stand_snail_count_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_jitter(data = urch_sn_ratio_RLS_2024%>%
+               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, fill = stand_snails), 
+              shape = 21, size = 3, height = 0.005, width = 0.005) + 
+  scale_fill_viridis_c() +
+  labs(title = "2024 Jittered Points", x = " \nLongitude", y = "Latitude\n ", fill = " Standardized Turban Snail Counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+####Saving the snail counts plot
+```{r Saving the snail counts plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/snail_count_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+snail_count_map_2024
+
+dev.off()
+```
+
+```{r Saving the standardized snail counts plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/stand_snail_count_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+stand_snail_count_map_2024
+
+dev.off()
 ```
 
 
