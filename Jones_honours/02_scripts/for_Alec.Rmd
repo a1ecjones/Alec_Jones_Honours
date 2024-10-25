@@ -1,0 +1,167 @@
+---
+title: "For Alec"
+author: "Dom"
+date: "2024-10-23"
+output: html_document
+---
+### Monthly averages from 1993 to 2020
+
+Downloaded from [Copernicus](https://resources.marine.copernicus.eu/product-download/GLOBAL_MULTIYEAR_BGC_001_029) with parameters:
+
+  * Whole Available Region
+  
+  * Time Range 1993-2020
+  
+  * Depth: 
+  
+    - Default = Surface
+  
+  * Environmental Variables:
+  
+    - NO3 - Nitrate (mmol m-3)
+    
+    - PO4 - Phosphate (mmol m-3)
+    
+
+Downloaded from [Copernicus](https://resources.marine.copernicus.eu/product-download/GLOBAL_MULTIYEAR_PHY_001_030) with parameters:
+
+  * Whole Available Region
+  
+  * Time Range 1993-2020
+  
+  * Depth: 
+  
+    - Default = Surface
+  
+  * Environmental Variables:
+  
+    - thetao - Temperature (&deg; C)
+
+```{r load environmental data monthly averages, include= FALSE}
+library(raster)
+library(ncdf4)
+
+#Combining the Nitrate data
+# nitrate_before2001 <- brick(here::here("Data/new_monthly_nutrients", "nitrate_before2001.nc"))
+# crs(nitrate_before2001) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# nitrate_after2000 <- brick(here::here("Data/new_monthly_nutrients", "nitrate_after2000.nc"))
+# crs(nitrate_after2000) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# nitrate_monthly <- brick(stack(nitrate_before2001, nitrate_after2000))
+# names(nitrate_monthly) <- gsub('.{12}$', '', names(nitrate_monthly))
+
+# writeRaster(nitrate_monthly, filename = here::here("Data/new_monthly_nutrients", "NP_nitrate_monthly.grd"), format = "raster", overwrite = TRUE)
+
+nitrate_monthly <- brick(here::here("Data/new_monthly_nutrients", "NP_nitrate_monthly.grd"))
+
+
+#Combining the Phosphate data
+# phosphate_before2001 <- brick(here::here("Data/new_monthly_nutrients", "phosphate_before2001.nc"))
+# crs(phosphate_before2001) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# phosphate_after2000 <- brick(here::here("Data/new_monthly_nutrients", "phosphate_after2000.nc"))
+# crs(phosphate_after2000) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# phosphate_monthly <- brick(stack(phosphate_before2001, phosphate_after2000))
+# names(phosphate_monthly) <- gsub('.{12}$', '', names(phosphate_monthly))
+
+# writeRaster(phosphate_monthly, filename = here::here("Data/new_monthly_nutrients", "NP_phosphate_monthly.grd"), format = "raster", overwrite = TRUE)
+
+phosphate_monthly <- brick(here::here("Data/new_monthly_nutrients", "NP_phosphate_monthly.grd"))
+
+
+#combine the two to make the ratio
+#Before2001
+# for(i in 1:dim(nitrate_before2001)[3]){
+# 
+#   if(i == 1){
+#     ratio_monthly_before2001 <- brick(nitrate_before2001[[i]]/phosphate_before2001[[i]])
+#     names(ratio_monthly_before2001) <- gsub('.{12}$', '', names(nitrate_before2001[[i]]))
+#   }
+# 
+#   if(i != 1){
+#   ratio_monthly_before2001 <- brick(stack(ratio_monthly_before2001, nitrate_before2001[[i]]/phosphate_before2001[[i]]))
+#   names(ratio_monthly_before2001)[i] <- gsub('.{12}$', '', names(nitrate_before2001[[i]]))
+#   }
+# }
+# crs(ratio_monthly_before2001) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# writeRaster(ratio_monthly_before2001, filename = here::here("Data/new_monthly_nutrients", "NP_ratio_monthly_before2001.grd"), format = "raster", overwrite = TRUE)
+
+
+#After2000
+# for(i in 1:dim(nitrate_after2000)[3]){
+# 
+#   if(i == 1){
+#     ratio_monthly_after2000 <- brick(nitrate_after2000[[i]]/phosphate_after2000[[i]])
+#     names(ratio_monthly_after2000) <- gsub('.{12}$', '', names(nitrate_after2000[[i]]))
+#   }
+# 
+#   if(i != 1){
+#   ratio_monthly_after2000 <- brick(stack(ratio_monthly_after2000, nitrate_after2000[[i]]/phosphate_after2000[[i]]))
+#   names(ratio_monthly_after2000)[i] <- gsub('.{12}$', '', names(nitrate_after2000[[i]]))
+#   }
+# }
+# 
+# writeRaster(ratio_monthly_after2000, filename = here::here("Data/new_monthly_nutrients", "NP_ratio_monthly_after2000.grd"), format = "raster", overwrite = TRUE)
+
+#Combining the ratio data
+# NP_ratio_monthly_before2001 <- brick(here::here("Data/new_monthly_nutrients", "NP_ratio_monthly_before2001.grd"))
+# crs(NP_ratio_monthly_before2001) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# NP_ratio_monthly_after2000 <- brick(here::here("Data/new_monthly_nutrients", "NP_ratio_monthly_after2000.grd"))
+# crs(NP_ratio_monthly_after2000) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# ratio_monthly <- brick(stack(NP_ratio_monthly_before2001, NP_ratio_monthly_after2000))
+# 
+# writeRaster(ratio_monthly, filename = here::here("Data/new_monthly_nutrients", "NP_ratio_monthly.grd"), format = "raster", overwrite = TRUE)
+
+ratio_monthly <- brick(here::here("Data/new_monthly_nutrients", "NP_ratio_monthly.grd"))
+
+
+# 
+# #Combining the Temperature data
+# temperature_1993_1995 <- brick(here::here("Data/new_monthly_nutrients/Temperature", "1993_1995.nc"))
+# crs(temperature_1993_1995) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+
+library(here)
+
+temp_2023_2024 <- brick(here("./01_raw_data/cmems_mod_glo_phy_myint_0.083deg_P1M-m_1729894830322.nc"))
+crs(temp_2023_2024) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+
+plot(temp_2023_2024)
+
+# temperature_1996_1998 <- brick(here::here("Data/new_monthly_nutrients/Temperature", "1996_1998.nc"))
+# crs(temperature_1996_1998) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# temperature_1999_2000 <- brick(here::here("Data/new_monthly_nutrients/Temperature", "1999_2000.nc"))
+# crs(temperature_1999_2000) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# temperature_2001_2003 <- brick(here::here("Data/new_monthly_nutrients/Temperature", "2001_2003.nc"))
+# crs(temperature_2001_2003) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# temperature_2004_2007 <- brick(here::here("Data/new_monthly_nutrients/Temperature", "2004_2007.nc"))
+# crs(temperature_2004_2007) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# temperature_2008_2010 <- brick(here::here("Data/new_monthly_nutrients/Temperature", "2008_2010.nc"))
+# crs(temperature_2008_2010) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# temperature_2011_2013 <- brick(here::here("Data/new_monthly_nutrients/Temperature", "2011_2013.nc"))
+# crs(temperature_2011_2013) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# temperature_2014_2016 <- brick(here::here("Data/new_monthly_nutrients/Temperature", "2014_2016.nc"))
+# crs(temperature_2014_2016) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# temperature_2017_2020 <- brick(here::here("Data/new_monthly_nutrients/Temperature", "2017_2020.nc"))
+# crs(temperature_2017_2020) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+# 
+# temp_monthly <- brick(stack(temperature_1993_1995, temperature_1996_1998, temperature_1999_2000, temperature_2001_2003, temperature_2004_2007, temperature_2008_2010, temperature_2011_2013, temperature_2014_2016, temperature_2017_2020))
+# 
+# names(temp_monthly) <- gsub('.{12}$', '', names(temp_monthly))
+# # 
+# writeRaster(temp_monthly, filename = here::here("Data/new_monthly_nutrients", "NP_temp_monthly.grd"), format = "raster", overwrite = TRUE)
+
+temp_monthly <- brick(here::here("Data/new_monthly_nutrients", "NP_temp_monthly.grd"))
+
+```

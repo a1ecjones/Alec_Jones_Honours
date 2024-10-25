@@ -23,6 +23,7 @@ library(vcd)
 library(sp)
 library(viridisLite)
 library(dplyr)
+library(raster)
 ```
 
 #Preliminary analyses of the RLS data from Barkley Sound
@@ -773,33 +774,6 @@ launch_df <- tibble(launch_long, launch_lat, names)
   ) +
   annotation_scale(location = "br"))
 ```
-###Plotting the goby counts
-
-```{r Plotting the goby counts in 2021}
-(goby_fish_count_2021 <- ggplot()+
-    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
-    coord_sf(xlim = c(long_min, long_max),
-           ylim = c(lat_min, lat_max)) +
-  geom_point(data = fish_data_clean%>%
-               filter(reporting_name == "Rhinogobiops nicholsii",
-                      year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = species_total),
-             size = 3,) + 
-  geom_point(data = fish_data_clean%>%
-               filter(reporting_name == "Rhinogobiops nicholsii",
-                      year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = species_total),
-             shape = 1, size = 3,colour = "black")+
-  scale_color_viridis_c() +
-  labs(title = "2021", x = " \nLongitude", y = "Latitude\n ", color = "Blackeye goby counts") +
-  theme.figure() +
-  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
-  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
-  annotation_north_arrow(
-    location = "tr",
-    which_north = "true",
-    style = north_arrow_fancy_orienteering
-  ) +
-  annotation_scale(location = "br"))
-```
 
 
 ###Saving all of the figures so far
@@ -1086,6 +1060,7 @@ factor_cols <- c("site_code", "site_name", "Code")
 RLS_data_2024_clean <- RLS_data_2024%>%
   select(c(`Site No.`, `Site Name`, Latitude, Longitude, Date, vis, Time, Depth, Method, Block, Code, Species, Total))%>%
   na.omit()%>%
+  mutate(Code = str_to_lower(Code))%>%
   rename(site_code = `Site No.`,
          site_name = `Site Name`,
          latitude = Latitude,
@@ -1656,6 +1631,120 @@ stand_snail_count_map_2024
 
 dev.off()
 ```
+
+
+
+##Making plots with the gobies
+
+###Making a dataframe with the gobies
+```{r}
+goby_urch_sn_counts_2024 <- RLS_data_2024_clean%>%
+  pivot_wider(names_from = Code, values_from = species_total)%>%
+  mutate(Urchins = mfra,
+         Turban_Snails = pgi,
+         Goby = rni)%>%
+  select(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour, Urchins, Turban_Snails, Goby)%>%
+  replace(is.na(.), 0)%>%
+   mutate(sn_goby_ratio = log10((Turban_Snails +1) / (Goby + 1)))
+```
+
+
+###Goby Counts plot
+
+```{r Making the plot with the goby counts on the map 2024, fig.height= 12, fig.width= 10}
+(goby_count_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_jitter(data = goby_urch_sn_counts_2024, mapping = aes(x = longitude, y = latitude, fill = Goby), 
+              shape = 21, size = 3, height = 0.005, width = 0.005) + 
+  scale_fill_viridis_c() +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", fill = " Blackeye Goby Counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+###Plotting sn to goby ratio on map 2024
+```{r}
+(sn_goby_ratio_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_jitter(data = goby_urch_sn_counts_2024, mapping = aes(x = longitude, y = latitude, fill = sn_goby_ratio), 
+              shape = 21, size = 3, height = 0.005, width = 0.005) + 
+  scale_fill_viridis_c() +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", fill = " Log Snails to Goby Ratio") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+
+
+###Plotting goby counts vs snail counts
+```{r Goby counts against snail counts}
+(goby_vs_snail_counts_2024 <- ggplot(goby_urch_sn_counts_2024, aes(x = Goby, y = Turban_Snails))+
+   geom_point()+
+   theme.figure())
+```
+
+
+
+
+##Loading in the temperature data
+```{r Loading in the temp .nc file downloaded from Copernicus}
+temp_2023_2024 <- brick(here("./01_raw_data/cmems_mod_glo_phy_myint_0.083deg_P1M-m_1729894830322.nc"))
+crs(temp_2023_2024) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+```
+
+```{r Calculating the average temperature for each pixel}
+average_temperature <- calc(temp_2023_2024, fun = mean, na.rm = TRUE)
+
+writeRaster(average_temperature, 
+            here("./01_raw_data/average_temperature.nc"), 
+            format = "CDF", 
+            overwrite = TRUE)
+```
+
+```{r Checking output}
+avg_temp_check <- brick(here("./01_raw_data/average_temperature.nc"))
+plot(avg_temp_check) 
+```
+
+
+###Plotting the temp data onto the barkley sound map
+```{r Converting the raster to a data frame so ggplot can use it}
+avg_temp_df <- as.data.frame(average_temperature, xy = TRUE, na.rm = TRUE)
+colnames(avg_temp_df) <- c("longitude", "latitude", "average_temp")
+```
+
+```{r Making the combined plot}
+ggplot() +
+  geom_raster(data = avg_temp_df, aes(x = longitude, y = latitude, fill = average_temp)) +
+   geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  scale_fill_viridis_c(option = "C", name = "Avg Temperature (°C)") +  # Optional color scale
+  theme.figure() +
+  labs(title = "Average Temperature with Map Overlay",
+       x = "Longitude",
+       y = "Latitude")  # This ensures correct projection
+```
+
 
 
 ##Making plots for the presentation
