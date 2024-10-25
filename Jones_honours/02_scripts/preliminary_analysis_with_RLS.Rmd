@@ -24,6 +24,7 @@ library(sp)
 library(viridisLite)
 library(dplyr)
 library(raster)
+library(RColorBrewer)
 ```
 
 #Preliminary analyses of the RLS data from Barkley Sound
@@ -1448,7 +1449,13 @@ each other
   geom_jitter(data = urch_sn_ratio_RLS_2024%>%
                filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, fill = urch_sn_ratio), 
               shape = 21, size = 3, height = 0.005, width = 0.005) + 
-  scale_fill_viridis_c() +
+  #scale_fill_viridis_c() +
+  #scale_fill_gradient2(
+   # low = "blue",          # Color for negative values
+    #mid = "white",         # Color for zero
+    #high = "red",          # Color for positive values
+    #midpoint = 0           # Set the midpoint to zero
+  #) +
   labs(title = "2024 Jittered Points", x = " \nLongitude", y = "Latitude\n ", fill = " Log Urchin to Snail Ratio") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
