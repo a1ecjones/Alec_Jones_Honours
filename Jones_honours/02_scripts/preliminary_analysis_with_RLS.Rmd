@@ -1087,10 +1087,7 @@ RLS_data_2024_clean <- RLS_data_2024%>%
            visibility, hour, Urchins, Turban_Snails)%>%
   replace(is.na(.), 0)%>%
   mutate(urch_sn_ratio = log10((Urchins +1) / (Turban_Snails + 1)),
-         survey_date = dmy(survey_date),
-         stand_urchins = Urchins / 709,
-         stand_snails = Turban_Snails / 645,
-         std_urch_sn_ratio = log((stand_urchins + 0.1) / (stand_snails + 0.1)))
+         survey_date = dmy(survey_date))
 ```
 
 
@@ -1450,12 +1447,12 @@ each other
                filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, fill = urch_sn_ratio), 
               shape = 21, size = 3, height = 0.005, width = 0.005) + 
   #scale_fill_viridis_c() +
-  #scale_fill_gradient2(
-   # low = "blue",          # Color for negative values
-    #mid = "white",         # Color for zero
-    #high = "red",          # Color for positive values
-    #midpoint = 0           # Set the midpoint to zero
-  #) +
+  scale_fill_gradient2(
+    low = "blue",          # Color for negative values
+    mid = "white",         # Color for zero
+    high = "red",          # Color for positive values
+    midpoint = 0           # Set the midpoint to zero
+  ) +
   labs(title = "2024 Jittered Points", x = " \nLongitude", y = "Latitude\n ", fill = " Log Urchin to Snail Ratio") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
@@ -1762,6 +1759,66 @@ png(filename = here("./04_plots/avg_temp_map_2023_24.png"), width = 7.5, height 
     units = "in", pointsize = 15, res = 600)
 
 avg_temp_map_2023_24
+
+dev.off()
+```
+
+
+###Working with the gloabl fishing watch data
+```{r Loading in the global fishing watch data}
+#gfw_data_raw <- read_csv(here("./01_raw_data/public-global-fishing-effort-v3.0.csv"))
+
+gfw_data_clean <- gfw_data_raw%>%
+  select(-c(`Time Range`))%>%
+  rename(latitude = Lat,
+         longitude = Lon,
+         vessel_IDs = `Vessel IDs`,
+         app_fish_hrs = `Apparent Fishing Hours`)%>%
+  mutate(cell_lat_min = latitude - 0.005,
+         cell_lat_max = latitude + 0.005,
+         cell_long_min = longitude - 0.005,
+         cell_long_max = longitude + 0.005)
+  
+```
+
+
+```{r Converting the lat long min/maxes into polygons}
+gfw_data_clean_poly <- gfw_data_clean %>%
+  rowwise() %>%
+  mutate(
+    geometry = list(st_polygon(list(rbind(
+      c(cell_long_min, cell_lat_min),
+      c(cell_long_min, cell_lat_max),
+      c(cell_long_max, cell_lat_max),
+      c(cell_long_max, cell_lat_min),
+      c(cell_long_min, cell_lat_min)
+    ))))
+  ) %>%
+  ungroup() %>%
+  st_as_sf(crs = 4326)
+```
+
+
+```{r Plotting the apparent fishing hour data on the map}
+(app_fishing_hours_plot <- ggplot(gfw_data_clean_poly) +
+  geom_sf(aes(fill = app_fish_hrs)) +
+  scale_fill_gradient(low = "blue", high = "red")+
+   geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+  theme.figure() +
+  labs(fill = "Fishing Hours",
+       x = "Longitude",
+       y = "Latitude"))
+```
+
+
+
+```{r Saving the fishing hours plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/app_fishing_hours_plot.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+app_fishing_hours_plot
 
 dev.off()
 ```
