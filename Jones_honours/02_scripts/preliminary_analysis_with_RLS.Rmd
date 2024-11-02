@@ -1090,6 +1090,17 @@ RLS_data_2024_clean <- RLS_data_2024%>%
          survey_date = dmy(survey_date))
 ```
 
+```{r Making a data frame of urchin to all other macrofauna ratio}
+urch_all_ratio_RLS_2024 <- RLS_data_2024_clean%>%
+   pivot_wider(names_from = Code, values_from = species_total)%>%
+mutate(Urchins = mfra,
+      Turban_Snails = pgi)%>%
+ # select(site_code, site_name, latitude, longitude, survey_date, depth, 
+      #     visibility, hour, Urchins, Turban_Snails)%>%
+  replace(is.na(.), 0)%>%
+  mutate(urch_all_ratio = log10(Urchins + 1) / log10(sum()),
+         survey_date = dmy(survey_date))
+```
 
 ##2024 Wave exposure calculations
 
@@ -1486,6 +1497,10 @@ each other
   annotation_scale(location = "br"))
 ```
 
+```{r Making the plot of urchin to all other benthic macrofauna ratio}
+
+```
+
 
 ###Saving the 2024 urch sn ratio plot
 ```{r Saving the 2024 urch sn ratio plot, fig.width=7.5, fig.height=5.5, include=FALSE}
@@ -1709,7 +1724,9 @@ goby_urch_sn_counts_2024 <- RLS_data_2024_clean%>%
 
 
 
-##Loading in the temperature data
+##Working with temperature data
+
+###Loading in the temperature data
 ```{r Loading in the temp .nc file downloaded from Copernicus}
 temp_2023_2024 <- brick(here("./01_raw_data/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2_1730223986748.nc"))
 crs(temp_2023_2024) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
@@ -1764,7 +1781,7 @@ dev.off()
 ```
 
 
-###Working with the gloabl fishing watch data
+##Working with the gloabl fishing watch data
 ```{r Loading in the global fishing watch data}
 #gfw_data_raw <- read_csv(here("./01_raw_data/public-global-fishing-effort-v3.0.csv"))
 
