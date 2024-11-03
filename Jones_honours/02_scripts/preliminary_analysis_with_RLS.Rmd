@@ -33,6 +33,7 @@ conflict_prefer("filter", "dplyr")
 
 #Preliminary analyses of the RLS data from Barkley Sound
 
+#2023 Analyses
 ##Loading in the data and organizing it
 ```{r Setting up the here package}
 here::here()
@@ -151,19 +152,9 @@ mutate(latitude = if_else(site_code == "BMSC21", 48.85205078, latitude))%>%
 ```
 
 
-```{r Making a separate df for each year}
-invert_data_clean_2021 <- invert_data_final_clean%>%
-  filter(year(survey_date) == "2021")
-
-invert_data_clean_2022 <- invert_data_final_clean%>%
-  filter(year(survey_date) == "2022")
-
-invert_data_clean_2023 <- invert_data_final_clean%>%
-  filter(year(survey_date) == "2023")
-```
-
 ```{r Writing a .csv for the clean data with the counts of each species/transect}
-write_csv(invert_data_final_clean, here("./03_clean_data/invert_data_final_clean.csv"))
+write_csv(invert_data_final_clean_updated_lat_long,
+          here("./03_clean_data/invert_data_final_clean_updated_lat_long.csv"))
 ```
 
 
@@ -171,11 +162,11 @@ write_csv(invert_data_final_clean, here("./03_clean_data/invert_data_final_clean
 
 ##Calculating urch to sn ratio and getting rid of other species
 ```{r Loading in the new clean df and making sure the right columns are factors, include=FALSE}
-invert_data_final_clean <- read_csv(here("./03_clean_data/invert_data_final_clean.csv"))
+invert_data_final_clean_updated_lat_long <- read_csv(here("./03_clean_data/invert_data_final_clean_updated_lat_long.csv"))
 
 factor_cols <- c("site_code", "site_name", "reporting_name")
 
-invert_data_final_clean <- invert_data_final_clean%>%
+invert_data_final_clean_updated_lat_long <- invert_data_final_clean_updated_lat_long%>%
   mutate_at(factor_cols, factor)
 ```
 
@@ -190,59 +181,6 @@ invert_data_final_clean <- invert_data_final_clean%>%
            visibility, hour, Urchins, Turban_Snails)%>%
   replace(is.na(.), 0)%>%
   mutate(urch_sn_ratio = log10((Urchins +1) / (Turban_Snails + 1)))
-```
-
-##Totalling up the fish counts
-
-```{r Loading in the fish data}
-fish_data_raw <- read_csv(here("./01_raw_data/IMOS_-_National_Reef_Monitoring_Network_Sub-Facility_-_Global_reef_fish_abundance_and_biomass_no_top.csv"))
-```
-
-
-
-```{r Cleaning up the fish data and totalling by species and transect}
-#fish_factor_cols <- c("site_code", "site_name", "class", "order", "family", "species_name", "reporting_name")
-
-fish_data_clean <- fish_data_raw%>%
-     mutate_at(fish_factor_cols, factor)%>%
-    group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
-        visibility, hour, reporting_name)%>%
- summarise(species_total = sum(total))
-```
-
-```{r Making a rockfish total for each site}
-rockfish_data <- fish_data_raw%>%
-   mutate_at(fish_factor_cols, factor)%>%
-filter(order == "Scorpaeniformes")%>%
-  group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
-           visibility, hour, reporting_name)%>%
-  summarise(species_total = sum(total))
-
-```
-
-```{r}
-rockfish_total_data <- rockfish_data%>%
-    group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
-           visibility, hour)%>%
-  summarise(total = sum(species_total))
-```
-
-
-
-
-##Making a theme for all subsequent figures
-```{r Making theme for all subsequent figures}
-theme.figure <- function (){
-  theme_bw(base_size = 12) +
-  theme(panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.line = element_line(colour = "black"),
-    axis.title = element_text(size = 14, face = "bold"),
-    axis.text = element_text(size = 12, face = "plain"),
-    legend.text = element_text(size = 10, face = "plain"),
-    legend.title = element_text(size = 14, face = "bold")) 
-}
-
 ```
 
 ##Making some visualizations of the urch_sn ratio and correlation between urch and sn
@@ -291,6 +229,21 @@ theme.figure <- function (){
 
 ##Making maps of the data in Barkley Sound
 
+###Making a theme for all subsequent figures
+```{r Making theme for all subsequent figures}
+theme.figure <- function (){
+  theme_bw(base_size = 12) +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12, face = "plain"),
+    legend.text = element_text(size = 10, face = "plain"),
+    legend.title = element_text(size = 14, face = "bold")) 
+}
+
+```
+
 ###Doing the set up for the base layer and map characteristics
 ```{r Loading in the base layer}
 VI_base_layer <- read_sf(dsn = here("./01_raw_data/canada_sf_data", ""), 
@@ -314,7 +267,7 @@ lat_max = max(urch_sn_ratio_RLS$latitude) + 0.05
 long_min = min(urch_sn_ratio_RLS$longitude) - 0.05
 long_max = max(urch_sn_ratio_RLS$longitude) + 0.05
 
-lat_min_launch = min(urch_sn_ratio_RLS$latitude) - 0.01
+lat_min_launch = min(urch_sn_ratio_RLS$latitude) - 0.01    #The launch ones are for the boat launch plot
 lat_max_launch = max(urch_sn_ratio_RLS$latitude) + 0.06
 
 long_min_launch = min(urch_sn_ratio_RLS$longitude) - 0.2
@@ -513,32 +466,7 @@ launch_df <- tibble(launch_long, launch_lat, names)
 ```
 
 
-```{r Making the plot with the urch to sn ratio on the map 2024}
-(urch_sn_ratio_map_2024 <- ggplot()+
-    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
-    coord_sf(xlim = c(long_min, long_max),
-           ylim = c(lat_min, lat_max)) +
-  geom_point(data = all_data_test%>%
-               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
-             size = 3,) + 
-  geom_point(data = all_data_test%>%
-               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
-             shape = 1, size = 3,colour = "black")+
-  scale_color_viridis_c() +
-  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", color = " Log Urchin to Snail Ratio") +
-  theme.figure() +
-  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
-  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
-  annotation_north_arrow(
-    location = "tr",
-    which_north = "true",
-    style = north_arrow_fancy_orienteering
-  ) +
-  annotation_scale(location = "br"))
- # geom_label(data = urch_sn_ratio_RLS, 
-             #mapping = aes(x = -125.134813, y = 48.834945, label = "BMSC")))
 
-```
 
 ###Plotting the urchin counts on the map
 ```{r Plot with urchin counts on map 2021}
@@ -703,84 +631,6 @@ launch_df <- tibble(launch_long, launch_lat, names)
 ```
 
 
-
-##Plotting the fish counts
-
-###Plotting the scorpaeniformes fish counts on the map
-
-```{r Plotting the total scorpaeniformes for each transect in 2021}
-(scorp_fish_count_2021 <- ggplot()+
-    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
-    coord_sf(xlim = c(long_min, long_max),
-           ylim = c(lat_min, lat_max)) +
-  geom_point(data = rockfish_total_data%>%
-               filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = total),
-             size = 3,) + 
-  geom_point(data = rockfish_total_data%>%
-               filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = total),
-             shape = 1, size = 3,colour = "black")+
-  scale_color_viridis_c() +
-  labs(title = "2021", x = " \nLongitude", y = "Latitude\n ", color = "Scorpaeniformes counts") +
-  theme.figure() +
-  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
-  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
-  annotation_north_arrow(
-    location = "tr",
-    which_north = "true",
-    style = north_arrow_fancy_orienteering
-  ) +
-  annotation_scale(location = "br"))
-```
-
-```{r Plotting the total scorpaeniformes for each transect in 2022}
-(scorp_fish_count_2022 <- ggplot()+
-    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
-    coord_sf(xlim = c(long_min, long_max),
-           ylim = c(lat_min, lat_max)) +
-  geom_point(data = rockfish_total_data%>%
-               filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = total),
-             size = 3,) + 
-  geom_point(data = rockfish_total_data%>%
-               filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = total),
-             shape = 1, size = 3,colour = "black")+
-  scale_color_viridis_c() +
-  labs(title = "2022", x = " \nLongitude", y = "Latitude\n ", color = "Scorpaeniformes counts") +
-  theme.figure() +
-  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
-  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
-  annotation_north_arrow(
-    location = "tr",
-    which_north = "true",
-    style = north_arrow_fancy_orienteering
-  ) +
-  annotation_scale(location = "br"))
-```
-
-```{r Plotting the total scorpaeniformes for each transect in 2023}
-(scorp_fish_count_2023 <- ggplot()+
-    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
-    coord_sf(xlim = c(long_min, long_max),
-           ylim = c(lat_min, lat_max)) +
-  geom_point(data = rockfish_total_data%>%
-               filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = total),
-             size = 3,) + 
-  geom_point(data = rockfish_total_data%>%
-               filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = total),
-             shape = 1, size = 3,colour = "black")+
-  scale_color_viridis_c() +
-  labs(title = "2023", x = " \nLongitude", y = "Latitude\n ", color = "Scorpaeniformes counts") +
-  theme.figure() +
-  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
-  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
-  annotation_north_arrow(
-    location = "tr",
-    which_north = "true",
-    style = north_arrow_fancy_orienteering
-  ) +
-  annotation_scale(location = "br"))
-```
-
-
 ###Saving all of the figures so far
 
 ####Site maps
@@ -918,102 +768,6 @@ dev.off()
 
 
 
-##Checking data for normality etc.
-
-###Urchin data
-```{r Testing urchin counts for normality}
-hist(urch_sn_ratio_RLS$Urchins)
-
-shapiro.test(urch_sn_ratio_RLS$Urchins)
-```
-The urchin counts are not normal based on visual test and on shapiro-wilks test.
-
-```{r Chi-square testing to see if urchin data follows Poisson}
-urch_temp_poisson_test <- urch_sn_ratio_RLS%>%
-  select(-c(urch_sn_ratio, Turban_Snails))%>%
-  na.omit
-
-hist(urch_temp_poisson_test$Urchins)
-
-lambda <- mean(urch_temp_poisson_test$Urchins)
-
-observed <- table(factor(urch_temp_poisson_test$Urchins,
-                         levels = min(urch_temp_poisson_test$Urchins):max(urch_temp_poisson_test$Urchins)))
-
-expected <- dpois(min(urch_temp_poisson_test$Urchins):max(urch_temp_poisson_test$Urchins),
-                  lambda) * length(urch_temp_poisson_test$Urchins)
-
-chisq.test(observed, p = expected, rescale.p = TRUE)
-```
-
-```{r Using vcd package to visually assess whether the data is poisson}
-(urch_poissonness_plot <- distplot(urch_temp_poisson_test$Urchins, type = "poisson"))
-```
-
-The poissonness plot shows that the counts approximately follow the poisson
-distribution.
-
-
-###Snail data
-```{r Testing snail counts for normality}
-hist(urch_sn_ratio_RLS$Turban_Snails, n = 20)
-
-shapiro.test(urch_sn_ratio_RLS$Turban_Snails)
-```
-The snail counts are not normal based on visual test and on shapiro-wilks test.
-
-```{r Using vcd package to visually assess if the data is poisson}
-snail_temp_poisson_test <- urch_sn_ratio_RLS%>%
-  select(-c(urch_sn_ratio, Urchins))%>%
-  na.omit
-
-distplot(snail_temp_poisson_test$Turban_Snails)
-```
-
-The snail data appears to somewhat follow a poisson distribution.
-
-###Urch sn ratio
-```{r Making a dataset with no na for now}
-urch_sn_ratio_temp_poisson <- urch_sn_ratio_RLS%>%
-  na.omit()
-```
-
-
-```{r Histogram of urch sn ratio}
-hist(urch_sn_ratio_temp_poisson$urch_sn_ratio, n = 20)
-```
-
-```{r Poissonness plot of urch sn ratio}
-distplot(urch_sn_ratio_temp_poisson$urch_sn_ratio)
-```
-
-
-
-
-##Plotting the stability of each site across years
-
-```{r Plotting the urch sn ratio across years for each site}
-(stability_plot <- ggplot(all_data_test, aes(x = year(survey_date), y = urch_sn_ratio,
-                                                 colour = depth, group = depth))+
-  geom_point(size = 2)+
-  theme.figure()+
-  scale_color_viridis_c() +
-   facet_wrap(~site_code, ncol = 10)+
-    scale_y_continuous(breaks = c(-3, -2, -1, 0, 1, 2, 3)))
-```
-
-
-```{r Saving the plot so it is more visible, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/stability_plot.png"), width = 20, height = 10, 
-    units = "in", pointsize = 15, res = 600)
-
-stability_plot
-
-dev.off()
-```
-
-
-
 
 ##Wave exposure calculations
 
@@ -1060,7 +814,7 @@ RLS_data_2024 <- read_csv(here("./01_raw_data/RLS_CANADA_Bamfield_2024.csv"))
 ```
 
 ```{r Removing first row and unnecessary columns}
-factor_cols <- c("site_code", "site_name", "Code")
+factor_cols2 <- c("site_code", "site_name", "Code")
 
 RLS_data_2024_clean <- RLS_data_2024%>%
   select(c(`Site No.`, `Site Name`, Latitude, Longitude, Date, vis, Time, Depth,
@@ -1076,15 +830,53 @@ RLS_data_2024_clean <- RLS_data_2024%>%
          visibility = vis,
          hour = Time,
          total = Total)%>%
-   mutate_at(factor_cols, factor)%>%
+   mutate_at(factor_cols2, factor)%>%
    mutate(longitude = if_else(site_code == "BMSC2", -125.19876860, longitude))%>% # one point at kirby had the lat for both lat and long
    group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
            visibility, hour, Code)%>%
   summarise(species_total = sum(total))
 ```
 
+```{r Making a data frame with different lat/longs for transects at same sites}
+RLS_data_2024_clean_updated_lat_long <- RLS_data_2024_clean%>%
+   mutate(latitude = if_else(site_code == "BMSC1" & depth == 6.5, 48.8290000, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC1" & depth == 6.5, -125.191000, longitude))%>%
+
+mutate(latitude = if_else(site_code == "BMSC11" & depth == 5, 48.8560000, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC11" & depth == 5, -125.1520000, longitude))%>%
+
+mutate(latitude = if_else(site_code == "BMSC12" & depth == 4.5, 48.8620000, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC12" & depth == 4.5, -125.1600000, longitude))%>%
+
+mutate(latitude = if_else(site_code == "BMSC12" & depth == 7, 48.858284, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC12" & depth == 7, -125.1650000, longitude))%>%
+
+mutate(latitude = if_else(site_code == "BMSC24" & depth == 5.5, 48.921000, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC24" & depth == 5.5, -125.131174, longitude))%>%
+
+mutate(latitude = if_else(site_code == "BMSC25" & depth == 5.5, 48.843000, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC25" & depth == 5.5, -125.135015, longitude))%>%
+
+mutate(latitude = if_else(site_code == "BMSC26" & depth == 6.5, 48.91500, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC26" & depth == 6.5, -125.037017, longitude))%>%
+
+mutate(latitude = if_else(site_code == "BMSC5" & depth == 6.0, 48.8230000, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC5" & depth == 6.0, -125.1980000, longitude))%>%
+
+mutate(latitude = if_else(site_code == "BMSC5" & depth == 6.5, 48.82733154, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC5" & depth == 6.5, -125.2010000, longitude))%>%
+
+mutate(latitude = if_else(site_code == "BMSC6" & depth == 8, 48.95023346, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC6" & depth == 8, -125.1620000, longitude))%>%
+
+mutate(latitude = if_else(site_code == "BMSC8" & depth == 7.5, 48.95508194, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC8" & depth == 7.5, -125.1460000, longitude))
+```
+
+
+###Urch sn ratio 2024
 ```{r removing other species and calculating urchin ratio}
- urch_sn_ratio_RLS_2024 <- RLS_data_2024_clean%>%
+ urch_sn_ratio_RLS_2024 <- RLS_data_2024_clean_updated_lat_long%>%
   pivot_wider(names_from = Code, values_from = species_total)%>%
   mutate(Urchins = mfra,
          Turban_Snails = pgi)%>%
@@ -1095,23 +887,16 @@ RLS_data_2024_clean <- RLS_data_2024%>%
          survey_date = dmy(survey_date))
 ```
 
+###Urch to all others ratio 2024
 ```{r Making a data frame of urchin to all other macrofauna ratio}
-urch_RLS_2024 <- RLS_data_2024_clean%>%
-   pivot_wider(names_from = Code, values_from = species_total)%>%
-mutate(Urchins = mfra)%>%
- select(site_code, site_name, latitude, longitude, survey_date, depth, 
-       visibility, hour, Urchins)%>%
-  replace(is.na(.), 0)%>%
-  mutate(survey_date = dmy(survey_date))
+Urchins <- urch_sn_ratio_RLS_2024$Urchins
 
-Urchins <- urch_RLS_2024$Urchins
-
-urch_all_ratio_RLS_2024 <- RLS_data_2024_clean%>%
+urch_all_ratio_RLS_2024 <- RLS_data_2024_clean_updated_lat_long%>%
   dplyr::filter(Code != "mfra")%>%
   group_by(site_code, site_name, latitude, longitude, survey_date, depth)%>%
   summarise(total_counts = sum(species_total))%>%
   cbind(Urchins = Urchins)%>%
-  mutate(urch_all_ratio = log10(Urchins + 1) / log10(total_counts + 1))
+  mutate(urch_all_ratio = log10((Urchins + 1) / (total_counts + 1)))
 ```
 
 ##2024 Wave exposure calculations
@@ -1459,24 +1244,25 @@ print(map_plot)
 
 ##2024 urch sn ratio plot
 
-need to separate the sites because there are multiple sites that were sampled twice at different depths so they are covering
-each other
-```{r Making the plot with the urch to sn ratio on the map 2024, fig.height= 12, fig.width= 10}
+```{r Making the plot with the urch to sn ratio on the map 2024}
 (urch_sn_ratio_map_2024 <- ggplot()+
     geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
-  geom_jitter(data = urch_sn_ratio_RLS_2024%>%
-               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, fill = urch_sn_ratio), 
-              shape = 21, size = 3, height = 0.005, width = 0.005) + 
+  geom_point(data = urch_sn_ratio_RLS_2024,
+             mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
+             size = 3,) +
+    geom_point(data = urch_sn_ratio_RLS_2024,
+             mapping = aes(x = longitude, y = latitude, colour = urch_sn_ratio), 
+              shape = 1, size = 3, colour = "black") + 
   #scale_fill_viridis_c() +
-  scale_fill_gradient2(
+  scale_colour_gradient2(
     low = "blue",          # Color for negative values
     mid = "white",         # Color for zero
     high = "red",          # Color for positive values
     midpoint = 0           # Set the midpoint to zero
   ) +
-  labs(title = "2024 Jittered Points", x = " \nLongitude", y = "Latitude\n ", fill = " Log Urchin to Snail Ratio") +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = " Log Urchin to\n Snail Ratio") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -1514,17 +1300,21 @@ each other
     geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
-  geom_jitter(data = urch_all_ratio_RLS_2024, mapping = aes(x = longitude, y = latitude, fill = urch_all_ratio), 
-              shape = 21, size = 3, height = 0.005, width = 0.005) + 
-  scale_fill_viridis_c() +
- # scale_fill_gradient2(
-  #  low = "blue",          # Color for negative values
-   # mid = "white",         # Color for zero
-    #high = "red",          # Color for positive values
-    #midpoint = 0           # Set the midpoint to zero
-  #) +
-  labs(title = "2024 Jittered Points", x = " \nLongitude", y = "Latitude\n ",
-       fill = " Log Urchin to Macrofauna Ratio") +
+  geom_point(data = urch_all_ratio_RLS_2024,
+             mapping = aes(x = longitude, y = latitude, color = urch_all_ratio),
+             size = 3,) +
+    geom_point(data = urch_all_ratio_RLS_2024,
+             mapping = aes(x = longitude, y = latitude, colour = urch_all_ratio), 
+              shape = 1, size = 3, colour = "black") +
+  #scale_colour_viridis_c() +
+  scale_colour_gradient2(
+    low = "blue",          # Color for negative values
+   mid = "white",         # Color for zero
+    high = "red",          # Color for positive values
+    midpoint = 0           # Set the midpoint to zero
+  ) +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ",
+       fill = " Log Urchin to\n Macrofauna Ratio") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -1539,7 +1329,7 @@ each other
 
 ###Saving the 2024 urch sn ratio plot
 ```{r Saving the 2024 urch sn ratio plot, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/urch_sn_ratio_map_2024.png"), width = 7.5, height = 5.5, 
+png(filename = here("./04_plots/urch_sn_ratio_map_2024.png"), width = 8, height = 6, 
     units = "in", pointsize = 15, res = 600)
 
 urch_sn_ratio_map_2024
@@ -1547,7 +1337,7 @@ urch_sn_ratio_map_2024
 dev.off()
 ```
 
-```{r Saving the 2024 urch sn ratio plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+```{r Saving the standardized 2024 urch sn ratio plot, fig.width=7.5, fig.height=5.5, include=FALSE}
 png(filename = here("./04_plots/stand_urch_sn_ratio_map_2024.png"), width = 7.5, height = 5.5, 
     units = "in", pointsize = 15, res = 600)
 
@@ -1816,7 +1606,7 @@ dev.off()
 ```
 
 
-##Working with the gloabl fishing watch data
+##Working with the global fishing watch data
 ```{r Loading in the global fishing watch data}
 #gfw_data_raw <- read_csv(here("./01_raw_data/public-global-fishing-effort-v3.0.csv"))
 
@@ -1873,97 +1663,5 @@ png(filename = here("./04_plots/app_fishing_hours_plot.png"), width = 7.5, heigh
 app_fishing_hours_plot
 
 dev.off()
-```
-
-
-
-##Making plots for the presentation
-```{r}
-fake_data <- read_csv(here("./01_raw_data/fake_data.csv"))
-```
-
-```{r Making a plot with the fake data}
-(fake_data_plot <- ggplot(fake_data, aes(x = Explanatory, y = Response))+
-  geom_point()+
-  geom_smooth(method = "lm")+
-  theme.figure())
-```
-
-
-```{r Saving the plot}
-png(filename = here("./04_plots/fake_data_plot.png"), width = 7.5, height = 5.5, 
-    units = "in", pointsize = 15, res = 600)
-
-fake_data_plot
-
-dev.off()
-```
-
-
-```{r Making fake data for predicted results of fetch}
-x1 <- seq(100, 900, by = 100)
-y1 <- seq(-1, 3 , by = 0.5)
-predicted_data <- cbind(x1, y1)
-```
-
-```{r Plotting fake data for fetch}
-(predicted_plot <- ggplot(predicted_data, aes(x = x1, y = y1))+
-  geom_point()+
-           geom_smooth(method = "lm")+
-  theme.figure()+
-   labs(x = "Kelp abundance", y = "Log urchin to snail ratio")+
-   theme(axis.title = element_text(size = 18, face = "bold"),
-    axis.text = element_text(size = 18, face = "plain")))
-```
-
-
-
-```{r Making fake data for substrate type, include=FALSE}
-fake_substrate_type_data <- read_csv(here("./01_raw_data/example_year_data.csv"))
-fake_substrate_type_data$substrate <- as.factor(fake_substrate_type_data$substrate)
-levels(fake_substrate_type_data$substrate) <- list(Sand = "Sand", 
-                                                   `Loose rocks` = "Loose rocks",
-                                                   `Solid rock` = "Solid rock")
-```
-
-```{r Plotting the fake substrate data}
-(fake_substrate_plot <- ggplot(fake_substrate_type_data, aes(x = substrate, y = urchin))+
-   geom_boxplot()+
-   theme.figure()+
-   labs(x = "\nSubstrate type", y = "Log urchin to snail ratio\n")+
-      theme(axis.title = element_text(size = 18, face = "bold"),
-    axis.text = element_text(size = 18, face = "plain")))
-```
-
-
-
-```{r Making fake kelp data, include=FALSE}
-fake_kelp_data <- read_csv(here("./01_raw_data/example_year_data.csv"))
-```
-
-```{r Plotting the fake kelp data}
-(fake_kelp_plot <- ggplot(fake_kelp_data, aes(x = kelp, y = urchin))+
-  geom_point()+
-           geom_smooth(method = "lm")+
-   labs(x = "\nKelp abundance (n/m2)", y = "Log urchin to snail ratio\n")+
-   theme.figure()+
-   theme(axis.title = element_text(size = 18, face = "bold"),
-    axis.text = element_text(size = 18, face = "plain")))
-```
-
-
-###Making an example of yearly fluctuations
-```{r Saving in the fake year data}
-year_flux_data <- read_csv(here("./01_raw_data/example_year_data.csv"))
-```
-
-```{r}
-(year_flux_snails <- ggplot()+
-  geom_point(year_flux_data, mapping = aes(x = year, y = Urchins),
-             size = 4)+
-labs(x = " \nYear", y = "Counts\n ") +
-  theme.figure()+
-   theme(axis.title = element_text(size = 18, face = "bold"),
-    axis.text = element_text(size = 18, face = "plain")))
 ```
 

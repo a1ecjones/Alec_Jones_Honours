@@ -1,0 +1,308 @@
+---
+title: "Extra chunks for Honours"
+author: "Alec"
+date: "2024-11-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Plotting the stability of each site across years
+
+```{r Plotting the urch sn ratio across years for each site}
+(stability_plot <- ggplot(all_data_test, aes(x = year(survey_date), y = urch_sn_ratio,
+                                                 colour = depth, group = depth))+
+  geom_point(size = 2)+
+  theme.figure()+
+  scale_color_viridis_c() +
+   facet_wrap(~site_code, ncol = 10)+
+    scale_y_continuous(breaks = c(-3, -2, -1, 0, 1, 2, 3)))
+```
+
+
+```{r Saving the plot so it is more visible, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/stability_plot.png"), width = 20, height = 10, 
+    units = "in", pointsize = 15, res = 600)
+
+stability_plot
+
+dev.off()
+```
+
+
+##Checking data for normality etc.
+
+###Urchin data
+```{r Testing urchin counts for normality}
+hist(urch_sn_ratio_RLS$Urchins)
+
+shapiro.test(urch_sn_ratio_RLS$Urchins)
+```
+The urchin counts are not normal based on visual test and on shapiro-wilks test.
+
+```{r Chi-square testing to see if urchin data follows Poisson}
+urch_temp_poisson_test <- urch_sn_ratio_RLS%>%
+  select(-c(urch_sn_ratio, Turban_Snails))%>%
+  na.omit
+
+hist(urch_temp_poisson_test$Urchins)
+
+lambda <- mean(urch_temp_poisson_test$Urchins)
+
+observed <- table(factor(urch_temp_poisson_test$Urchins,
+                         levels = min(urch_temp_poisson_test$Urchins):max(urch_temp_poisson_test$Urchins)))
+
+expected <- dpois(min(urch_temp_poisson_test$Urchins):max(urch_temp_poisson_test$Urchins),
+                  lambda) * length(urch_temp_poisson_test$Urchins)
+
+chisq.test(observed, p = expected, rescale.p = TRUE)
+```
+
+```{r Using vcd package to visually assess whether the data is poisson}
+(urch_poissonness_plot <- distplot(urch_temp_poisson_test$Urchins, type = "poisson"))
+```
+
+The poissonness plot shows that the counts approximately follow the poisson
+distribution.
+
+###Snail data
+```{r Testing snail counts for normality}
+hist(urch_sn_ratio_RLS$Turban_Snails, n = 20)
+
+shapiro.test(urch_sn_ratio_RLS$Turban_Snails)
+```
+The snail counts are not normal based on visual test and on shapiro-wilks test.
+
+```{r Using vcd package to visually assess if the data is poisson}
+snail_temp_poisson_test <- urch_sn_ratio_RLS%>%
+  select(-c(urch_sn_ratio, Urchins))%>%
+  na.omit
+
+distplot(snail_temp_poisson_test$Turban_Snails)
+```
+
+The snail data appears to somewhat follow a poisson distribution.
+
+###Urch sn ratio
+```{r Making a dataset with no na for now}
+urch_sn_ratio_temp_poisson <- urch_sn_ratio_RLS%>%
+  na.omit()
+```
+
+
+```{r Histogram of urch sn ratio}
+hist(urch_sn_ratio_temp_poisson$urch_sn_ratio, n = 20)
+```
+
+```{r Poissonness plot of urch sn ratio}
+distplot(urch_sn_ratio_temp_poisson$urch_sn_ratio)
+```
+
+
+
+
+##Totalling up the fish counts
+
+```{r Loading in the fish data}
+fish_data_raw <- read_csv(here("./01_raw_data/IMOS_-_National_Reef_Monitoring_Network_Sub-Facility_-_Global_reef_fish_abundance_and_biomass_no_top.csv"))
+```
+
+
+
+```{r Cleaning up the fish data and totalling by species and transect}
+#fish_factor_cols <- c("site_code", "site_name", "class", "order", "family", "species_name", "reporting_name")
+
+fish_data_clean <- fish_data_raw%>%
+     mutate_at(fish_factor_cols, factor)%>%
+    group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
+        visibility, hour, reporting_name)%>%
+ summarise(species_total = sum(total))
+```
+
+
+```{r Making a rockfish total for each site}
+rockfish_data <- fish_data_raw%>%
+   mutate_at(fish_factor_cols, factor)%>%
+filter(order == "Scorpaeniformes")%>%
+  group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour, reporting_name)%>%
+  summarise(species_total = sum(total))
+
+```
+
+```{r}
+rockfish_total_data <- rockfish_data%>%
+    group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour)%>%
+  summarise(total = sum(species_total))
+```
+
+##Plotting the fish counts
+
+###Plotting the scorpaeniformes fish counts on the map
+
+```{r Plotting the total scorpaeniformes for each transect in 2021}
+(scorp_fish_count_2021 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = rockfish_total_data%>%
+               filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = total),
+             size = 3,) + 
+  geom_point(data = rockfish_total_data%>%
+               filter(year(survey_date) == "2021"), mapping = aes(x = longitude, y = latitude, color = total),
+             shape = 1, size = 3,colour = "black")+
+  scale_color_viridis_c() +
+  labs(title = "2021", x = " \nLongitude", y = "Latitude\n ", color = "Scorpaeniformes counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Plotting the total scorpaeniformes for each transect in 2022}
+(scorp_fish_count_2022 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = rockfish_total_data%>%
+               filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = total),
+             size = 3,) + 
+  geom_point(data = rockfish_total_data%>%
+               filter(year(survey_date) == "2022"), mapping = aes(x = longitude, y = latitude, color = total),
+             shape = 1, size = 3,colour = "black")+
+  scale_color_viridis_c() +
+  labs(title = "2022", x = " \nLongitude", y = "Latitude\n ", color = "Scorpaeniformes counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Plotting the total scorpaeniformes for each transect in 2023}
+(scorp_fish_count_2023 <- ggplot()+
+    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = rockfish_total_data%>%
+               filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = total),
+             size = 3,) + 
+  geom_point(data = rockfish_total_data%>%
+               filter(year(survey_date) == "2023"), mapping = aes(x = longitude, y = latitude, color = total),
+             shape = 1, size = 3,colour = "black")+
+  scale_color_viridis_c() +
+  labs(title = "2023", x = " \nLongitude", y = "Latitude\n ", color = "Scorpaeniformes counts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+
+##Making plots for the presentation
+```{r}
+fake_data <- read_csv(here("./01_raw_data/fake_data.csv"))
+```
+
+```{r Making a plot with the fake data}
+(fake_data_plot <- ggplot(fake_data, aes(x = Explanatory, y = Response))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  theme.figure())
+```
+
+
+```{r Saving the plot}
+png(filename = here("./04_plots/fake_data_plot.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+fake_data_plot
+
+dev.off()
+```
+
+
+```{r Making fake data for predicted results of fetch}
+x1 <- seq(100, 900, by = 100)
+y1 <- seq(-1, 3 , by = 0.5)
+predicted_data <- cbind(x1, y1)
+```
+
+```{r Plotting fake data for fetch}
+(predicted_plot <- ggplot(predicted_data, aes(x = x1, y = y1))+
+  geom_point()+
+           geom_smooth(method = "lm")+
+  theme.figure()+
+   labs(x = "Kelp abundance", y = "Log urchin to snail ratio")+
+   theme(axis.title = element_text(size = 18, face = "bold"),
+    axis.text = element_text(size = 18, face = "plain")))
+```
+
+
+
+```{r Making fake data for substrate type, include=FALSE}
+fake_substrate_type_data <- read_csv(here("./01_raw_data/example_year_data.csv"))
+fake_substrate_type_data$substrate <- as.factor(fake_substrate_type_data$substrate)
+levels(fake_substrate_type_data$substrate) <- list(Sand = "Sand", 
+                                                   `Loose rocks` = "Loose rocks",
+                                                   `Solid rock` = "Solid rock")
+```
+
+```{r Plotting the fake substrate data}
+(fake_substrate_plot <- ggplot(fake_substrate_type_data, aes(x = substrate, y = urchin))+
+   geom_boxplot()+
+   theme.figure()+
+   labs(x = "\nSubstrate type", y = "Log urchin to snail ratio\n")+
+      theme(axis.title = element_text(size = 18, face = "bold"),
+    axis.text = element_text(size = 18, face = "plain")))
+```
+
+
+
+```{r Making fake kelp data, include=FALSE}
+fake_kelp_data <- read_csv(here("./01_raw_data/example_year_data.csv"))
+```
+
+```{r Plotting the fake kelp data}
+(fake_kelp_plot <- ggplot(fake_kelp_data, aes(x = kelp, y = urchin))+
+  geom_point()+
+           geom_smooth(method = "lm")+
+   labs(x = "\nKelp abundance (n/m2)", y = "Log urchin to snail ratio\n")+
+   theme.figure()+
+   theme(axis.title = element_text(size = 18, face = "bold"),
+    axis.text = element_text(size = 18, face = "plain")))
+```
+
+
+###Making an example of yearly fluctuations
+```{r Saving in the fake year data}
+year_flux_data <- read_csv(here("./01_raw_data/example_year_data.csv"))
+```
+
+```{r}
+(year_flux_snails <- ggplot()+
+  geom_point(year_flux_data, mapping = aes(x = year, y = Urchins),
+             size = 4)+
+labs(x = " \nYear", y = "Counts\n ") +
+  theme.figure()+
+   theme(axis.title = element_text(size = 18, face = "bold"),
+    axis.text = element_text(size = 18, face = "plain")))
+```
+
