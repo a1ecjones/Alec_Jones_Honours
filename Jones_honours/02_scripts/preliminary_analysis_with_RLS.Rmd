@@ -832,6 +832,7 @@ RLS_data_2024_clean <- RLS_data_2024%>%
          total = Total)%>%
    mutate_at(factor_cols2, factor)%>%
    mutate(longitude = if_else(site_code == "BMSC2", -125.19876860, longitude))%>% # one point at kirby had the lat for both lat and long
+  filter(!Code %in% c("dez", "deg", "dem", "deo", "def", "dew", "dec", "nsf", "snd"))%>%
    group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
            visibility, hour, Code)%>%
   summarise(species_total = sum(total))
