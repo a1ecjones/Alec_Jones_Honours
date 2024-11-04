@@ -259,6 +259,19 @@ VI_base_layer_sf <- st_as_sf(VI_base_layer)
 st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 ```
 
+
+```{r Loading in the new high res shape file}
+VI_base_layer_hi_res <- read_sf(dsn = here("./01_raw_data/hakai-zip", ""),
+                                stringsAsFactors = F)
+VI_base_layer_hi_res_sf <- st_as_sf(VI_base_layer_hi_res)
+```
+
+```{r Specifying the projection we want to use for our data}
+st_crs(VI_base_layer_hi_res_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
+```
+
+
+
 ```{r Making the range for the map}
 #first need to specify the range of the map
 lat_min = min(urch_sn_ratio_RLS$latitude) - 0.05
@@ -285,7 +298,7 @@ site_map_data <- invert_data_final_clean_updated_lat_long%>%
 
 ```{r Making the map with the site names, fig.width=7.5, fig.height=5.5}
 (RLS_site_name_map <- ggplot()+
-    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
   labs(x = " \nLongitude", y = "Latitude\n ") +
@@ -296,16 +309,16 @@ site_map_data <- invert_data_final_clean_updated_lat_long%>%
     location = "tr",
     which_north = "true",
     style = north_arrow_fancy_orienteering
-  ) +
-geom_label_repel(
-    data = site_map_data, 
-    mapping = aes(x = longitude, y = latitude, label = site_name), 
-    size = 2,
+  ) )
+#geom_label_repel(
+ #   data = site_map_data, 
+  #  mapping = aes(x = longitude, y = latitude, label = site_name), 
+   # size = 2,
    # box.padding = 0.35,  # Add padding between labels and points
   #  point.padding = 0.5, # Add padding between points and text
-    segment.color = 'grey50', # Line from label to point
-    max.overlaps = 15      # Adjust maximum number of overlaps
-  ))
+    #segment.color = 'grey50', # Line from label to point
+    #max.overlaps = 15      # Adjust maximum number of overlaps
+  #))
 ```
 
 
@@ -1247,7 +1260,7 @@ print(map_plot)
 
 ```{r Making the plot with the urch to sn ratio on the map 2024}
 (urch_sn_ratio_map_2024 <- ggplot()+
-    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
   geom_point(data = urch_sn_ratio_RLS_2024,
@@ -1352,14 +1365,19 @@ dev.off()
 ###Urchin plots
 ```{r Making the plot with the urch counts on the map 2024, fig.height= 12, fig.width= 10}
 (urch_count_map_2024 <- ggplot()+
-    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
-  geom_jitter(data = urch_sn_ratio_RLS_2024%>%
-               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, fill = Urchins), 
-              shape = 21, size = 3, height = 0.005, width = 0.005) + 
-  scale_fill_viridis_c() +
-  labs(title = "2024 Jittered Points", x = " \nLongitude", y = "Latitude\n ", fill = " Urchin Counts") +
+ geom_point(data = urch_sn_ratio_RLS_2024,
+             mapping = aes(x = longitude, y = latitude, color = Urchins),
+             size = 3,) +
+    scale_colour_gradient(low = "blue", high = "red")+
+   geom_point(data = urch_sn_ratio_RLS_2024,
+             mapping = aes(x = longitude, y = latitude, colour = Urchins), 
+              shape = 1, size = 3, colour = "black") +
+ # scale_colour_viridis_c() +
+  
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", fill = " Urchin Counts") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -1417,14 +1435,18 @@ dev.off()
 
 ```{r Making the plot with the snail counts on the map 2024, fig.height= 12, fig.width= 10}
 (snail_count_map_2024 <- ggplot()+
-    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
-  geom_jitter(data = urch_sn_ratio_RLS_2024%>%
-               filter(year(survey_date) == "2024"), mapping = aes(x = longitude, y = latitude, fill = Turban_Snails), 
-              shape = 21, size = 3, height = 0.005, width = 0.005) + 
+  geom_point(data = urch_sn_ratio_RLS_2024,
+             mapping = aes(x = longitude, y = latitude, color = Turban_Snails),
+             size = 3,) +
+    scale_colour_gradient(low = "blue", high = "red")+
+   geom_point(data = urch_sn_ratio_RLS_2024,
+             mapping = aes(x = longitude, y = latitude, colour = Turban_Snails), 
+              shape = 1, size = 3, colour = "black") +
   scale_fill_viridis_c() +
-  labs(title = "2024 Jittered Points", x = " \nLongitude", y = "Latitude\n ", fill = " Turban Snail Counts") +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", fill = " Turban Snail\n Counts") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -1499,13 +1521,20 @@ goby_urch_sn_counts_2024 <- RLS_data_2024_clean%>%
 
 ```{r Making the plot with the goby counts on the map 2024, fig.height= 12, fig.width= 10}
 (goby_count_map_2024 <- ggplot()+
-    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
   geom_jitter(data = goby_urch_sn_counts_2024, mapping = aes(x = longitude, y = latitude, fill = Goby), 
               shape = 21, size = 3, height = 0.005, width = 0.005) + 
-  scale_fill_viridis_c() +
-  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", fill = " Blackeye Goby Counts") +
+    geom_point(data = goby_urch_sn_counts_2024,
+             mapping = aes(x = longitude, y = latitude, color = Goby),
+             size = 3,) +
+    scale_colour_gradient(low = "blue", high = "red")+
+   geom_point(data = goby_urch_sn_counts_2024,
+             mapping = aes(x = longitude, y = latitude, colour = Goby), 
+              shape = 1, size = 3, colour = "black") +
+ # scale_fill_viridis_c() +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", fill = " Blackeye Goby\n Counts") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -1520,12 +1549,17 @@ goby_urch_sn_counts_2024 <- RLS_data_2024_clean%>%
 ###Plotting sn to goby ratio on map 2024
 ```{r}
 (sn_goby_ratio_map_2024 <- ggplot()+
-    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
-  geom_jitter(data = goby_urch_sn_counts_2024, mapping = aes(x = longitude, y = latitude, fill = sn_goby_ratio), 
-              shape = 21, size = 3, height = 0.005, width = 0.005) + 
-  scale_fill_viridis_c() +
+    geom_point(data = goby_urch_sn_counts_2024,
+             mapping = aes(x = longitude, y = latitude, color = sn_goby_ratio),
+             size = 3,) +
+    scale_colour_gradient(low = "blue", high = "red")+
+   geom_point(data = goby_urch_sn_counts_2024,
+             mapping = aes(x = longitude, y = latitude, colour = sn_goby_ratio), 
+              shape = 1, size = 3, colour = "black") +
+  #scale_fill_viridis_c() +
   labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", fill = " Log Snails to Goby Ratio") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
@@ -1585,7 +1619,7 @@ avg_temp_df <- avg_temp_df%>%
 ```{r Making the combined plot}
 (avg_temp_map_2023_24 <- ggplot() +
   geom_raster(data = avg_temp_df, aes(x = longitude, y = latitude, fill = avg_temp_c)) +
-   geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+   geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
   scale_fill_viridis_c(option = "C", name = "Avg Temperature (°C)") +  # Optional color scale
@@ -1609,7 +1643,7 @@ dev.off()
 
 ##Working with the global fishing watch data
 ```{r Loading in the global fishing watch data}
-#gfw_data_raw <- read_csv(here("./01_raw_data/public-global-fishing-effort-v3.0.csv"))
+gfw_data_raw <- read_csv(here("./01_raw_data/public-global-fishing-effort-v3.0.csv"))
 
 gfw_data_clean <- gfw_data_raw%>%
   select(-c(`Time Range`))%>%
@@ -1646,7 +1680,7 @@ gfw_data_clean_poly <- gfw_data_clean %>%
 (app_fishing_hours_plot <- ggplot(gfw_data_clean_poly) +
   geom_sf(aes(fill = app_fish_hrs)) +
   scale_fill_gradient(low = "blue", high = "red")+
-   geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+   geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max))+
   theme.figure() +
