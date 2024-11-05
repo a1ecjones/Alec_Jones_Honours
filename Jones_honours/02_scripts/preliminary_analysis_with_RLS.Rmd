@@ -261,9 +261,12 @@ st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 
 
 ```{r Loading in the new high res shape file}
-VI_base_layer_hi_res <- read_sf(dsn = here("./01_raw_data/hakai-zip", ""),
+VI_base_layer_hi_res <- read_sf(dsn = here("./01_raw_data/hakai_zip"),
                                 stringsAsFactors = F)
 VI_base_layer_hi_res_sf <- st_as_sf(VI_base_layer_hi_res)
+
+#ggplot(VI_base_layer_hi_res_sf)+
+ # geom_sf()
 ```
 
 ```{r Specifying the projection we want to use for our data}
@@ -813,7 +816,7 @@ bearings <- seq(1, 1, by = 1)
 ```
 
 ```{r Calculating the fetch for the points}
-fetch_df <- fetch_len_multi(site_sp, bearings, dmax = 30000, shoreline = VI_base_layer_sf, projected = TRUE)
+fetch_df <- fetch_len_multi(site_sp, bearings, dmax = 30000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
 ```
 
 
