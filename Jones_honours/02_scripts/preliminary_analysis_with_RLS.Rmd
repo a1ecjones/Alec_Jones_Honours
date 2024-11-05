@@ -1709,3 +1709,75 @@ app_fishing_hours_plot
 dev.off()
 ```
 
+
+
+##Working with the DFO flyover data
+
+###Loading in the data and cleaning it up
+```{r Loading in the data}
+#DFO_data_raw_2023 <- read_csv(here("./01_raw_data/DFO_data/Overflight2023_ObservationPoints_20241024.csv"))
+
+dfo_factors <- c("Day Type", "Creel Subarea")
+
+DFO_data_clean_2023 <- DFO_data_raw_2023%>%
+  mutate_at(dfo_factors, factor)%>%
+  rename(rec_boats_fishing = `1. Rec Boat Fishing`,
+         rec_boats_running = `2. Rec Boats Running`,
+         comm_vessel_fishing = `3. Commercial Vessel Fishing`,
+         comm_vessel_not_fishing = `4. Commercial Vessel Not Fishing`,
+         small_comm_vessel = `5. Small Commercial Vessel`,
+         large_comm_vessel = `6. Large Commercial Vessel`,
+         whale_watching = `7.  Whale Watching Boat`,
+         orcas = `8. Orcas`,
+         whales = `9. Whales`,
+         sea_state = `10. Sea State`)%>%
+  mutate(across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
+                  "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
+                  "whale_watching", "orcas", "whales"), ~ ifelse(. == "<Null>", 0, .)),
+         across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
+                  "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
+                  "whale_watching", "orcas", "whales"), as.numeric))
+  
+```
+
+
+```{r Making a dataframe of only points where rec boats were fishing}
+rec_boats_fishing2023 <- DFO_data_clean_2023%>%
+  filter(rec_boats_fishing != 0)
+```
+
+
+###Making a preliminary plot
+```{r Making max and min lat/longs for the rec fishing points}
+rec_lat_min = min(rec_boats_fishing2023$Latitude) - 0.05
+rec_lat_max = max(rec_boats_fishing2023$Latitude) + 0.05
+rec_long_min = min(rec_boats_fishing2023$Longitude) - 0.05
+rec_long_max = max(rec_boats_fishing2023$Longitude) + 0.05
+```
+
+
+```{r Making a plot of the points, fig.height= 12, fig.width= 10}
+(rec_fishing_boats_2023_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+    geom_point(data = rec_boats_fishing2023,
+             mapping = aes(x = Longitude, y = Latitude, color = rec_boats_fishing),
+             size = 1,) +
+    scale_colour_gradient(low = "blue", high = "red")+
+   geom_point(data = rec_boats_fishing2023,
+             mapping = aes(x = Longitude, y = Latitude, colour = rec_boats_fishing), 
+              shape = 1, size = 1, colour = "black") +
+ # scale_colour_viridis_c() +
+  labs(title = "2023", x = " \nLongitude", y = "Latitude\n ", colour = "# of Rec Fishing\nBoats Observed") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
