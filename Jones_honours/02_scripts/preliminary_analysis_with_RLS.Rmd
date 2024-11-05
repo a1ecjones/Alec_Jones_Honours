@@ -929,7 +929,7 @@ site_coords_2024 <- site_data_2024%>%
 ```
 
 ###Adjusting the points to be in the water
-```{r}
+```{r Adjusting the points so that all the transects are in the water for calculations}
 site_coordinates_corrected_2024 <- site_coords_2024%>%
  mutate(latitude = if_else(row_number() == 1, 48.828689, latitude))%>%
  mutate(longitude = if_else(row_number() == 1, -125.197557, longitude))%>%
@@ -966,13 +966,13 @@ site_coordinates_corrected_2024 <- site_coords_2024%>%
 
 
 ```{r Converting site coordinates into spatial points file type 2024}
-site_sp_2024 <- st_as_sf(site_coordinates_corrected_2024, coords = c("longitude", "latitude"), crs = 4326)
-bearings <- seq(1, 360, by = 1)
+site_sp_2024 <- st_as_sf(site_coords_2024, coords = c("longitude", "latitude"), crs = 4326)
+bearings <- seq(1, 1, by = 1)
 ```
 
 ###Calculating fetch for all of the sites in 2024
 ```{r Calculating the fetch for the sites 2024}
-fetch_df_2024 <- fetch_len_multi(site_sp_2024, bearings, dmax = 30000, shoreline = VI_base_layer_sf, projected = TRUE)
+fetch_df_2024 <- fetch_len_multi(site_sp_2024, bearings, dmax = 1000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
 ```
 
 ###Turning the raw fetch data into a dataframe with column labels
@@ -1311,7 +1311,7 @@ print(map_plot)
 
 ```{r Making the plot of urchin to all other macrofauna ratio}
 (urch_all_ratio_map_2024 <- ggplot()+
-    geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
   geom_point(data = urch_all_ratio_RLS_2024,
@@ -1328,7 +1328,7 @@ print(map_plot)
     midpoint = 0           # Set the midpoint to zero
   ) +
   labs(title = "2024", x = " \nLongitude", y = "Latitude\n ",
-       fill = " Log Urchin to\n Macrofauna Ratio") +
+       colour = " Log Urchin to\n Macrofauna Ratio") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -1363,7 +1363,7 @@ dev.off()
 ##Urchin and snail counts plots 2024
 
 ###Urchin plots
-```{r Making the plot with the urch counts on the map 2024, fig.height= 12, fig.width= 10}
+```{r Making the plot with the urch counts on the map 2024}
 (urch_count_map_2024 <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
@@ -1433,7 +1433,7 @@ dev.off()
 
 ###Snail plots
 
-```{r Making the plot with the snail counts on the map 2024, fig.height= 12, fig.width= 10}
+```{r Making the plot with the snail counts on the map 2024}
 (snail_count_map_2024 <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
