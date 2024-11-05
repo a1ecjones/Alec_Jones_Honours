@@ -273,6 +273,12 @@ VI_base_layer_hi_res_sf <- st_as_sf(VI_base_layer_hi_res)
 st_crs(VI_base_layer_hi_res_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 ```
 
+```{r Reducing the resolution of the hi res shape file}
+reduced_VI_base_layer_hi_res_sf <- st_simplify(VI_base_layer_hi_res_sf, dTolerance = 1000)
+
+plot(st_geometry(VI_base_layer_hi_res_sf), main = "Original Shapefile")
+plot(st_geometry(reduced_VI_base_layer_hi_res_sf), main = "Simplified Shapefile")
+```
 
 
 ```{r Making the range for the map}
@@ -812,11 +818,11 @@ Sites 3, 13, 14, 15, 16, 24, 27, 29, 32 need to be shifted
 
 ```{r Converting site coordinates into spatial points file type}
 site_sp <- st_as_sf(site_coordinates_corrected, coords = c("longitude", "latitude"), crs = 4326)
-bearings <- seq(1, 1, by = 1)
+bearings <- c(1, 2)
 ```
 
 ```{r Calculating the fetch for the points}
-fetch_df <- fetch_len_multi(site_sp, bearings, dmax = 30000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
+fetch_df <- fetch_len_multi(site_sp, bearings, dmax = 30000, shoreline = reduced_VI_base_layer_hi_res_sf, projected = TRUE)
 ```
 
 
@@ -970,12 +976,12 @@ site_coordinates_corrected_2024 <- site_coords_2024%>%
 
 ```{r Converting site coordinates into spatial points file type 2024}
 site_sp_2024 <- st_as_sf(site_coords_2024, coords = c("longitude", "latitude"), crs = 4326)
-bearings <- seq(1, 1, by = 1)
+bearings <- seq(1, 360, by = 1)
 ```
 
 ###Calculating fetch for all of the sites in 2024
 ```{r Calculating the fetch for the sites 2024}
-fetch_df_2024 <- fetch_len_multi(site_sp_2024, bearings, dmax = 1000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
+fetch_df_2024 <- fetch_len_multi(site_sp_2024, bearings, dmax = 40000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
 ```
 
 ###Turning the raw fetch data into a dataframe with column labels
@@ -1019,7 +1025,7 @@ ggplot(fetch_2024_long %>% filter(site_code == "BMSC1"), aes(x = as.numeric(degr
 
 ###Plotting the fetch for the sites
 ```{r Plotting fetch for all the sites, fig.width=50, fig.height=50}
-(test_fetch_2024_all_sites_plot <- ggplot(fetch_2024_long, aes(x = as.numeric(degree), y = fetch,
+(fetch_2024_all_sites_plot <- ggplot(fetch_2024_long, aes(x = as.numeric(degree), y = fetch,
                             fill = fetch)) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar(start = 0) +
@@ -1032,11 +1038,11 @@ ggplot(fetch_2024_long %>% filter(site_code == "BMSC1"), aes(x = as.numeric(degr
 ```
 
 
-```{r Saving the 2021 snail counts map, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/test_fetch_2024_all_sites_plot.png"), width = 15, height = 15, 
+```{r Saving the plot of fetch for all sites, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/fetch_2024_all_sites_plot.png"), width = 15, height = 15, 
     units = "in", pointsize = 15, res = 700)
 
-test_fetch_2024_all_sites_plot
+fetch_2024_all_sites_plot
 
 dev.off()
 ```
@@ -1078,9 +1084,10 @@ names(fetch_plots) <- site_codes
 ####Making the base map and site code map
 
 #####Base map
+
 ```{r Making the base map plot}
 (map_plot <- ggplot() +
-  geom_sf(data = VI_base_layer_sf, colour = "darkgrey", fill = "lightgrey") +
+  geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey") +
   coord_sf(xlim = c(long_min, long_max), ylim = c(lat_min, lat_max)) +
   labs(x = "Longitude", y = "Latitude")+
    theme.figure()+
@@ -1094,7 +1101,6 @@ names(fetch_plots) <- site_codes
   annotation_scale(location = "br"))
 
 ```
-
 
 ```{r Saving the base map, fig.width=7.5, fig.height=5.5, include=FALSE}
 png(filename = here("./04_plots/base_map_plot.png"), width = 7.5, height = 5.5, 
