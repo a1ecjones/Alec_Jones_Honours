@@ -1750,13 +1750,6 @@ rec_boats_fishing2023 <- DFO_data_clean_2023%>%
 
 
 ###Making a preliminary plot
-```{r Making max and min lat/longs for the rec fishing points}
-rec_lat_min = min(rec_boats_fishing2023$Latitude) - 0.05
-rec_lat_max = max(rec_boats_fishing2023$Latitude) + 0.05
-rec_long_min = min(rec_boats_fishing2023$Longitude) - 0.05
-rec_long_max = max(rec_boats_fishing2023$Longitude) + 0.05
-```
-
 
 ```{r Making a plot of the points, fig.height= 10, fig.width= 8}
 (rec_fishing_boats_2023_plot <- ggplot()+
@@ -1792,9 +1785,32 @@ rec_fishing_boat_points_gfw_combined <- st_join(gfw_data_clean_poly, rec_fishing
   summarize(total_boats = sum(rec_boats_fishing, na.rm = TRUE))
 ```
 
+```{r Trying the second method to make the shape file of rec fishing points}
+bbox <- st_bbox(gfw_data_clean_poly)
+
+grid <- st_make_grid(st_as_sfc(bbox), cellsize = 0.01, square = TRUE)  # 0.01 for 0.01° by 0.01° cells
+grid_sf <- st_sf(geometry = grid)
+
+# Join original shapefile with the new grid
+original_data_grid <- st_join(grid_sf, gfw_data_clean_poly, left = TRUE)
+
+# Join fishing boat data with the new grid
+fishing_data_grid <- st_join(grid_sf, rec_fishing_boat_points, left = TRUE)
+
+rec_data_aggregated_data <- fishing_data_grid %>%
+  group_by(geometry) %>%
+  summarize(total_boats = sum(rec_boats_fishing, na.rm = TRUE))
+
+rec_data_aggregated_data$total_boats[is.na(aggregated_data$total_boats)] <- 0
+
+rec_filtered_data <- rec_data_aggregated_data %>%
+  filter(total_boats > 0)
+```
+
+
 
 ```{r Plotting the rec fishing boats as a grid}
-(rec_fishing_grid_2023 <- ggplot(rec_fishing_boat_points_gfw_combined) +
+(rec_fishing_grid_2023 <- ggplot(rec_filtered_data) +
   geom_sf(aes(fill = total_boats)) +
   scale_fill_gradient(low = "blue", high = "red")+
    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
