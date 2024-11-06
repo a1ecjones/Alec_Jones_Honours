@@ -922,6 +922,43 @@ urch_all_ratio_RLS_2024 <- RLS_data_2024_clean_updated_lat_long%>%
   mutate(urch_all_ratio = log10((Urchins + 1) / (total_counts + 1)))
 ```
 
+###Urch to all method 2 macrofauna ratio 2024
+
+```{r Making a dataframe of urchin to all method 2 macrofauna raito}
+urch_m2_macro_ratio_RLS_2024 <- RLS_data_2024%>%
+  select(c(`Site No.`, `Site Name`, Latitude, Longitude, Date, vis, Time, Depth,
+           Method, Block, Code, Species, Total))%>%
+  na.omit()%>%
+  mutate(Code = str_to_lower(Code))%>%
+  rename(site_code = `Site No.`,
+         site_name = `Site Name`,
+         latitude = Latitude,
+         longitude = Longitude,
+         survey_date = Date,
+         depth = Depth,
+         visibility = vis,
+         hour = Time,
+         total = Total)%>%
+   mutate_at(factor_cols2, factor)%>%
+   mutate(longitude = if_else(site_code == "BMSC2", -125.19876860, longitude))%>% # one point at kirby had the lat for both lat and long
+  filter(!Code %in% c("dez", "deg", "dem", "deo", "def", "dew", "dec", "nsf", "snd"))%>%
+  filter(Method == 2)%>%
+     group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour, Code)%>%
+  summarise(species_total = sum(total))
+
+
+
+urch_m2_macro_ratio_RLS_2024_final <- urch_m2_macro_ratio_RLS_2024%>%
+  dplyr::filter(Code != "mfra")%>%
+  group_by(site_code, site_name, latitude, longitude, survey_date, depth)%>%
+  summarise(total_counts = sum(species_total))%>%
+  cbind(Urchins = Urchins)%>%
+  mutate(urch_all_ratio = log10((Urchins + 1) / (total_counts + 1)))
+```
+
+
+
 ##2024 Wave exposure calculations
 
 ###Making dataframes for the site lat and longs 2024
@@ -1081,7 +1118,7 @@ names(fetch_plots) <- site_codes
 ```
 
 
-####Making the base map and site code map
+###Making the base map and site code map
 
 #####Base map
 
@@ -1112,7 +1149,7 @@ dev.off()
 ```
 
 
-#####Site code map
+####Site code map
 
 #####Making data frame with just one site for each site
 ```{r}
@@ -1161,7 +1198,7 @@ RLS_site_code_map_2024
 dev.off()
 ```
 
-####Making the combined plot with the fetch plots on the map
+###Making the combined plot with the fetch plots on the map
 
 #####Making all the individual fetch plots
 ```{r}
@@ -1337,7 +1374,38 @@ print(map_plot)
     midpoint = 0           # Set the midpoint to zero
   ) +
   labs(title = "2024", x = " \nLongitude", y = "Latitude\n ",
-       colour = " Log Urchin to\n Macrofauna Ratio") +
+       colour = " Log Urchin to\n All Macrofauna Ratio") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Making the plot of urchin to all M2 macrofauna ratio}
+(urch_m2_macro_ratio_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_m2_macro_ratio_RLS_2024_final,
+             mapping = aes(x = longitude, y = latitude, color = urch_all_ratio),
+             size = 3,) +
+    geom_point(data = urch_all_ratio_RLS_2024,
+             mapping = aes(x = longitude, y = latitude, colour = urch_all_ratio), 
+              shape = 1, size = 3, colour = "black") +
+  #scale_colour_viridis_c() +
+  scale_colour_gradient2(
+    low = "blue",          # Color for negative values
+   mid = "white",         # Color for zero
+    high = "red",          # Color for positive values
+    midpoint = 0           # Set the midpoint to zero
+  ) +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ",
+       colour = " Log Urchin to\n All M2 Macrofauna Ratio") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -1350,9 +1418,9 @@ print(map_plot)
 ```
 
 
-###Saving the 2024 urch sn ratio plot
+###Saving the 2024 urch ratio plots
 ```{r Saving the 2024 urch sn ratio plot, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/urch_sn_ratio_map_2024.png"), width = 8, height = 6, 
+png(filename = here("./04_plots/ratios/urch_sn_ratio_map_2024.png"), width = 8, height = 6, 
     units = "in", pointsize = 15, res = 600)
 
 urch_sn_ratio_map_2024
@@ -1369,6 +1437,23 @@ stand_urch_sn_ratio_map_2024
 dev.off()
 ```
 
+```{r Saving the urch to all macrofauna ratio 2024, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/ratios/urch_all_ratio_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_all_ratio_map_2024
+
+dev.off()
+```
+
+```{r Saving the urch to M2 macrofauna ratio 2024, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/ratios/urch_m2_macro_ratio_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_m2_macro_ratio_map_2024
+
+dev.off()
+```
 ##Urchin and snail counts plots 2024
 
 ###Urchin plots
@@ -1386,7 +1471,7 @@ dev.off()
               shape = 1, size = 3, colour = "black") +
  # scale_colour_viridis_c() +
   
-  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", fill = " Urchin Counts") +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = " Urchin Counts") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -1423,7 +1508,7 @@ dev.off()
 
 ####Saving the urchin counts plots
 ```{r Saving the urchin counts plot, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/urch_count_map_2024.png"), width = 7.5, height = 5.5, 
+png(filename = here("./04_plots/counts/urch_count_map_2024.png"), width = 7.5, height = 5.5, 
     units = "in", pointsize = 15, res = 600)
 
 urch_count_map_2024
@@ -1455,7 +1540,7 @@ dev.off()
              mapping = aes(x = longitude, y = latitude, colour = Turban_Snails), 
               shape = 1, size = 3, colour = "black") +
   scale_fill_viridis_c() +
-  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", fill = " Turban Snail\n Counts") +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = " Turban Snail\n Counts") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -1491,7 +1576,7 @@ dev.off()
 
 ####Saving the snail counts plot
 ```{r Saving the snail counts plot, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/snail_count_map_2024.png"), width = 7.5, height = 5.5, 
+png(filename = here("./04_plots/counts/snail_count_map_2024.png"), width = 7.5, height = 5.5, 
     units = "in", pointsize = 15, res = 600)
 
 snail_count_map_2024
@@ -1514,7 +1599,7 @@ dev.off()
 
 ###Making a dataframe with the gobies
 ```{r}
-goby_urch_sn_counts_2024 <- RLS_data_2024_clean%>%
+goby_urch_sn_counts_2024 <- RLS_data_2024_clean_updated_lat_long%>%
   pivot_wider(names_from = Code, values_from = species_total)%>%
   mutate(Urchins = mfra,
          Turban_Snails = pgi,
@@ -1522,19 +1607,18 @@ goby_urch_sn_counts_2024 <- RLS_data_2024_clean%>%
   select(site_code, site_name, latitude, longitude, survey_date, depth, 
            visibility, hour, Urchins, Turban_Snails, Goby)%>%
   replace(is.na(.), 0)%>%
-   mutate(sn_goby_ratio = log10((Turban_Snails +1) / (Goby + 1)))
+   mutate(sn_goby_ratio = log10((Turban_Snails +1) / (Goby + 1)),
+          urch_goby_ratio = log10((Urchins + 1) / (Goby + 1)))
 ```
 
 
 ###Goby Counts plot
 
-```{r Making the plot with the goby counts on the map 2024, fig.height= 12, fig.width= 10}
+```{r Making the plot with the goby counts on the map 2024}
 (goby_count_map_2024 <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max)) +
-  geom_jitter(data = goby_urch_sn_counts_2024, mapping = aes(x = longitude, y = latitude, fill = Goby), 
-              shape = 21, size = 3, height = 0.005, width = 0.005) + 
     geom_point(data = goby_urch_sn_counts_2024,
              mapping = aes(x = longitude, y = latitude, color = Goby),
              size = 3,) +
@@ -1543,7 +1627,7 @@ goby_urch_sn_counts_2024 <- RLS_data_2024_clean%>%
              mapping = aes(x = longitude, y = latitude, colour = Goby), 
               shape = 1, size = 3, colour = "black") +
  # scale_fill_viridis_c() +
-  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", fill = " Blackeye Goby\n Counts") +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = " Blackeye Goby\n Counts") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -1554,6 +1638,16 @@ goby_urch_sn_counts_2024 <- RLS_data_2024_clean%>%
   ) +
   annotation_scale(location = "br"))
 ```
+
+```{r Saving the goby counts plot 2024}
+png(filename = here("./04_plots/counts/goby_count_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+goby_count_map_2024
+
+dev.off()
+```
+
 
 ###Plotting sn to goby ratio on map 2024
 ```{r}
@@ -1564,12 +1658,17 @@ goby_urch_sn_counts_2024 <- RLS_data_2024_clean%>%
     geom_point(data = goby_urch_sn_counts_2024,
              mapping = aes(x = longitude, y = latitude, color = sn_goby_ratio),
              size = 3,) +
-    scale_colour_gradient(low = "blue", high = "red")+
+   scale_colour_gradient2(
+    low = "blue",          # Color for negative values
+   mid = "white",         # Color for zero
+    high = "red",          # Color for positive values
+    midpoint = 0           # Set the midpoint to zero
+  ) +
    geom_point(data = goby_urch_sn_counts_2024,
              mapping = aes(x = longitude, y = latitude, colour = sn_goby_ratio), 
               shape = 1, size = 3, colour = "black") +
   #scale_fill_viridis_c() +
-  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", fill = " Log Snails to Goby Ratio") +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = " Log Snails to \n Goby Ratio") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -1581,17 +1680,137 @@ goby_urch_sn_counts_2024 <- RLS_data_2024_clean%>%
   annotation_scale(location = "br"))
 ```
 
+```{r Saving the snail to goby ratio plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/ratios/sn_goby_ratio_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+sn_goby_ratio_map_2024
+
+dev.off()
+```
 
 
-###Plotting goby counts vs snail counts
+###Plotting urchin to goby ratio
+```{r}
+(urch_goby_ratio_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+    geom_point(data = goby_urch_sn_counts_2024,
+             mapping = aes(x = longitude, y = latitude, color = urch_goby_ratio),
+             size = 3,) +
+   scale_colour_gradient2(
+    low = "blue",          # Color for negative values
+   mid = "white",         # Color for zero
+    high = "red",          # Color for positive values
+    midpoint = 0           # Set the midpoint to zero
+  ) +
+   geom_point(data = goby_urch_sn_counts_2024,
+             mapping = aes(x = longitude, y = latitude, colour = sn_goby_ratio), 
+              shape = 1, size = 3, colour = "black") +
+  #scale_fill_viridis_c() +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = " Log Urchins to \n Goby Ratio") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Saving the urchin to goby ratio plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/ratios/urch_goby_ratio_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_goby_ratio_map_2024
+
+dev.off()
+```
+
+###Plotting goby counts vs snail counts and urchin counts
 ```{r Goby counts against snail counts}
 (goby_vs_snail_counts_2024 <- ggplot(goby_urch_sn_counts_2024, aes(x = Goby, y = Turban_Snails))+
    geom_point()+
    theme.figure())
 ```
 
+```{r Goby counts against snail counts}
+(goby_vs_urch_counts_2024 <- ggplot(goby_urch_sn_counts_2024, aes(x = Urchins, y = Goby))+
+   geom_point()+
+   theme.figure())
+```
 
 
+
+###Plotting counts of all other animals except urchins
+```{r Plotting the counts of all other macrofauna except urchins}
+(all_macro_counts_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_all_ratio_RLS_2024,
+             mapping = aes(x = longitude, y = latitude, color = total_counts),
+             size = 3,) +
+    geom_point(data = urch_all_ratio_RLS_2024,
+             mapping = aes(x = longitude, y = latitude, colour = total_counts), 
+              shape = 1, size = 3, colour = "black") +
+  #scale_colour_viridis_c() +
+  scale_colour_gradient(
+    low = "blue",
+    high = "red") +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ",
+       colour = "All Macrofauna \nCounts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Saving the all macrofauna counts map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/counts/all_macro_counts_map.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+all_macro_counts_map_2024
+
+dev.off()
+```
+
+
+```{r Plotting the counts of all M2 macrofauna except urchins}
+(m2_macro_counts_map_2024 <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_m2_macro_ratio_RLS_2024_final,
+             mapping = aes(x = longitude, y = latitude, color = total_counts),
+             size = 3,) +
+    geom_point(data = urch_all_ratio_RLS_2024,
+             mapping = aes(x = longitude, y = latitude, colour = total_counts), 
+              shape = 1, size = 3, colour = "black") +
+  #scale_colour_viridis_c() +
+  scale_colour_gradient(
+    low = "blue",
+    high = "red") +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ",
+       colour = "M2 Macrofauna \nCounts") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
 
 ##Working with temperature data
 
@@ -1641,7 +1860,7 @@ avg_temp_df <- avg_temp_df%>%
 
 ####Saving the temp map plot
 ```{r Saving the 2023-24 average temp plot, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/avg_temp_map_2023_24.png"), width = 7.5, height = 5.5, 
+png(filename = here("./04_plots/explanatory/avg_temp_map_2023_24.png"), width = 7.5, height = 5.5, 
     units = "in", pointsize = 15, res = 600)
 
 avg_temp_map_2023_24
@@ -1691,6 +1910,7 @@ gfw_data_clean_poly$cell_id <- paste(gfw_data_clean_poly$latitude, gfw_data_clea
 (app_fishing_hours_plot <- ggplot(gfw_data_clean_poly) +
   geom_sf(aes(fill = app_fish_hrs)) +
   scale_fill_gradient(low = "blue", high = "red")+
+   #scale_fill_viridis_c()+
    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max))+
@@ -1703,7 +1923,7 @@ gfw_data_clean_poly$cell_id <- paste(gfw_data_clean_poly$latitude, gfw_data_clea
 
 
 ```{r Saving the fishing hours plot, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/app_fishing_hours_plot.png"), width = 7.5, height = 5.5, 
+png(filename = here("./04_plots/explanatory/app_fishing_hours_plot_red_blue.png"), width = 7.5, height = 5.5, 
     units = "in", pointsize = 15, res = 600)
 
 app_fishing_hours_plot
@@ -1776,6 +1996,16 @@ rec_boats_fishing2023 <- DFO_data_clean_2023%>%
   annotation_scale(location = "br"))
 ```
 
+```{r Saving the Rec boat points 2023 map}
+png(filename = here("./04_plots/explanatory/rec_fishing_boats_2023_plot.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+rec_fishing_boats_2023_plot
+
+dev.off()
+```
+
+
 ###Making the points into a raster file for comparison with the global fishing watch data
 ```{r Making the points into shape data and summing based on the }
 rec_fishing_boat_points <- st_as_sf(rec_boats_fishing2023, coords = c("Longitude", "Latitude"), crs = 4326)
@@ -1817,14 +2047,14 @@ rec_filtered_data <- rec_data_aggregated_data %>%
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max))+
   theme.figure() +
-  labs(fill = "Number of Recreational \nBoats Fishing",
+  labs(fill = "# of Recreational \nBoats Fishing",
        x = "Longitude",
        y = "Latitude",
        title = "2023"))
 ```
 
 ```{r Saving the rec fishing boat plot, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/rec_fishing_grid_2023.png"), width = 7.5, height = 5.5, 
+png(filename = here("./04_plots/explanatory/rec_fishing_grid_2023.png"), width = 7.5, height = 5.5, 
     units = "in", pointsize = 15, res = 600)
 
 rec_fishing_grid_2023
