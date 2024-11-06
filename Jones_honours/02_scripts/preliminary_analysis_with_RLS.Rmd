@@ -1315,7 +1315,7 @@ print(map_plot)
     geom_point(data = urch_sn_ratio_RLS_2024,
              mapping = aes(x = longitude, y = latitude, colour = urch_sn_ratio), 
               shape = 1, size = 3, colour = "black") + 
-  #scale_fill_viridis_c() +
+  #scale_colour_viridis_c() +
   scale_colour_gradient2(
     low = "blue",          # Color for negative values
     mid = "white",         # Color for zero
