@@ -1013,7 +1013,7 @@ site_coordinates_corrected_2024 <- site_coords_2024%>%
 
 ```{r Converting site coordinates into spatial points file type 2024}
 site_sp_2024 <- st_as_sf(site_coords_2024, coords = c("longitude", "latitude"), crs = 4326)
-bearings <- seq(1, 360, by = 1)
+bearings <- seq(200, 230, by = 1)
 ```
 
 ###Calculating fetch for all of the sites in 2024
@@ -1034,12 +1034,12 @@ fetch_df_2024$site_code <- site_code
 fetch_df_2024$latitude <- site_coordinates_corrected_2024$latitude
 fetch_df_2024$longitude <- site_coordinates_corrected_2024$longitude
 
-fetch_df_2024_final <- fetch_df_2024[, c(361, 362, 363, seq(1, 360, by = 1))]
+fetch_df_2024_final <- fetch_df_2024[, c(32, 33, 34, seq(1, 31, by = 1))]
 ```
 
 ```{r Converting the data into long format}
 fetch_2024_long <- fetch_df_2024_final %>%
-  pivot_longer(cols = `1`: `360`,  # Columns for compass degrees (assuming "degree1", "degree2", ...)
+  pivot_longer(cols = `200`: `230`,  # Columns for compass degrees (assuming "degree1", "degree2", ...)
                names_to = "degree",           # Name of the new column for degrees
                values_to = "fetch",           # Name of the new column for fetch values
                names_prefix = "degree")       # Remove "degree" prefix from column names if needed
@@ -2096,3 +2096,20 @@ sst_values <- raster::extract(average_temperature, site_points_df) - 273.15
 urch_sn_ratio_mod_2024$sst <- sst_values
 ```
 
+
+###Adding photoquadrat data to the urchin ratio
+```{r Loading in the photoquadrat data}
+pq_data <- read_csv(here("./01_raw_data/photoquadrat_data.csv"))
+
+pq_data_final <- pq_data%>%
+  select(c(site_code, depth, dominant_score, secondary_score))%>%
+  distinct(site_code, depth, .keep_all = TRUE)
+```
+
+```{r Merging the photoquadrat data with the urch sn ratio df}
+urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, pq_data_final, by = c("site_code", "depth"),
+                                all.x = TRUE)
+```
+
+
+###Adding in the fetch data
