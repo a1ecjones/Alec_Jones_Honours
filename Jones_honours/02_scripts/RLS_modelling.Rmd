@@ -7,4 +7,18 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+
 ```
+
+
+#Modelling the environmental variables
+
+##Loading in the data
+```{r Loading in the data}
+env_mod_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
+```
+
+

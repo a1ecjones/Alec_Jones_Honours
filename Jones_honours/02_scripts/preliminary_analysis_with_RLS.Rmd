@@ -976,12 +976,12 @@ site_coords_2024 <- site_data_2024%>%
 
 ###Adjusting the points to be in the water
 ```{r Adjusting the points so that all the transects are in the water for calculations}
-site_coordinates_corrected_2024 <- site_coords_2024%>%
- mutate(latitude = if_else(row_number() == 1, 48.828689, latitude))%>%
- mutate(longitude = if_else(row_number() == 1, -125.197557, longitude))%>%
+#site_coordinates_corrected_2024 <- site_coords_2024%>%        Did not use this for the latest fetch calculations
+ #mutate(latitude = if_else(row_number() == 1, 48.828689, latitude))%>%
+ #mutate(longitude = if_else(row_number() == 1, -125.197557, longitude))%>%
   
-     mutate(latitude = if_else(row_number() == 11, 48.829336, latitude))%>%
-     mutate(longitude = if_else(row_number() == 11, -125.221597, longitude))%>%
+  #   mutate(latitude = if_else(row_number() == 11, 48.829336, latitude))%>%
+   #  mutate(longitude = if_else(row_number() == 11, -125.221597, longitude))%>%
   
   mutate(latitude = if_else(row_number() == 12, 48.850541, latitude))%>%
   mutate(longitude = if_else(row_number() == 12, -125.198564, longitude))%>%
@@ -1031,8 +1031,8 @@ fetch_df_2024 <- as.data.frame(fetch_df_2024)
 
 fetch_df_2024$site_code <- site_code
 
-fetch_df_2024$latitude <- site_coordinates_corrected_2024$latitude
-fetch_df_2024$longitude <- site_coordinates_corrected_2024$longitude
+fetch_df_2024$latitude <- site_coords_2024$latitude
+fetch_df_2024$longitude <- site_coords_2024$longitude
 
 fetch_df_2024_final <- fetch_df_2024[, c(32, 33, 34, seq(1, 31, by = 1))]
 ```
@@ -2099,7 +2099,7 @@ urch_sn_ratio_mod_2024$sst <- sst_values
 
 ###Adding photoquadrat data to the urchin ratio
 ```{r Loading in the photoquadrat data}
-pq_data <- read_csv(here("./01_raw_data/photoquadrat_data.csv"))
+pq_data <- read_csv(here("./01_raw_data/pq_data.csv"))
 
 pq_data_final <- pq_data%>%
   select(c(site_code, depth, dominant_score, secondary_score))%>%
@@ -2113,3 +2113,22 @@ urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, pq_data_final, by = c("s
 
 
 ###Adding in the fetch data
+
+```{r Calculating the average fetch from the range of values calculated previously for each site}
+avg_fetch <- fetch_2024_long%>%
+  group_by(site_code, latitude, longitude)%>%
+  summarise(avg_fetch = mean(fetch))
+```
+
+```{r Adding the avg fetch values into the urch sn ratio df}
+urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, avg_fetch, by = c("site_code", "latitude", "longitude"))
+```
+
+
+###Writing a final csv for modelling the environmental variables
+
+```{r Writing the urch sn ratio mod df}
+write_csv(urch_sn_ratio_mod_2024,
+          here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
+```
+
