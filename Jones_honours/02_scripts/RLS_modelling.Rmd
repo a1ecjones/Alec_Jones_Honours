@@ -114,12 +114,13 @@ avg_fetch_sm |>
 ###With spatial autocorrelation term
 
 ```{r Building the gam with the spatial autocorrelation term}
-env_mod_sp <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + te(latitude, longitude),
+env_mod_sp <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, k =10),
                   data = env_mod_data, 
                   method = 'REML',
                   select = TRUE)   #In this case I have added the lat long as an interaction term directly in the model
 
 gam.check(env_mod_sp, rep = 500)
+plot(env_mod_sp, residuals = TRUE)
 ```
 
 ```{r}
