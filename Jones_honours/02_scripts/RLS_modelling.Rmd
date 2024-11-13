@@ -14,6 +14,7 @@ library(mgcv)
 library(DHARMa)
 library(mgcViz)
 library(ggeffects)
+library(gratia)
 ```
 
 
@@ -28,6 +29,7 @@ env_mod_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
 env_mod_data$sst_scale <- scale(env_mod_data$sst)
 env_mod_data$avg_fetch_scale <- scale(env_mod_data$avg_fetch)
 env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
+levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
 ```
 
 ##Plotting EVs against urch sn ratio
@@ -53,9 +55,9 @@ ggplot(env_mod_data, aes(x = dominant_score, y = urch_sn_ratio))+
 ##Building the GAM
 
 ```{r Making a gam with no spatial autocorrelation term to start}
-env_mod <- gam(urch_sn_ratio ~ s(sst_scale, k = 11) + s(avg_fetch_scale), data = env_mod_data, method = 'REML', select = TRUE)
+env_mod <- gam(urch_sn_ratio ~ s(sst_scale, k = 13) + s(avg_fetch_scale) + dominant_score, data = env_mod_data, method = 'REML', select = TRUE)
 
-gam.check(env_mod, rep = 100)
+gam.check(env_mod, rep = 500)
 
 ```
 
@@ -65,33 +67,37 @@ plot(env_mod_resids)
 ```
 
 ```{r Plotting the model output}
-gratia::draw(env_mod)
+draw(env_mod, residuals = TRUE)
 ```
 
 
 ###Visualizing the model output
 ```{r}
-plot(ggeffects::ggpredict(env_mod), facets = TRUE)
+sst_sm <- smooth_estimates(env_mod, select = "s(sst_scale)")
+avg_fetch_sm <- smooth_estimates(env_mod, select = "s(avg_fetch_scale)")
 ```
 
-####Using ggpredict to get predicted values for each EV
-```{r Using ggpredict to predict values for the EVs}
-pred_env_data <- ggpredict(env_mod, terms = "sst_scale", "avg_fetch_scale", "dominant_score")%>%
-  as.data.frame()
-```
-
-```{r}
-ggplot(env_mod_data, aes(x = sst_scale, y = urch_sn_ratio))+
-  geom_point()+
-  geom_line(aes(y = predict(env_mod, new_data = env_mod_data)), colour = "blue")+
+```{r Plotting the temp model estimates}
+sst_sm |>
+  add_confint() |>
+  ggplot(aes(y = .estimate, x = sst_scale))+
+    geom_ribbon(aes(ymin = .lower_ci, ymax = .upper_ci),
+         alpha = 0.2, fill = "forestgreen")+
+  geom_line(colour = "forestgreen", linewidth = 1.5)+
+  labs(y = "Partial Effect", x = "sst_scaled")+
   theme.figure()
 ```
 
 
-```{r}
-ggplot(env_mod_data, aes(x = avg_fetch_scale, y = urch_sn_ratio))+
-  geom_point()+
-  geom_line(aes(y = predict.gam(env_mod, new_data = env_mod_data)), colour = "blue")+
+```{r Plotting the fetch model estimates}
+avg_fetch_sm |>
+  add_confint() |>
+  ggplot(aes(y = .estimate, x = avg_fetch_scale))+
+    geom_ribbon(aes(ymin = .lower_ci, ymax = .upper_ci),
+         alpha = 0.2, fill = "forestgreen")+
+  geom_line(colour = "forestgreen", linewidth = 1.5)+
+  labs(y = "Partial Effect", x = "avg_fetch_scaled")+
   theme.figure()
 ```
+
 
