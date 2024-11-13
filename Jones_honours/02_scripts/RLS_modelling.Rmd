@@ -61,15 +61,8 @@ env_mod <- gam(urch_sn_ratio ~ s(sst_scale, k = 13) + s(avg_fetch_scale) + domin
                method = 'REML',
                select = TRUE)
 
-env_mod_no_fetch <- gam(urch_sn_ratio ~ s(sst_scale, k = 13) + dominant_score, data = env_mod_data,
-                        method = 'REML',
-                        select = TRUE)
 
 gam.check(env_mod, rep = 500)
-gam.check(env_mod_no_fetch, rep = 500)
-
-AIC(env_mod, env_mod_no_fetch)
-itsadug::compareML(env_mod, env_mod_no_fetch)
 ```
 
 ```{r Checking the model fit with DHARMa}
@@ -110,6 +103,19 @@ avg_fetch_sm |>
   labs(y = "Partial Effect", x = "avg_fetch_scaled")+
   theme.figure()
 ```
+
+```{r}
+env_mod_no_fetch <- gam(urch_sn_ratio ~ s(sst_scale, k = 13) + dominant_score, data = env_mod_data,
+                        method = 'REML',
+                        select = TRUE)
+
+gam.check(env_mod_no_fetch, rep = 500)
+
+AIC(env_mod, env_mod_no_fetch)
+itsadug::compareML(env_mod, env_mod_no_fetch)
+```
+
+
 
 ###With spatial autocorrelation term
 
