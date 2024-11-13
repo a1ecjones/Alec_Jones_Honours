@@ -10,7 +10,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(here)
-
+library(mgcv)
+library(DHARMa)
+library(mgcViz)
+library(ggeffects)
 ```
 
 
@@ -21,4 +24,74 @@ library(here)
 env_mod_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
 ```
 
+```{r Scaling the explanatory variables and converting substrate type to factor}
+env_mod_data$sst_scale <- scale(env_mod_data$sst)
+env_mod_data$avg_fetch_scale <- scale(env_mod_data$avg_fetch)
+env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
+```
+
+##Plotting EVs against urch sn ratio
+
+```{r ratio against fetch}
+ggplot(env_mod_data, aes(x = avg_fetch_scale, y = urch_sn_ratio))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against sst}
+ggplot(env_mod_data, aes(x = sst_scale, y = urch_sn_ratio))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against substrate type}
+ggplot(env_mod_data, aes(x = dominant_score, y = urch_sn_ratio))+
+  geom_point()+
+  theme.figure()
+```
+
+##Building the GAM
+
+```{r Making a gam with no spatial autocorrelation term to start}
+env_mod <- gam(urch_sn_ratio ~ s(sst_scale, k = 11) + s(avg_fetch_scale), data = env_mod_data, method = 'REML', select = TRUE)
+
+gam.check(env_mod, rep = 100)
+
+```
+
+```{r Checking the model fit with DHARMa}
+env_mod_resids <- simulateResiduals(env_mod)
+plot(env_mod_resids)
+```
+
+```{r Plotting the model output}
+gratia::draw(env_mod)
+```
+
+
+###Visualizing the model output
+```{r}
+plot(ggeffects::ggpredict(env_mod), facets = TRUE)
+```
+
+####Using ggpredict to get predicted values for each EV
+```{r Using ggpredict to predict values for the EVs}
+pred_env_data <- ggpredict(env_mod, terms = "sst_scale", "avg_fetch_scale", "dominant_score")%>%
+  as.data.frame()
+```
+
+```{r}
+ggplot(env_mod_data, aes(x = sst_scale, y = urch_sn_ratio))+
+  geom_point()+
+  geom_line(aes(y = predict(env_mod, new_data = env_mod_data)), colour = "blue")+
+  theme.figure()
+```
+
+
+```{r}
+ggplot(env_mod_data, aes(x = avg_fetch_scale, y = urch_sn_ratio))+
+  geom_point()+
+  geom_line(aes(y = predict.gam(env_mod, new_data = env_mod_data)), colour = "blue")+
+  theme.figure()
+```
 
