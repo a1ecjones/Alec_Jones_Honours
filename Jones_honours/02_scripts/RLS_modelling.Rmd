@@ -171,3 +171,13 @@ gam.check(env_mod_sp_cor, rep = 500)
 draw(env_mod_sp_cor)
 ```
 
+
+####Testing the data to see if it is spatially correlated
+
+```{r}
+inv_dist <- with(env_mod_data, 1/dist(cbind(latitude, longitude), diag = TRUE, upper = TRUE))
+inv_dist <- as.matrix(inv_dist)
+inv_dist[is.infinite(inv_dist)] <- 0.1
+ape::Moran.I(env_mod_data$urch_sn_ratio, weight = inv_dist, scaled = TRUE)
+```
+
