@@ -187,3 +187,6 @@ inv_dist[is.infinite(inv_dist)] <- 0.1
 ape::Moran.I(env_mod_data$urch_sn_ratio, weight = inv_dist, scaled = TRUE)
 ```
 
+####Testing the data for colinearity
+
+
