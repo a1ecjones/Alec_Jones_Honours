@@ -41,7 +41,7 @@ ggplot(env_mod_data, aes(x = avg_fetch_scale, y = urch_sn_ratio))+
 ```
 
 ```{r ratio against sst}
-ggplot(env_mod_data, aes(x = sst_scale, y = urch_sn_ratio))+
+ggplot(env_mod_data, aes(x = sst, y = urch_sn_ratio))+
   geom_point()+
   theme.figure()
 ```
@@ -56,14 +56,20 @@ ggplot(env_mod_data, aes(x = dominant_score, y = urch_sn_ratio))+
 
 ###No spatial autocorrelation term
 ```{r Making a gam with no spatial autocorrelation term to start}
-env_mod <- gam(urch_sn_ratio ~ s(sst_scale, k = 13) + s(avg_fetch_scale) + dominant_score,
+env_mod <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score,
                data = env_mod_data,
+               family = gaussian(link = "identity"),
                method = 'REML',
                select = TRUE)
 
-
+set.seed(13)
 gam.check(env_mod, rep = 500)
+
+plot(env_mod)
+
+summary(env_mod)
 ```
+
 
 ```{r Checking the model fit with DHARMa}
 env_mod_resids <- simulateResiduals(env_mod)
@@ -105,22 +111,31 @@ avg_fetch_sm |>
 ```
 
 ```{r}
-env_mod_no_fetch <- gam(urch_sn_ratio ~ s(sst_scale, k = 13) + dominant_score, data = env_mod_data,
+env_mod_no_fetch <- gam(urch_sn_ratio ~ s(sst_scale) + dominant_score, data = env_mod_data,
                         method = 'REML',
-                        select = TRUE)
+                        family = gaussian(link = "identity"),
+                        select = FALSE)
 
 gam.check(env_mod_no_fetch, rep = 500)
 
-AIC(env_mod, env_mod_no_fetch)
+
+AIC(env_mod, env_mod_no_fetch)%>%
+arrange(AIC)%>%
+  mutate(delta_AIC = AIC - AIC[1])
+
+
 itsadug::compareML(env_mod, env_mod_no_fetch)
 ```
 
+```{r}
+draw(env_mod_no_fetch)
+```
 
 
 ###With spatial autocorrelation term
 
 ```{r Building the gam with the spatial autocorrelation term}
-env_mod_sp <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, k =10),
+env_mod_sp <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, k = 10),
                   data = env_mod_data, 
                   method = 'REML',
                   select = TRUE)   #In this case I have added the lat long as an interaction term directly in the model
@@ -145,8 +160,10 @@ env_mod_sp_test <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + domin
                   data = env_mod_data, 
                   method = 'REML',
                   select = TRUE)   #In this case I have added the lat long as an interaction term directly in the model
-
+?gam
 gam.check(env_mod_sp_test, rep = 500)
+summary(env_mod_sp_test)
+plot(env_mod_sp_test)
 ```
 
 ```{r}
@@ -164,9 +181,9 @@ draw(env_mod_sp_test)
 
 
 ```{r Building gamm with spatial autocorrelation term}
-env_mod_sp_cor <- gamm(urch_sn_ratio ~ s(sst_scale, k = 12) + s(avg_fetch_scale) + dominant_score, 
+env_mod_sp_cor <- gamm(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score, 
                         data = env_mod_data, 
-                       correlation = corSpher(form = ~ longitude + latitude + depth), 
+                       correlation = corSpher(form = ~ longitude + latitude), 
                        method = 'REML',
                        select = TRUE)
 
