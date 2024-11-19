@@ -15,6 +15,7 @@ library(DHARMa)
 library(mgcViz)
 library(ggeffects)
 library(gratia)
+library(geoR)
 ```
 
 
@@ -190,7 +191,15 @@ ape::Moran.I(env_mod_data$urch_sn_ratio, weight = inv_dist, scaled = TRUE)
 ```
 
 ```{r Plotting a semi-variogram to confirm that the data is not spatially autocorrelated}
+lat_long_dist <- dist(urch_sn_ratio_mod_2024[, 2:3])
+summary(lat_long_dist)
 
+variog_data <- urch_sn_ratio_mod_2024%>%
+  select(c(latitude, longitude, urch_sn_ratio))
+variog_data <- as.geodata(variog_data)
+
+plot(variog_data)
+points(variog_data)
 ```
 
 
