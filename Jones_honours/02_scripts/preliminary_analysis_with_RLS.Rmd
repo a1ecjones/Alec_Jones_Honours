@@ -961,6 +961,105 @@ urch_m2_macro_ratio_RLS_2024_final <- urch_m2_macro_ratio_RLS_2024%>%
 
 ##2024 Wave exposure calculations
 
+###Calculating the dominant wind direction for calculating the fetch
+
+####For 2024
+```{r loading in the 2024 wind direction data}
+wind_data_csv_list_2024 <- list.files(path = here("./01_raw_data/wind_direction_data"), pattern = "||.csv$", 
+                                         full.names = TRUE)
+
+wind_data_2024 <- wind_data_csv_list_2024%>%
+ lapply(function(file) {
+   read_csv(file, col_types = cols(.default = "c"))
+ }) %>%
+  bind_rows()%>%
+  mutate(across(everything(), ~ na_if(.x, "MD")))%>%
+  na.omit()
+
+wind_data_2024$Average <- as.numeric(wind_data_2024$Average)
+wind_data_2024$Date <- make_date(wind_data_2024$Year, wind_data_2024$Month, wind_data_2024$Day)
+```
+
+```{r calculating mean and CIs for the wind datq}
+mean_wind_direction <- mean(wind_data_2024$Average)
+n_2024 <- sum(!is.na(wind_data_2024$Average))
+se_2024 <- sd(wind_data_2024$Average) / sqrt(n_2024)
+ci_2024 <- qt(0.975, df = n_2024 - 1) * se_2024
+
+```
+
+```{r plotting the data}
+(wind_dir_2024 <- ggplot(wind_data_2024, aes(x = Date, y = Average))+
+   geom_point()+
+   geom_hline(yintercept = mean_wind_direction, colour = "red", linetype = "dashed")+
+  # geom_ribbon(aes(ymin = mean_wind_direction - ci_2024, ymax = mean_wind_direction + ci_2024), 
+               #fill = "red", alpha = 0.2)+
+   theme.figure()+
+    annotate("text", x = min(wind_data_2024$Date) + 10, y = mean_wind_direction + 100, 
+           label = paste("Average:", round(mean_wind_direction, 2)), vjust = -1, color = "red"))
+```
+
+####For 2019
+```{r reading in the wind data for 2019}
+wind_data_csv_list_2019 <- list.files(path = here("./01_raw_data/wind_direction_data/2019"), pattern = "||.csv$", 
+                                         full.names = TRUE)
+
+wind_data_2019 <- wind_data_csv_list_2019%>%
+ lapply(function(file) {
+   read_csv(file, col_types = cols(.default = "c"))
+ }) %>%
+  bind_rows()%>%
+  mutate(across(everything(), ~ na_if(.x, "MD")))%>%
+  na.omit()
+
+wind_data_2019$Average <- as.numeric(wind_data_2019$Average)
+wind_data_2019$Date <- make_date(wind_data_2019$Year, wind_data_2019$Month, wind_data_2019$Day)
+mean_wind_direction_2019 <- mean(wind_data_2019$Average)
+```
+
+```{r plotting the data}
+(wind_dir_2019 <- ggplot(wind_data_2019, aes(x = Date, y = Average))+
+   geom_point()+
+   geom_hline(yintercept = mean_wind_direction_2019, colour = "red", linetype = "dashed")+
+   theme.figure()+
+    annotate("text", x = min(wind_data_2019$Date) + 100, y = mean_wind_direction - 100, 
+           label = paste("Average:", round(mean_wind_direction_2019, 2)), vjust = -1, color = "red"))
+```
+
+####For 2018
+```{r reading in the wind data for 2019}
+wind_data_csv_list_2018 <- list.files(path = here("./01_raw_data/wind_direction_data/2018"), pattern = "||.csv$", 
+                                         full.names = TRUE)
+
+wind_data_2018 <- wind_data_csv_list_2018%>%
+ lapply(function(file) {
+   read_csv(file, col_types = cols(.default = "c"))
+ }) %>%
+  bind_rows()%>%
+  mutate(across(everything(), ~ na_if(.x, "MD")))%>%
+  na.omit()
+
+wind_data_2018$Average <- as.numeric(wind_data_2018$Average)
+wind_data_2018$Date <- make_date(wind_data_2018$Year, wind_data_2018$Month, wind_data_2018$Day)
+mean_wind_direction_2018 <- mean(wind_data_2018$Average)
+```
+
+```{r plotting the data}
+(wind_dir_2018 <- ggplot(wind_data_2018, aes(x = Date, y = Average))+
+   geom_point()+
+   geom_hline(yintercept = mean_wind_direction_2018, colour = "red", linetype = "dashed")+
+   theme.figure()+
+    annotate("text", x = min(wind_data_2018$Date) + 100, y = mean_wind_direction - 100, 
+           label = paste("Average:", round(mean_wind_direction_2018, 2)), vjust = -1, color = "red"))
+```
+
+####Across all years
+```{r Mean across all years}
+mean_across_years <- (mean_wind_direction + mean_wind_direction_2018 + mean_wind_direction_2019)/3
+
+```
+
+
 ###Making dataframes for the site lat and longs 2024
 ```{r making 2024 Site data dataframe}
 site_data_2024 <- RLS_data_2024_clean%>%
