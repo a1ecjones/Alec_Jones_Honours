@@ -1055,10 +1055,39 @@ mean_wind_direction_2018 <- mean(wind_data_2018$Average)
 
 ####Across all years
 ```{r Mean across all years}
-mean_across_years <- (mean_wind_direction + mean_wind_direction_2018 + mean_wind_direction_2019)/3
+wind_data_csv_list_all_yrs <- list.files(path = here("./01_raw_data/wind_direction_data"), pattern = "||.csv$", 
+                                         full.names = TRUE)
+
+wind_data_all_yrs <- wind_data_csv_list_all_yrs%>%
+ lapply(function(file) {
+   read_csv(file, col_types = cols(.default = "c"))
+ }) %>%
+  bind_rows()%>%
+  mutate(across(everything(), ~ na_if(.x, "MD")))%>%
+  na.omit()
+
+wind_data_all_yrs$Average <- as.numeric(wind_data_all_yrs$Average)
+wind_data_all_yrs$Date <- make_date(wind_data_all_yrs$Year, wind_data_all_yrs$Month, wind_data_all_yrs$Day)
+mean_wind_direction_all_yrs <- mean(wind_data_all_yrs$Average)
+```
+
+```{r calculating mean and CIs for the wind datq}
+n_all_yrs <- sum(!is.na(wind_data_all_yrs$Average))
+se_all_yrs <- sd(wind_data_all_yrs$Average) / sqrt(n_all_yrs)
+ci_all_yrs <- qt(0.975, df = n_all_yrs - 1) * se_all_yrs
 
 ```
 
+```{r plotting the data}
+(wind_dir_all_yrs <- ggplot(wind_data_all_yrs, aes(x = Date, y = Average))+
+   geom_point()+
+   geom_hline(yintercept = mean_wind_direction_all_yrs, colour = "red", linetype = "dashed")+
+   geom_ribbon(aes(ymin = mean_wind_direction_all_yrs - ci_all_yrs, ymax = mean_wind_direction_all_yrs + ci_all_yrs), 
+               fill = "red", alpha = 0.2)+
+   theme.figure()+
+    annotate("text", x = min(wind_data_all_yrs$Date) + 4000, y = mean_wind_direction_all_yrs - 100, 
+           label = paste("Average:", round(mean_wind_direction_all_yrs, 2)), vjust = -1, color = "red"))
+```
 
 ###Making dataframes for the site lat and longs 2024
 ```{r making 2024 Site data dataframe}
