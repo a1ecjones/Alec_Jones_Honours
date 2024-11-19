@@ -66,8 +66,6 @@ set.seed(13)
 gam.check(env_mod, rep = 500)
 
 plot(env_mod)
-
-summary(env_mod)
 ```
 
 
@@ -156,53 +154,45 @@ draw(env_mod_sp)
 
 
 ```{r Building the gam with the spatial autocorrelation term}
-env_mod_sp_test <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
+env_mod_sp_gp <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
                   data = env_mod_data, 
+                  family = gaussian(link = "identity"),
                   method = 'REML',
                   select = TRUE)   #In this case I have added the lat long as an interaction term directly in the model
-?gam
-gam.check(env_mod_sp_test, rep = 500)
-summary(env_mod_sp_test)
-plot(env_mod_sp_test)
+
+set.seed(10)
+gam.check(env_mod_sp_gp, rep = 500)
+plot(env_mod_sp_gp)
 ```
-
-```{r}
-draw(env_mod_sp_test)
-```
-
-
-
-
-
-
-
-
-
 
 
 ```{r Building gamm with spatial autocorrelation term}
 env_mod_sp_cor <- gamm(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score, 
-                        data = env_mod_data, 
+                        data = env_mod_data,
+                       family = gaussian(link = "identity"),
                        correlation = corSpher(form = ~ longitude + latitude), 
                        method = 'REML',
                        select = TRUE)
 
+set.seed(100)
 gam.check(env_mod_sp_cor, rep = 500)
-```
-
-```{r}
-draw(env_mod_sp_cor)
+plot(env_mod_sp_cor)
 ```
 
 
 ####Testing the data to see if it is spatially correlated
 
-```{r}
+```{r Using Moran's I test on the data}
 inv_dist <- with(env_mod_data, 1/dist(cbind(latitude, longitude), diag = TRUE, upper = TRUE))
 inv_dist <- as.matrix(inv_dist)
 inv_dist[is.infinite(inv_dist)] <- 0.1
 ape::Moran.I(env_mod_data$urch_sn_ratio, weight = inv_dist, scaled = TRUE)
 ```
+
+```{r Plotting a semi-variogram to confirm that the data is not spatially autocorrelated}
+
+```
+
 
 ####Testing the data for colinearity
 

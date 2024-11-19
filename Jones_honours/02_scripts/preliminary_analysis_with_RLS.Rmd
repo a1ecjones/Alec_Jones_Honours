@@ -1089,6 +1089,11 @@ ci_all_yrs <- qt(0.975, df = n_all_yrs - 1) * se_all_yrs
            label = paste("Average:", round(mean_wind_direction_all_yrs, 2)), vjust = -1, color = "red"))
 ```
 
+```{r Histogram of the wind direction data for all years}
+hist(wind_data_all_yrs$Average)
+```
+
+
 ###Making dataframes for the site lat and longs 2024
 ```{r making 2024 Site data dataframe}
 site_data_2024 <- RLS_data_2024_clean%>%
