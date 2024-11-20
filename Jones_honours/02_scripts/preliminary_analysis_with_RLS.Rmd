@@ -2075,6 +2075,7 @@ gfw_data_clean_poly$cell_id <- paste(gfw_data_clean_poly$latitude, gfw_data_clea
    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max))+
+    #geom_point(data = urch_sn_ratio_mod_2024, aes(x = longitude, y = latitude))+
   theme.figure() +
   labs(fill = "Fishing Hours",
        x = "Longitude",
@@ -2207,6 +2208,7 @@ rec_filtered_data <- rec_data_aggregated_data %>%
    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max))+
+    geom_point(data = urch_sn_ratio_mod_2024, aes(x = longitude, y = latitude))+
   theme.figure() +
   labs(fill = "# of Recreational \nBoats Fishing",
        x = "Longitude",
@@ -2312,3 +2314,50 @@ write_csv(urch_sn_ratio_mod_calc_2024,
           here("./03_clean_data/urch_sn_ratio_mod_calc_data.csv"))
 ```
 
+###Adding in the fishing variables to the data frame
+```{r making a fishing modelling data frame}
+urch_sn_ratio_fishing_mod_2024 <- RLS_data_2024_clean%>%
+  pivot_wider(names_from = Code, values_from = species_total)%>%
+  mutate(Urchins = mfra,
+         Turban_Snails = pgi)%>%
+  select(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour, Urchins, Turban_Snails)%>%
+  replace(is.na(.), 0)%>%
+  mutate(urch_sn_ratio = log10((Urchins +1) / (Turban_Snails + 1)),
+         survey_date = dmy(survey_date))
+```
+
+
+####Adding the GFW data
+
+```{r Combining the sites with the gfw data to get the app fishing hours for each site}
+urch_sn_ratio_sf <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = st_crs(gfw_data_clean_poly))
+
+urch_sn_ratio_sf <- st_transform(urch_sn_ratio_sf, crs = st_crs(gfw_data_clean_poly))
+
+combined_urch_sn_GFW <- st_join(urch_sn_ratio_sf, gfw_data_clean_poly)
+combined_urch_sn_GFW$app_fish_hrs <- combined_urch_sn_GFW$app_fish_hrs%>%
+  replace(is.na(.), 0)
+```
+
+```{r Extracting the apparent fishing hours from the combined df and adding it to the modelling data}
+urch_sn_ratio_fishing_mod_2024 <- cbind(urch_sn_ratio_fishing_mod_2024, combined_urch_sn_GFW$app_fish_hrs)
+
+colnames(urch_sn_ratio_fishing_mod_2024)[12] <- "app_fishing_hrs"
+```
+
+####Adding the rec fishing data
+```{r Combining the sites with the rec fishing data to get the # of boats for each site}
+urch_sn_ratio_sf_rec <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = st_crs(rec_filtered_data))
+urch_sn_ratio_sf_rec <- st_transform(urch_sn_ratio_sf_rec, crs = st_crs(rec_filtered_data))
+
+combined_urch_sn_rec <- st_join(urch_sn_ratio_sf_rec, rec_filtered_data)
+combined_urch_sn_rec$total_boats <- combined_urch_sn_rec$total_boats%>%
+  replace(is.na(.), 0)
+```
+
+```{r Extracting the rec fishing boats from the combined df and adding it to the modelling data}
+urch_sn_ratio_fishing_mod_2024 <- cbind(urch_sn_ratio_fishing_mod_2024, combined_urch_sn_rec$total_boats)
+
+colnames(urch_sn_ratio_fishing_mod_2024)[13] <- "total_rec_boats"
+```
