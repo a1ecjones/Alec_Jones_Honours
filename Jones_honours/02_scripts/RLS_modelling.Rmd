@@ -22,6 +22,10 @@ library(sf)
 ```
 
 
+
+
+
+
 #Modelling the environmental variables
 
 ##Loading in the data with old fetch data
