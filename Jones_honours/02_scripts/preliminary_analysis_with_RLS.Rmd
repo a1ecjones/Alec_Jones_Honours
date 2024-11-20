@@ -1088,7 +1088,9 @@ ci_all_yrs <- qt(0.975, df = n_all_yrs - 1) * se_all_yrs
     annotate("text", x = min(wind_data_all_yrs$Date) + 4000, y = mean_wind_direction_all_yrs - 100, 
            label = paste("Average:", round(mean_wind_direction_all_yrs, 2)), vjust = -1, color = "red"))
 ```
-
+179
+182
+185
 ```{r Histogram of the wind direction data for all years}
 hist(wind_data_all_yrs$Average)
 ```
@@ -1147,15 +1149,18 @@ site_coords_2024 <- site_data_2024%>%
 ```{r Converting site coordinates into spatial points file type 2024}
 site_sp_2024 <- st_as_sf(site_coords_2024, coords = c("longitude", "latitude"), crs = 4326)
 bearings <- seq(200, 230, by = 1)
+bearings_calculated <- c(179, 180, 181, 182, 183, 184, 185)
 ```
 
 ###Calculating fetch for all of the sites in 2024
 ```{r Calculating the fetch for the sites 2024}
 fetch_df_2024 <- fetch_len_multi(site_sp_2024, bearings, dmax = 40000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
+
+fetch_df_2024_calc <- fetch_len_multi(site_sp_2024, bearings = bearings_calculated, dmax = 40000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
 ```
 
 ###Turning the raw fetch data into a dataframe with column labels
-```{r}
+```{r Turning the raw fetch data into a dataframe with column labels}
 site_code <- c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC13", "BMSC14", "BMSC15", "BMSC16",
                "BMSC17", "BMSC18", "BMSC19", "BMSC2", "BMSC20", "BMSC21", "BMSC22", "BMSC23", "BMSC24",
                "BMSC25", "BMSC26", "BMSC27", "BMSC3", "BMSC4", "BMSC5", "BMSC6", "BMSC8", "BMSC9")
@@ -1170,6 +1175,20 @@ fetch_df_2024$longitude <- site_coords_2024$longitude
 fetch_df_2024_final <- fetch_df_2024[, c(32, 33, 34, seq(1, 31, by = 1))]
 ```
 
+```{r Turning the raw fetch data using the calculated wind dir into a dataframe}
+fetch_df_2024_calc <- as.data.frame(fetch_df_2024_calc)
+
+fetch_df_2024_calc$site_code <- site_code
+
+fetch_df_2024_calc$latitude <- site_coords_2024$latitude
+fetch_df_2024_calc$longitude <- site_coords_2024$longitude
+
+fetch_df_2024_calc_final <- fetch_df_2024_calc[, c(8, 9, 10, seq(1, 7, by = 1))]
+```
+
+
+
+
 ```{r Converting the data into long format}
 fetch_2024_long <- fetch_df_2024_final %>%
   pivot_longer(cols = `200`: `230`,  # Columns for compass degrees (assuming "degree1", "degree2", ...)
@@ -1180,9 +1199,18 @@ fetch_2024_long <- fetch_df_2024_final %>%
 ```
 
 
+```{r Converting the data with the calculated wind dir into long format}
+fetch_2024_calc_long <- fetch_df_2024_calc_final %>%
+  pivot_longer(cols = `179`: `185`,  # Columns for compass degrees (assuming "degree1", "degree2", ...)
+               names_to = "degree",           # Name of the new column for degrees
+               values_to = "fetch",           # Name of the new column for fetch values
+               names_prefix = "degree")       # Remove "degree" prefix from column names if needed
+
+```
+
 ###Plotting the fetch for just one site as a test
 ```{r}
-ggplot(fetch_2024_long %>% filter(site_code == "BMSC1"), aes(x = as.numeric(degree), y = fetch,
+ggplot(fetch_2024_calc_long %>% filter(site_code == "BMSC11"), aes(x = as.numeric(degree), y = fetch,
                                                              fill = fetch)) +
   geom_bar(stat = "identity", position = "identity") +
   coord_polar(start = 0) +  # Convert to polar coordinates
@@ -2242,6 +2270,8 @@ pq_data_final <- pq_data%>%
 ```{r Merging the photoquadrat data with the urch sn ratio df}
 urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, pq_data_final, by = c("site_code", "depth"),
                                 all.x = TRUE)
+
+urch_sn_ratio_mod_calc_2024 <- urch_sn_ratio_mod_2024   #Making a separate df for the calc here so that it does not add fetch to both
 ```
 
 
@@ -2258,10 +2288,27 @@ urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, avg_fetch, by = c("site_
 ```
 
 
+```{r Calculating the avg fetch values for the fetch data using the calc wind dir}
+avg_fetch_calc <- fetch_2024_calc_long%>%
+  group_by(site_code, latitude, longitude)%>%
+  summarise(avg_fetch = mean(fetch))
+```
+
+```{r Adding the avg fetch values into a new urch sn ratio df}
+urch_sn_ratio_mod_calc_2024 <- merge(urch_sn_ratio_mod_calc_2024, avg_fetch_calc, by = c("site_code", "latitude", "longitude"))
+```
+
+
 ###Writing a final csv for modelling the environmental variables
 
 ```{r Writing the urch sn ratio mod df}
 write_csv(urch_sn_ratio_mod_2024,
           here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
+```
+
+
+```{r Writing the urch sn ratio mod calc df}
+write_csv(urch_sn_ratio_mod_calc_2024,
+          here("./03_clean_data/urch_sn_ratio_mod_calc_data.csv"))
 ```
 
