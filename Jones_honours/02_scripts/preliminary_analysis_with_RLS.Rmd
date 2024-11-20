@@ -2215,7 +2215,7 @@ rec_filtered_data <- rec_data_aggregated_data %>%
        y = "Latitude",
        title = "2023"))
 ```
-
+do a geometric mean
 ```{r Saving the rec fishing boat plot, fig.width=7.5, fig.height=5.5, include=FALSE}
 png(filename = here("./04_plots/explanatory/rec_fishing_grid_2023.png"), width = 7.5, height = 5.5, 
     units = "in", pointsize = 15, res = 600)
@@ -2360,4 +2360,14 @@ combined_urch_sn_rec$total_boats <- combined_urch_sn_rec$total_boats%>%
 urch_sn_ratio_fishing_mod_2024 <- cbind(urch_sn_ratio_fishing_mod_2024, combined_urch_sn_rec$total_boats)
 
 colnames(urch_sn_ratio_fishing_mod_2024)[13] <- "total_rec_boats"
+```
+
+```{r}
+ggplot(urch_sn_ratio_fishing_mod_2024, aes(x = app_fishing_hrs, y = urch_sn_ratio))+
+  geom_point()
+```
+
+```{r}
+ggplot(urch_sn_ratio_fishing_mod_2024, aes(x = log(total_rec_boats + 1), y = urch_sn_ratio))+
+  geom_point()
 ```
