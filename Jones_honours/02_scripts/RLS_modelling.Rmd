@@ -18,6 +18,7 @@ library(gratia)
 library(geoR)
 library(geosphere)
 library(gstat)
+library(sf)
 ```
 
 
@@ -76,40 +77,10 @@ plot(env_mod)
 env_mod_resids <- simulateResiduals(env_mod)
 plot(env_mod_resids)
 ```
-
-```{r Plotting the model output}
-draw(env_mod, residuals = TRUE)
-```
+All good
 
 
-###Visualizing the model output
-```{r}
-sst_sm <- smooth_estimates(env_mod, select = "s(sst_scale)")
-avg_fetch_sm <- smooth_estimates(env_mod, select = "s(avg_fetch_scale)")
-```
 
-```{r Plotting the temp model estimates}
-sst_sm |>
-  add_confint() |>
-  ggplot(aes(y = .estimate, x = sst_scale))+
-    geom_ribbon(aes(ymin = .lower_ci, ymax = .upper_ci),
-         alpha = 0.2, fill = "forestgreen")+
-  geom_line(colour = "forestgreen", linewidth = 1.5)+
-  labs(y = "Partial Effect", x = "sst_scaled")+
-  theme.figure()
-```
-
-
-```{r Plotting the fetch model estimates}
-avg_fetch_sm |>
-  add_confint() |>
-  ggplot(aes(y = .estimate, x = avg_fetch_scale))+
-    geom_ribbon(aes(ymin = .lower_ci, ymax = .upper_ci),
-         alpha = 0.2, fill = "forestgreen")+
-  geom_line(colour = "forestgreen", linewidth = 1.5)+
-  labs(y = "Partial Effect", x = "avg_fetch_scaled")+
-  theme.figure()
-```
 
 ```{r}
 env_mod_no_fetch <- gam(urch_sn_ratio ~ s(sst_scale) + dominant_score, data = env_mod_data,
@@ -118,19 +89,13 @@ env_mod_no_fetch <- gam(urch_sn_ratio ~ s(sst_scale) + dominant_score, data = en
                         select = FALSE)
 
 gam.check(env_mod_no_fetch, rep = 500)
-
-
-AIC(env_mod, env_mod_no_fetch)%>%
-arrange(AIC)%>%
-  mutate(delta_AIC = AIC - AIC[1])
-
-
-itsadug::compareML(env_mod, env_mod_no_fetch)
 ```
 
 ```{r}
-draw(env_mod_no_fetch)
+env_mod_no_fetch_resid <- simulateResiduals(env_mod_no_fetch)
+plot(env_mod_no_fetch_resid)
 ```
+Possible problem with this model according to DHARMa
 
 
 
@@ -152,7 +117,7 @@ ape::Moran.I(env_mod_data$urch_sn_ratio, weight = inv_sphere_dist, scaled = TRUE
 
 ####Moran's I with transects at same site averaged
 ```{r Making a df with averaged urch_sn ratios}
-urch_sn_ratio_averaged <- urch_sn_ratio_mod_2024%>%
+urch_sn_ratio_averaged <- env_mod_data%>%
   group_by(site_code, latitude, longitude)%>%
   summarise(avg_urch_sn_ratio = mean(urch_sn_ratio))
 ```
@@ -186,7 +151,12 @@ plot(vario_meters)
 
 
 ```{r Variogram with the non-averaged points}
+urch_sn_coords_var_2 <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+urch_sn_coords_var_2_projected <- st_transform(urch_sn_coords_var_2, crs = 3857)
 
+vario_2 <- variogram(urch_sn_ratio ~ 1, data = urch_sn_coords_var_2_projected)
+
+plot(vario_2)
 ```
 
 
@@ -202,7 +172,7 @@ variog_data <- as.geodata(variog_data)
 
 plot(variog_data)
 points(variog_data)
-?variog
+
 variogram_1 <- variog(variog_data)
 plot(variogram_1)
 ```
@@ -215,18 +185,14 @@ env_mod_sp <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_s
                   data = env_mod_data, 
                   method = 'REML',
                   select = TRUE)   #In this case I have added the lat long as an interaction term directly in the model
-
+set.seed(199)
 gam.check(env_mod_sp, rep = 500)
 plot(env_mod_sp, residuals = TRUE)
 ```
 
-```{r}
+```{r DHARMa for the model}
 env_mod_sp_resid <- simulateResiduals(env_mod_sp)
 plot(env_mod_sp_resid)
-```
-
-```{r}
-draw(env_mod_sp)
 ```
 
 
@@ -243,24 +209,90 @@ gam.check(env_mod_sp_gp, rep = 500)
 plot(env_mod_sp_gp)
 ```
 
+```{r DHARMa for model fit}
+env_mod_sp_gp_resid <- simulateResiduals(env_mod_sp_gp)
+plot(env_mod_sp_gp_resid)
+```
+All good
 
-```{r Building gamm with spatial autocorrelation term}
-env_mod_sp_cor <- gamm(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score, 
-                        data = env_mod_data,
+```{r Making a dataframe with sites at the same location shifted slightly}
+env_mod_data_shifted <- env_mod_data%>%
+    mutate(latitude = if_else(row_number() == 2, 48.82896, latitude))%>%
+  mutate(latitude = if_else(row_number() == 5, 48.85746, latitude))%>%
+  mutate(latitude = if_else(row_number() == 7, 48.85827, latitude))%>%
+  mutate(latitude = if_else(row_number() == 21, 48.91608, latitude))%>%
+   mutate(latitude = if_else(row_number() == 23, 48.83858, latitude))%>%
+   mutate(latitude = if_else(row_number() == 25, 48.90711, latitude))%>%
+  mutate(latitude = if_else(row_number() == 30, 48.82734, latitude))%>%
+  mutate(latitude = if_else(row_number() == 32, 48.95024, latitude))%>%
+   mutate(latitude = if_else(row_number() == 34, 48.95508, latitude))
+```
+
+```{r Building the gam with the spatial autocorrelation term and shifted points}
+env_mod_sp_gp_shifted <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
+                  data = env_mod_data_shifted, 
+                  family = gaussian(link = "identity"),
+                  method = 'REML',
+                  select = TRUE)   #In this case I have added the lat long as an interaction term directly in the model
+
+set.seed(10)
+gam.check(env_mod_sp_gp, rep = 500)
+plot(env_mod_sp_gp)
+```
+
+```{r DHARMa for model fit}
+env_mod_sp_gp_shifted_resid <- simulateResiduals(env_mod_sp_gp_shifted)
+plot(env_mod_sp_gp_shifted_resid)
+```
+All good
+
+```{r Building gamm with spatial autocorrelation term corSpher}
+env_mod_sp_cor_Spher <- gamm(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score, 
+                        data = env_mod_data_shifted,
                        family = gaussian(link = "identity"),
                        correlation = corSpher(form = ~ longitude + latitude), 
                        method = 'REML',
                        select = TRUE)
 
-set.seed(100)
-gam.check(env_mod_sp_cor, rep = 500)
-plot(env_mod_sp_cor)
+gam.check(env_mod_sp_cor_Spher$gam, rep = 500)
+plot(env_mod_sp_cor$gam)
+```
+
+```{r DHARMa for model fit}
+env_mod_sp_cor_Spher_resid <- simulateResiduals(fittedModel = env_mod_sp_cor_Spher$lme)
+plot(env_mod_sp_cor_Spher_resid)
 ```
 
 
+```{r Building gamm with spatial autocorrelation term corExp}
+env_mod_sp_cor_exp <- gamm(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score, 
+                        data = env_mod_data_shifted,
+                       family = gaussian(link = "identity"),
+                       correlation = corExp(form = ~ longitude + latitude), 
+                       method = 'REML',
+                       select = TRUE)
 
 
+gam.check(env_mod_sp_cor_exp$gam, rep = 500)
+plot(env_mod_sp_cor_exp$gam)
 
-####Testing the data for colinearity
+```
+
+```{r DHARMa for model fit}
+env_mod_sp_cor_exp_resid <- simulateResiduals(env_mod_sp_cor_exp$lme)
+plot(env_mod_sp_cor_exp_resid)
+```
+
+###AIC with the different models
+
+```{r Comparing the models with an AIC}
+AIC(env_mod, env_mod_no_fetch, env_mod_sp_gp, env_mod_sp_gp_shifted,
+    env_mod_sp_cor_Spher$lme, 
+    env_mod_sp_cor_exp$lme
+    )%>%
+arrange(AIC)%>%
+  mutate(delta_AIC = AIC - AIC[1])
+```
+
 
 
