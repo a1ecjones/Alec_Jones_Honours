@@ -16,6 +16,8 @@ library(mgcViz)
 library(ggeffects)
 library(gratia)
 library(geoR)
+library(geosphere)
+library(gstat)
 ```
 
 
@@ -131,6 +133,81 @@ draw(env_mod_no_fetch)
 ```
 
 
+
+###Testing the data to see if it is spatially correlated
+
+####Moran's I with transects at same site separate
+```{r Using Moran's I test on the data with geosphere}
+##Method setting transects at same site to 1 m apart
+
+sphere_coords <- cbind(env_mod_data$longitude, env_mod_data$latitude)
+sphere_dist <- distm(sphere_coords, fun = distGeo)
+
+sphere_dist[sphere_dist == 0] <- 1
+inv_sphere_dist <- 1 / sphere_dist
+diag(inv_sphere_dist) <- 0
+  
+ape::Moran.I(env_mod_data$urch_sn_ratio, weight = inv_sphere_dist, scaled = TRUE)
+```
+
+####Moran's I with transects at same site averaged
+```{r Making a df with averaged urch_sn ratios}
+urch_sn_ratio_averaged <- urch_sn_ratio_mod_2024%>%
+  group_by(site_code, latitude, longitude)%>%
+  summarise(avg_urch_sn_ratio = mean(urch_sn_ratio))
+```
+
+```{r calculating Moran's I with the averaged points}
+sphere_coords_avg <- cbind(urch_sn_ratio_averaged$longitude, urch_sn_ratio_averaged$latitude)
+
+sphere_dist_avg <- distm(sphere_coords_avg, fun = distGeo)
+
+inv_sphere_dist_avg <- 1 / sphere_dist_avg
+
+diag(inv_sphere_dist_avg) <- 0
+
+ape::Moran.I(urch_sn_ratio_averaged$avg_urch_sn_ratio, weight = inv_sphere_dist_avg, scaled = TRUE)
+```
+
+
+
+####Using a semi-variogram to see what type of spatial autocorrelation factor to use
+
+```{r Transforming the coordinates into meters for the variogram}
+# Using the averaged data
+urch_sn_ratio_averaged_sf <- st_as_sf(urch_sn_ratio_averaged, coords = c("longitude", "latitude"), crs = 4326)
+urch_sn_ratio_averaged_projected <- st_transform(urch_sn_ratio_averaged_sf, crs = 3857)
+```
+
+```{r Plotting a semi-variogram with the meter distances}
+vario_meters <- variogram(avg_urch_sn_ratio ~ 1, data = urch_sn_ratio_averaged_projected)
+plot(vario_meters)
+```
+
+
+```{r Variogram with the non-averaged points}
+
+```
+
+
+
+
+```{r Plotting a semi-variogram to confirm that the data is not spatially autocorrelated}
+lat_long_dist <- dist(urch_sn_ratio_mod_2024[, 2:3])
+summary(lat_long_dist)
+
+variog_data <- urch_sn_ratio_mod_2024%>%
+  select(c(latitude, longitude, urch_sn_ratio))
+variog_data <- as.geodata(variog_data)
+
+plot(variog_data)
+points(variog_data)
+?variog
+variogram_1 <- variog(variog_data)
+plot(variogram_1)
+```
+
+
 ###With spatial autocorrelation term
 
 ```{r Building the gam with the spatial autocorrelation term}
@@ -181,26 +258,7 @@ plot(env_mod_sp_cor)
 ```
 
 
-####Testing the data to see if it is spatially correlated
 
-```{r Using Moran's I test on the data}
-inv_dist <- with(env_mod_data, 1/dist(cbind(latitude, longitude), diag = TRUE, upper = TRUE))
-inv_dist <- as.matrix(inv_dist)
-inv_dist[is.infinite(inv_dist)] <- 0.1
-ape::Moran.I(env_mod_data$urch_sn_ratio, weight = inv_dist, scaled = TRUE)
-```
-
-```{r Plotting a semi-variogram to confirm that the data is not spatially autocorrelated}
-lat_long_dist <- dist(urch_sn_ratio_mod_2024[, 2:3])
-summary(lat_long_dist)
-
-variog_data <- urch_sn_ratio_mod_2024%>%
-  select(c(latitude, longitude, urch_sn_ratio))
-variog_data <- as.geodata(variog_data)
-
-plot(variog_data)
-points(variog_data)
-```
 
 
 ####Testing the data for colinearity
