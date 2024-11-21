@@ -24,8 +24,6 @@ library(sf)
 
 
 
-
-
 #Modelling the environmental variables
 
 ##Loading in the data with old fetch data
@@ -102,8 +100,6 @@ plot(env_mod_no_fetch_resid)
 ```
 Possible problem with this model according to DHARMa
 
-
-
 ###Testing the data to see if it is spatially correlated
 
 ####Moran's I with transects at same site separate
@@ -138,20 +134,9 @@ diag(inv_sphere_dist_avg) <- 0
 
 ape::Moran.I(urch_sn_ratio_averaged$avg_urch_sn_ratio, weight = inv_sphere_dist_avg, scaled = TRUE)
 ```
-can include site as a random effect, then spatial correlation might not be significant
-
-figure out what the threshold is for siters to be independent
-include the spatial structure as a random effect
-fitting as a 2d smooth
-
-methods
-checked for a reltiaonship between sites
-
-accounted for transect with site as a random effect
 
 ####Using a semi-variogram to see what type of spatial autocorrelation factor to use
 
-https://web.pdx.edu/~jduh/courses/geog493f09/Students/W7_Spatial%20Autocorrelation%20and%20Semi%20Variance.pdf
 
 ```{r Transforming the coordinates into meters for the variogram}
 # Using the averaged data

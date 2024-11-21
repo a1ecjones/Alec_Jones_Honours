@@ -43,6 +43,7 @@ here::here()
 invert_data_raw <- read_csv(here("./01_raw_data/IMOS_-_National_Reef_Monitoring_Network_Sub-Facility_-_Global_mobile_macroinvertebrate_abundance_no_top.csv"))
 ```
 
+
 ```{r Cleaning up columns and converting certain columns to factors}
 factor_cols <- c("site_code", "site_name", "reporting_name")
 
