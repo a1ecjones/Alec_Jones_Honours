@@ -2099,6 +2099,8 @@ dev.off()
 ##Working with the DFO flyover data
 
 ###Loading in the data and cleaning it up
+
+####2023
 ```{r Loading in the data}
 #DFO_data_raw_2023 <- read_csv(here("./01_raw_data/DFO_data/Overflight2023_ObservationPoints_20241024.csv"))
 
@@ -2128,7 +2130,83 @@ DFO_data_clean_2023 <- DFO_data_raw_2023%>%
 
 ```{r Making a dataframe of only points where rec boats were fishing}
 rec_boats_fishing2023 <- DFO_data_clean_2023%>%
-  filter(rec_boats_fishing != 0)
+  filter(rec_boats_fishing != 0)%>%
+    select(c(UniqueID, `Filename/FlightID`, Year, Month, Day, Date, `Critical Period`, `Day Type`, `Creel Subarea`, GMA, PFMA, 
+           `Pin ID`, Longitude, Latitude, rec_boats_fishing, rec_boats_running))
+```
+
+####2022
+```{r Loading in the data}
+DFO_data_raw_2022 <- read_csv(here("./01_raw_data/DFO_data/Overflight2022_ObservationPoints_20240124_COUNTS.csv"))
+
+#dfo_factors <- c("Day Type", "Creel Subarea")
+
+DFO_data_clean_2022 <- DFO_data_raw_2022%>%
+  mutate_at(dfo_factors, factor)%>%
+  rename(rec_boats_fishing = `1. Rec Boat Fishing`,
+         rec_boats_running = `2. Rec Boats Running`,
+         comm_vessel_fishing = `3. Commercial Vessel Fishing`,
+         comm_vessel_not_fishing = `4. Commercial Vessel Not Fishing`,
+         small_comm_vessel = `5. Small Commercial Vessel`,
+         large_comm_vessel = `6. Large Commercial Vessel`,
+         whale_watching = `7.  Whale Watching Boat`,
+         orcas = `8. Orcas`,
+         whales = `9. Whales`,
+         sea_state = `10. Sea State`)%>%
+  mutate(across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
+                  "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
+                  "whale_watching", "orcas", "whales"), ~ ifelse(. == "<Null>", 0, .)),
+         across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
+                  "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
+                  "whale_watching", "orcas", "whales"), as.numeric))
+  
+```
+
+```{r Making a dataframe of only points where rec boats were fishing}
+rec_boats_fishing2022 <- DFO_data_clean_2022%>%
+  filter(rec_boats_fishing != 0)%>%
+    select(c(UniqueID, `Filename/FlightID`, Year, Month, Day, Date, `Critical Period`, `Day Type`, `Creel Subarea`, GMA, PFMA, 
+           `Pin ID`, Longitude, Latitude, rec_boats_fishing, rec_boats_running))
+```
+
+
+####2021
+```{r Loading in the data}
+DFO_data_raw_2021 <- read_csv(here("./01_raw_data/DFO_data/Overflight2021_ObservationPoints_20240321_counts.csv"))
+
+#dfo_factors <- c("Day Type", "Creel Subarea")
+
+DFO_data_clean_2021 <- DFO_data_raw_2021%>%
+  mutate_at(dfo_factors, factor)%>%
+  rename(rec_boats_fishing = `1. Rec Boat Fishing`,
+         rec_boats_running = `2. Rec Boats Running`,
+         comm_vessel_fishing = `3. Commercial Vessel Fishing`,
+         comm_vessel_not_fishing = `4. Commercial Vessel Not Fishing`,
+         small_comm_vessel = `5. Small Commercial Vessel`,
+         large_comm_vessel = `6. Large Commercial Vessel`,
+         whale_watching = `7.  Whale Watching Boat`,
+         orcas = `8. Orcas`,
+         whales = `9. Whales`,
+         sea_state = `10. Sea State`)%>%
+  mutate(across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
+                  "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
+                  "whale_watching", "orcas", "whales"), ~ ifelse(. == "<Null>", 0, .)),
+         across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
+                  "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
+                  "whale_watching", "orcas", "whales"), as.numeric))
+  
+```
+
+```{r Making a dataframe of only points where rec boats were fishing}
+rec_boats_fishing2021 <- DFO_data_clean_2021%>%
+  filter(rec_boats_fishing != 0)%>%
+  select(c(UniqueID, `Filename/FlightID`, Year, Month, Day, Date, `Critical Period`, `Day Type`, `Creel Subarea`, GMA, PFMA, 
+           `Pin ID`, Longitude, Latitude, rec_boats_fishing, rec_boats_running))
+```
+
+####Combining the three years of data into one data frame
+```{r Combining the three years of data by row}
+rec_boats_fishing_total <- rbind(rec_boats_fishing2021, rec_boats_fishing2022, rec_boats_fishing2023)
 ```
 
 
@@ -2168,6 +2246,32 @@ rec_fishing_boats_2023_plot
 dev.off()
 ```
 
+
+```{r Making a plot of the points, fig.height=10, fig.width=10}
+(rec_fishing_boats_total_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+    geom_point(data = rec_boats_fishing_total,
+             mapping = aes(x = Longitude, y = Latitude, color = rec_boats_fishing),
+             size = 1,) +
+    scale_colour_gradient(low = "blue", high = "red")+
+   geom_point(data = rec_boats_fishing2023,
+             mapping = aes(x = Longitude, y = Latitude, colour = rec_boats_fishing), 
+              shape = 1, size = 1, colour = "black") +
+ # scale_colour_viridis_c() +
+  labs(title = "2023", x = " \nLongitude", y = "Latitude\n ", colour = "# of Rec Fishing\nBoats Observed") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))+
+  facet_wrap(~ Year, nrow = 3)
+```
 
 ###Making the points into a raster file for comparison with the global fishing watch data
 ```{r Making the points into shape data and summing based on the }
@@ -2348,6 +2452,64 @@ colnames(urch_sn_ratio_fishing_mod_2024)[12] <- "app_fishing_hrs"
 ```
 
 ####Adding the rec fishing data
+
+#####Adding using a polygon around each site
+```{r Creating a circular radius around each site then seeing which fishing points fall within}
+site_locations <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = 4326)
+site_locations_proj_m <- st_transform(site_locations, crs = 3857)
+site_locations_radius <- st_buffer(x = site_locations_proj_m, dist = 1500) #Can change the radius with dist to be based on effects of rec fishers
+```
+
+```{r Plotting to see if radius is correct}
+ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+  geom_sf(data = site_locations_radius, fill = "red", alpha = 0.3)+
+      coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+    geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude), 
+              shape = 1, size = 2, colour = "black") + 
+  geom_point(data = rec_boats_fishing2023, 
+             mapping = aes(x = Longitude, y = Latitude, fill = rec_boats_fishing))+
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br")
+```
+
+```{r Finding the overlapping points for each site}
+rec_boats_fishing_total_points <- st_as_sf(rec_boats_fishing_total, coords = c("Longitude", "Latitude"), crs = 4326)
+rec_boats_fishing_total_points <- st_transform(rec_boats_fishing_total_points, crs = 3857)
+
+rec_fishing_boat_total_radius <- st_intersection(site_locations_radius, rec_boats_fishing_total_points)
+
+rec_fishing_boat_total_radius <- rec_fishing_boat_total_radius%>%
+  select(c(site_code, depth, site_name, survey_date, visibility, hour, Urchins, UniqueID, Filename.FlightID, 
+           Year, Month, Day, Date, rec_boats_fishing, rec_boats_running))
+```
+
+```{r Making the dataframe with boat counts summed for each year at each site}
+rec_fishing_boat_total_radius_summed <- rec_fishing_boat_total_radius%>%
+  group_by(site_code, depth, site_name, survey_date, visibility, hour, Year)%>%
+  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
+```
+
+```{r Making the final dataframe with the average boat counts per year for each site}
+rec_fishing_boat_total_radius_final <- rec_fishing_boat_total_radius_summed%>%
+  group_by(site_code, depth, site_name, survey_date, visibility, hour)%>%
+  summarise(mean_rec_boat_counts = mean(yearly_rec_boats_fishing))
+```
+
+
+#####Adding based on the grid (old method)
 ```{r Combining the sites with the rec fishing data to get the # of boats for each site}
 urch_sn_ratio_sf_rec <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = st_crs(rec_filtered_data))
 urch_sn_ratio_sf_rec <- st_transform(urch_sn_ratio_sf_rec, crs = st_crs(rec_filtered_data))
