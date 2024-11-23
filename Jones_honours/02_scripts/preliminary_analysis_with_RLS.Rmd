@@ -2508,7 +2508,7 @@ rec_fishing_boat_total_radius_final <- rec_fishing_boat_total_radius_summed%>%
   summarise(mean_rec_boat_counts = mean(yearly_rec_boats_fishing))
 ```
 
-#####Adding the averaged counts to the main modelling dataset
+######Adding the averaged counts to the main modelling dataset
 ```{r}
 urch_sn_ratio_fishing_mod_2024 <- urch_sn_ratio_fishing_mod_2024%>%
   left_join(rec_fishing_boat_total_radius_final, by = c("site_code", "site_name", "depth", "survey_date", 
