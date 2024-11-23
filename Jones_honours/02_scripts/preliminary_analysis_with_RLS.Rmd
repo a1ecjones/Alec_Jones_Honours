@@ -2508,9 +2508,19 @@ rec_fishing_boat_total_radius_final <- rec_fishing_boat_total_radius_summed%>%
   summarise(mean_rec_boat_counts = mean(yearly_rec_boats_fishing))
 ```
 
+#####Adding the averaged counts to the main modelling dataset
+```{r}
+urch_sn_ratio_fishing_mod_2024 <- urch_sn_ratio_fishing_mod_2024%>%
+  left_join(rec_fishing_boat_total_radius_final, by = c("site_code", "site_name", "depth", "survey_date", 
+                                                        "visibility", "hour"))%>%
+  replace(is.na(.), 0)
+```
+
 
 #####Adding based on the grid (old method)
 ```{r Combining the sites with the rec fishing data to get the # of boats for each site}
+#not using this method anymore
+
 urch_sn_ratio_sf_rec <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = st_crs(rec_filtered_data))
 urch_sn_ratio_sf_rec <- st_transform(urch_sn_ratio_sf_rec, crs = st_crs(rec_filtered_data))
 
