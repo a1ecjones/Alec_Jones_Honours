@@ -29,6 +29,8 @@ library(sf)
 ##Loading in the data with old fetch data
 ```{r Loading in the data}
 env_mod_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
+
+#I added columns for site and wider location in excel before downloading the df
 ```
 
 ```{r Scaling the explanatory variables and converting substrate type to factor}
@@ -37,6 +39,7 @@ env_mod_data$avg_fetch_scale <- scale(env_mod_data$avg_fetch)
 env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
 levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
 ```
+
 
 ##Plotting EVs against urch sn ratio
 
@@ -134,6 +137,11 @@ diag(inv_sphere_dist_avg) <- 0
 
 ape::Moran.I(urch_sn_ratio_averaged$avg_urch_sn_ratio, weight = inv_sphere_dist_avg, scaled = TRUE)
 ```
+
+```{r Making a Moran's I correlogram}
+
+```
+
 
 ####Using a semi-variogram to see what type of spatial autocorrelation factor to use
 
