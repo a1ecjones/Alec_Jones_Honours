@@ -138,9 +138,6 @@ diag(inv_sphere_dist_avg) <- 0
 ape::Moran.I(urch_sn_ratio_averaged$avg_urch_sn_ratio, weight = inv_sphere_dist_avg, scaled = TRUE)
 ```
 
-```{r Making a Moran's I correlogram}
-
-```
 
 
 ####Using a semi-variogram to see what type of spatial autocorrelation factor to use
@@ -154,7 +151,16 @@ urch_sn_ratio_averaged_projected <- st_transform(urch_sn_ratio_averaged_sf, crs 
 
 ```{r Plotting a semi-variogram with the meter distances for the averaged transects}
 vario_meters <- variogram(avg_urch_sn_ratio ~ 1, data = urch_sn_ratio_averaged_projected)
+vario_meters_df <- as.data.frame(vario_meters)
 plot(vario_meters)
+
+ggplot(vario_meters_df, aes(x = dist, y = gamma)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = seq(0, 15000, by = 1000)) + # Custom x-axis ticks
+  labs(x = "Distance (m)", y = "Semivariance", title = "Variogram") +
+  theme_minimal()
+
 ```
 
 
@@ -163,10 +169,33 @@ urch_sn_coords_var_2 <- st_as_sf(env_mod_data, coords = c("longitude", "latitude
 urch_sn_coords_var_2_projected <- st_transform(urch_sn_coords_var_2, crs = 3857)
 
 vario_2 <- variogram(urch_sn_ratio ~ 1, data = urch_sn_coords_var_2_projected)
-
+vario_2_df <- as.data.frame(vario_2)
 plot(vario_2)
+
+ggplot(vario_2_df, aes(x = dist, y = gamma)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = seq(0, 15000, by = 1000)) + # Custom x-axis ticks
+  labs(x = "Distance (m)", y = "Semivariance", title = "Variogram") +
+  theme_minimal()
 ```
 
+```{r Fitting a variogram model}
+vario_2_mod <- fit.variogram(vario_2, model = vgm(1, model = c("Exp", "Sph"), range = 1000, psill = 1), fit.sills = TRUE, fit.ranges = TRUE)
+vario_2_mod
+summary(vario_2_mod)
+plot(vario_2, vario_2_mod)
+```
+
+```{r Testing the variogram fit}
+# Perform cross-validation
+crossval_vario_2_mod <- krige.cv(urch_sn_ratio ~ 1, urch_sn_coords_var_2_projected, vario_2_mod)
+
+# View results
+summary(crossval_vario_2_mod)
+plot(crossval_vario_2_mod$observed, crossval_vario_2_mod$predicted, xlab = "Observed", ylab = "Predicted")
+abline(0, 1, col = "red") # 1:1 line for visual assessment
+```
 
 
 
