@@ -142,7 +142,7 @@ ape::Moran.I(urch_sn_ratio_averaged$avg_urch_sn_ratio, weight = inv_sphere_dist_
 
 ####Using a semi-variogram to see what type of spatial autocorrelation factor to use
 
-
+#####With averaged points
 ```{r Transforming the coordinates into meters for the variogram}
 # Using the averaged data
 urch_sn_ratio_averaged_sf <- st_as_sf(urch_sn_ratio_averaged, coords = c("longitude", "latitude"), crs = 4326)
@@ -163,6 +163,16 @@ ggplot(vario_meters_df, aes(x = dist, y = gamma)) +
 
 ```
 
+```{r Fitting a variogram model}
+vario_meters_mod <- fit.variogram(vario_meters, 
+                                  model = vgm(nugget = 0.1, range = 2000, psill = 0.75, 
+                                              model = c("Exp", "Sph", "Gau")),
+                                  fit.sills = TRUE, fit.ranges = TRUE)
+vario_meters_mod
+plot(vario_meters, vario_meters_mod)
+```
+
+#####With non averaged points
 
 ```{r Variogram with the non-averaged points}
 urch_sn_coords_var_2 <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
@@ -181,60 +191,33 @@ ggplot(vario_2_df, aes(x = dist, y = gamma)) +
 ```
 
 ```{r Fitting a variogram model}
-vario_2_mod <- fit.variogram(vario_2, model = vgm(1, model = c("Exp", "Sph"), range = 1000, psill = 1), fit.sills = TRUE, fit.ranges = TRUE)
+vario_2_mod <- fit.variogram(vario_2, model = vgm(1, model = c("Exp", "Sph", "Gau"), range = 1000, psill = 1), fit.sills = TRUE, fit.ranges = TRUE)
 vario_2_mod
 summary(vario_2_mod)
 plot(vario_2, vario_2_mod)
 ```
 
-```{r Testing the variogram fit}
-# Perform cross-validation
-crossval_vario_2_mod <- krige.cv(urch_sn_ratio ~ 1, urch_sn_coords_var_2_projected, vario_2_mod)
 
-# View results
-summary(crossval_vario_2_mod)
-plot(crossval_vario_2_mod$observed, crossval_vario_2_mod$predicted, xlab = "Observed", ylab = "Predicted")
-abline(0, 1, col = "red") # 1:1 line for visual assessment
+#####With shifted points
+
+```{r Plotting an experimental variogram for the data that is shifted by one meter}
+vario_shifted <- variogram(urch_sn_ratio ~ 1, data = env_mod_sf_projected)
+plot(vario_shifted)
 ```
 
-
-
-```{r Plotting a semi-variogram to confirm that the data is not spatially autocorrelated}
-lat_long_dist <- dist(urch_sn_ratio_mod_2024[, 2:3])
-summary(lat_long_dist)
-
-variog_data <- urch_sn_ratio_mod_2024%>%
-  select(c(latitude, longitude, urch_sn_ratio))
-variog_data <- as.geodata(variog_data)
-
-plot(variog_data)
-points(variog_data)
-
-variogram_1 <- variog(variog_data)
-plot(variogram_1)
+```{r Fitting a variogram model to the experimental variogram}
+vario_shifted_mod <- fit.variogram(vario_shifted, model = vgm(nugget = 1, model = c("Exp", "Sph", "Gau"), range = 1000, psill = 1), fit.sills = TRUE, fit.ranges = TRUE)
+vario_shifted_mod
+plot(vario_shifted, vario_shifted_mod)
 ```
+
 
 
 ###With spatial autocorrelation term
 
 ```{r Building the gam with the spatial autocorrelation term}
-env_mod_sp <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, k = 10),
-                  data = env_mod_data, 
-                  method = 'REML',
-                  select = TRUE)   #In this case I have added the lat long as an interaction term directly in the model
-set.seed(199)
-gam.check(env_mod_sp, rep = 500)
-plot(env_mod_sp, residuals = TRUE)
-```
+####This is likely overfitting the model and just saying that a smooth of lat and long explains the variation in urch ratio
 
-```{r DHARMa for the model}
-env_mod_sp_resid <- simulateResiduals(env_mod_sp)
-plot(env_mod_sp_resid)
-```
-
-
-
-```{r Building the gam with the spatial autocorrelation term}
 env_mod_sp_gp <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
                   data = env_mod_data, 
                   family = gaussian(link = "identity"),
@@ -262,8 +245,18 @@ env_mod_data_shifted <- env_mod_data%>%
    mutate(latitude = if_else(row_number() == 25, 48.90711, latitude))%>%
   mutate(latitude = if_else(row_number() == 30, 48.82734, latitude))%>%
   mutate(latitude = if_else(row_number() == 32, 48.95024, latitude))%>%
-   mutate(latitude = if_else(row_number() == 34, 48.95508, latitude))
+   mutate(latitude = if_else(row_number() == 34, 48.95509, latitude))
 ```
+
+```{r Converting the shifted points into meters}
+env_mod_sf <- st_as_sf(env_mod_data_shifted, coords = c("longitude", "latitude"), crs = 4326)
+env_mod_sf_projected <- st_transform(env_mod_sf, crs = 3857)
+
+projected_coords <- st_coordinates(env_mod_sf_projected)
+env_mod_data_shifted$longitude_proj <- projected_coords[ , 1]
+env_mod_data_shifted$latitude_proj <- projected_coords[ , 2]
+```
+
 
 ```{r Building the gam with the spatial autocorrelation term and shifted points}
 env_mod_sp_gp_shifted <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
@@ -306,14 +299,14 @@ Problem with DHARMa for gamms
 env_mod_sp_cor_exp <- gamm(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score, 
                         data = env_mod_data_shifted,
                        family = gaussian(link = "identity"),
-                       correlation = corExp(form = ~ longitude + latitude), 
+                       correlation = corExp(form = ~ longitude_proj + latitude_proj, nugget = FALSE, value = 639), 
                        method = 'REML',
                        select = TRUE)
 
 
 gam.check(env_mod_sp_cor_exp$gam, rep = 500)
 plot(env_mod_sp_cor_exp$gam)
-
+summary(env_mod_sp_cor_exp$lme)
 ```
 
 ```{r DHARMa for model fit}
@@ -347,7 +340,9 @@ AIC(env_mod, env_mod_no_fetch, env_mod_sp_gp_shifted,
 arrange(AIC)%>%
   mutate(delta_AIC = AIC - AIC[1])
 ```
-##Modelling with new fetch data
+
+
+#Modelling with new fetch data
 
 ##Loading in the data
 ```{r Loading in the data}
