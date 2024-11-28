@@ -37,6 +37,8 @@ env_mod_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
 env_mod_data$sst_scale <- scale(env_mod_data$sst)
 env_mod_data$avg_fetch_scale <- scale(env_mod_data$avg_fetch)
 env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
+env_mod_data$location <- as.factor(env_mod_data$location)
+env_mod_data$site_code <- as.factor(env_mod_data$site_code)
 levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
 ```
 
@@ -315,12 +317,38 @@ plot(env_mod_sp_cor_exp_resid)
 ```
 Problem with DHARMa for gamms
 
+```{r}
+env_mod_location <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(location, bs = "re"), 
+                        data = env_mod_data,
+                       family = gaussian(link = "identity"),
+                       method = 'REML',
+                       select = TRUE)
+
+gam.check(env_mod_location, rep = 500)
+plot(env_mod_location)
+summary(env_mod_location)
+```
+
+```{r}
+env_mod_site <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(site_code, bs = "re"), 
+                        data = env_mod_data,
+                       family = gaussian(link = "identity"),
+                       method = 'REML',
+                       select = TRUE)
+
+gam.check(env_mod_site, rep = 500)
+plot(env_mod_site)
+summary(env_mod_site)
+```
+
+
 ###AIC with the different models
 
 ```{r Comparing the models with an AIC}
-AIC(env_mod, env_mod_no_fetch, env_mod_sp_gp, env_mod_sp_gp_shifted,
+AIC(env_mod, env_mod_no_fetch,
     env_mod_sp_cor_Spher$lme, 
-    env_mod_sp_cor_exp$lme
+    env_mod_sp_cor_exp$lme, 
+    env_mod_site
     )%>%
 arrange(AIC)%>%
   mutate(delta_AIC = AIC - AIC[1])
@@ -514,3 +542,4 @@ AIC(env_mod_calc, env_mod_no_fetch_calc, env_mod_sp_gp_calc_shifted,
 arrange(AIC)%>%
   mutate(delta_AIC = AIC - AIC[1])
 ```
+
