@@ -26,6 +26,7 @@ library(dplyr)
 library(raster)
 library(RColorBrewer)
 library(conflicted)
+library(lwgeom)
 
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
@@ -1145,19 +1146,22 @@ site_coords_2024 <- site_data_2024%>%
 ###Setup for using the waver package
 
 
-
-
 ```{r Converting site coordinates into spatial points file type 2024}
 site_sp_2024 <- st_as_sf(site_coords_2024, coords = c("longitude", "latitude"), crs = 4326)
-bearings <- seq(200, 230, by = 1)
-bearings_calculated <- c(179, 180, 181, 182, 183, 184, 185)
+#bearings <- seq(200, 230, by = 1)
+#bearings_calculated <- c(179, 180, 181, 182, 183, 184, 185)
+bearings_openness <- seq(7.5, 360, by = 7.5)
 ```
 
 ###Calculating fetch for all of the sites in 2024
 ```{r Calculating the fetch for the sites 2024}
-fetch_df_2024 <- fetch_len_multi(site_sp_2024, bearings, dmax = 40000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
+#fetch_df_2024 <- fetch_len_multi(site_sp_2024, bearings, dmax = 40000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
 
-fetch_df_2024_calc <- fetch_len_multi(site_sp_2024, bearings = bearings_calculated, dmax = 40000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
+#fetch_df_2024_calc <- fetch_len_multi(site_sp_2024, bearings = bearings_calculated, dmax = 40000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
+
+sf::sf_use_s2(FALSE)
+
+fetch_df_2024_openness <- fetch_len_multi(site_sp_2024, bearings = bearings_openness, dmax = 650000, shoreline = VI_base_layer_hi_res_sf, projected = FALSE)
 ```
 
 ###Turning the raw fetch data into a dataframe with column labels
