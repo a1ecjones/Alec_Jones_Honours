@@ -306,3 +306,82 @@ labs(x = " \nYear", y = "Counts\n ") +
     axis.text = element_text(size = 18, face = "plain")))
 ```
 
+
+
+#bearings <- seq(200, 230, by = 1)
+#bearings_calculated <- c(179, 180, 181, 182, 183, 184, 185)
+
+###Calculating fetch for all of the sites in 2024
+```{r Calculating the fetch for the sites 2024}
+#fetch_df_2024 <- fetch_len_multi(site_sp_2024, bearings, dmax = 40000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
+
+#fetch_df_2024_calc <- fetch_len_multi(site_sp_2024, bearings = bearings_calculated, dmax = 40000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
+```
+
+
+```{r Turning the raw fetch data into a dataframe with column labels}
+site_code <- c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC13", "BMSC14", "BMSC15", "BMSC16",
+               "BMSC17", "BMSC18", "BMSC19", "BMSC2", "BMSC20", "BMSC21", "BMSC22", "BMSC23", "BMSC24",
+               "BMSC25", "BMSC26", "BMSC27", "BMSC3", "BMSC4", "BMSC5", "BMSC6", "BMSC8", "BMSC9")
+
+fetch_df_2024 <- as.data.frame(fetch_df_2024)
+
+fetch_df_2024$site_code <- site_code
+
+fetch_df_2024$latitude <- site_coords_2024$latitude
+fetch_df_2024$longitude <- site_coords_2024$longitude
+
+fetch_df_2024_final <- fetch_df_2024[, c(32, 33, 34, seq(1, 31, by = 1))]
+```
+
+```{r Turning the raw fetch data using the calculated wind dir into a dataframe}
+fetch_df_2024_calc <- as.data.frame(fetch_df_2024_calc)
+
+fetch_df_2024_calc$site_code <- site_code
+
+fetch_df_2024_calc$latitude <- site_coords_2024$latitude
+fetch_df_2024_calc$longitude <- site_coords_2024$longitude
+
+fetch_df_2024_calc_final <- fetch_df_2024_calc[, c(8, 9, 10, seq(1, 7, by = 1))]
+```
+
+```{r Converting the data into long format}
+fetch_2024_long <- fetch_df_2024_final %>%
+  pivot_longer(cols = `200`: `230`,  # Columns for compass degrees (assuming "degree1", "degree2", ...)
+               names_to = "degree",           # Name of the new column for degrees
+               values_to = "fetch",           # Name of the new column for fetch values
+               names_prefix = "degree")       # Remove "degree" prefix from column names if needed
+
+```
+
+```{r Converting the data with the calculated wind dir into long format}
+fetch_2024_calc_long <- fetch_df_2024_calc_final %>%
+  pivot_longer(cols = `179`: `185`,  # Columns for compass degrees (assuming "degree1", "degree2", ...)
+               names_to = "degree",           # Name of the new column for degrees
+               values_to = "fetch",           # Name of the new column for fetch values
+               names_prefix = "degree")       # Remove "degree" prefix from column names if needed
+
+```
+
+###Adding in the fetch data
+
+```{r Calculating the average fetch from the range of values calculated previously for each site}
+avg_fetch <- fetch_2024_long%>%
+  group_by(site_code, latitude, longitude)%>%
+  summarise(avg_fetch = mean(fetch))
+```
+
+```{r Adding the avg fetch values into the urch sn ratio df}
+urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, avg_fetch, by = c("site_code", "latitude", "longitude"))
+```
+
+
+```{r Calculating the avg fetch values for the fetch data using the calc wind dir}
+avg_fetch_calc <- fetch_2024_calc_long%>%
+  group_by(site_code, latitude, longitude)%>%
+  summarise(avg_fetch = mean(fetch))
+```
+
+```{r Adding the avg fetch values into a new urch sn ratio df}
+urch_sn_ratio_mod_calc_2024 <- merge(urch_sn_ratio_mod_calc_2024, avg_fetch_calc, by = c("site_code", "latitude", "longitude"))
+```

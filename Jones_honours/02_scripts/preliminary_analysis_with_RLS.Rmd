@@ -265,6 +265,7 @@ st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 ```{r Loading in the new high res shape file}
 VI_base_layer_hi_res <- read_sf(dsn = here("./01_raw_data/hakai_zip"),
                                 stringsAsFactors = F)
+
 VI_base_layer_hi_res_sf <- st_as_sf(VI_base_layer_hi_res)
 
 #ggplot(VI_base_layer_hi_res_sf)+
@@ -1148,69 +1149,40 @@ site_coords_2024 <- site_data_2024%>%
 
 ```{r Converting site coordinates into spatial points file type 2024}
 site_sp_2024 <- st_as_sf(site_coords_2024, coords = c("longitude", "latitude"), crs = 4326)
-#bearings <- seq(200, 230, by = 1)
-#bearings_calculated <- c(179, 180, 181, 182, 183, 184, 185)
+
 bearings_openness <- seq(7.5, 360, by = 7.5)
 ```
 
 ###Calculating fetch for all of the sites in 2024
 ```{r Calculating the fetch for the sites 2024}
-#fetch_df_2024 <- fetch_len_multi(site_sp_2024, bearings, dmax = 40000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
-
-#fetch_df_2024_calc <- fetch_len_multi(site_sp_2024, bearings = bearings_calculated, dmax = 40000, shoreline = VI_base_layer_hi_res_sf, projected = TRUE)
-
 sf::sf_use_s2(FALSE)
 
 fetch_df_2024_openness <- fetch_len_multi(site_sp_2024, bearings = bearings_openness, dmax = 650000, shoreline = VI_base_layer_hi_res_sf, projected = FALSE)
 ```
 
 ###Turning the raw fetch data into a dataframe with column labels
-```{r Turning the raw fetch data into a dataframe with column labels}
+
+```{r Turning the raw openness fetch data into a dataframe with column labels}
 site_code <- c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC13", "BMSC14", "BMSC15", "BMSC16",
                "BMSC17", "BMSC18", "BMSC19", "BMSC2", "BMSC20", "BMSC21", "BMSC22", "BMSC23", "BMSC24",
                "BMSC25", "BMSC26", "BMSC27", "BMSC3", "BMSC4", "BMSC5", "BMSC6", "BMSC8", "BMSC9")
 
-fetch_df_2024 <- as.data.frame(fetch_df_2024)
+fetch_df_2024_openness <- as.data.frame(fetch_df_2024_openness)
 
-fetch_df_2024$site_code <- site_code
+fetch_df_2024_openness$site_code <- site_code
+fetch_df_2024_openness$latitude <- site_coords_2024$latitude
+fetch_df_2024_openness$longitude <- site_coords_2024$longitude
 
-fetch_df_2024$latitude <- site_coords_2024$latitude
-fetch_df_2024$longitude <- site_coords_2024$longitude
-
-fetch_df_2024_final <- fetch_df_2024[, c(32, 33, 34, seq(1, 31, by = 1))]
-```
-
-```{r Turning the raw fetch data using the calculated wind dir into a dataframe}
-fetch_df_2024_calc <- as.data.frame(fetch_df_2024_calc)
-
-fetch_df_2024_calc$site_code <- site_code
-
-fetch_df_2024_calc$latitude <- site_coords_2024$latitude
-fetch_df_2024_calc$longitude <- site_coords_2024$longitude
-
-fetch_df_2024_calc_final <- fetch_df_2024_calc[, c(8, 9, 10, seq(1, 7, by = 1))]
+fetch_df_2024_openness_final <- fetch_df_2024_openness[, c(49, 50, 51, seq(1, 48, by = 1))]
 ```
 
 
-
-
-```{r Converting the data into long format}
-fetch_2024_long <- fetch_df_2024_final %>%
-  pivot_longer(cols = `200`: `230`,  # Columns for compass degrees (assuming "degree1", "degree2", ...)
-               names_to = "degree",           # Name of the new column for degrees
-               values_to = "fetch",           # Name of the new column for fetch values
-               names_prefix = "degree")       # Remove "degree" prefix from column names if needed
-
-```
-
-
-```{r Converting the data with the calculated wind dir into long format}
-fetch_2024_calc_long <- fetch_df_2024_calc_final %>%
-  pivot_longer(cols = `179`: `185`,  # Columns for compass degrees (assuming "degree1", "degree2", ...)
-               names_to = "degree",           # Name of the new column for degrees
-               values_to = "fetch",           # Name of the new column for fetch values
-               names_prefix = "degree")       # Remove "degree" prefix from column names if needed
-
+```{r Converting the openness into long format}
+fetch_df_2024_openness_long <- fetch_df_2024_openness_final%>%
+  pivot_longer(cols = `7.5`: `360`, 
+               names_to = "degree", 
+               values_to = "fetch", 
+               names_prefix = "degree")
 ```
 
 ###Plotting the fetch for just one site as a test
@@ -2358,6 +2330,7 @@ site_points_df <- urch_sn_ratio_mod_2024%>%
  
 
 coordinates(site_points_df) <- ~longitude+latitude
+
 proj4string(site_points_df) <- crs(average_temperature)
 
 sst_values <- raster::extract(average_temperature, site_points_df) - 273.15
@@ -2381,32 +2354,22 @@ pq_data_final <- pq_data%>%
 ```{r Merging the photoquadrat data with the urch sn ratio df}
 urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, pq_data_final, by = c("site_code", "depth"),
                                 all.x = TRUE)
-
-urch_sn_ratio_mod_calc_2024 <- urch_sn_ratio_mod_2024   #Making a separate df for the calc here so that it does not add fetch to both
 ```
 
 
-###Adding in the fetch data
 
-```{r Calculating the average fetch from the range of values calculated previously for each site}
-avg_fetch <- fetch_2024_long%>%
+###Adding in the openness fetch data
+```{r Summing the fetch vectors for each site then dividing by the largest openness value}
+openness <- fetch_df_2024_openness_long%>%
   group_by(site_code, latitude, longitude)%>%
-  summarise(avg_fetch = mean(fetch))
+  summarise(openness = sum(fetch))%>%
+  mutate(norm_openness = openness / max_openness)
+
+max_openness <- max(openness$openness)
 ```
 
-```{r Adding the avg fetch values into the urch sn ratio df}
-urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, avg_fetch, by = c("site_code", "latitude", "longitude"))
-```
-
-
-```{r Calculating the avg fetch values for the fetch data using the calc wind dir}
-avg_fetch_calc <- fetch_2024_calc_long%>%
-  group_by(site_code, latitude, longitude)%>%
-  summarise(avg_fetch = mean(fetch))
-```
-
-```{r Adding the avg fetch values into a new urch sn ratio df}
-urch_sn_ratio_mod_calc_2024 <- merge(urch_sn_ratio_mod_calc_2024, avg_fetch_calc, by = c("site_code", "latitude", "longitude"))
+```{r Adding the normalized openness values to the modelling data frame}
+urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, openness, by = c("site_code", "latitude", "longitude"))
 ```
 
 
@@ -2415,12 +2378,6 @@ urch_sn_ratio_mod_calc_2024 <- merge(urch_sn_ratio_mod_calc_2024, avg_fetch_calc
 ```{r Writing the urch sn ratio mod df}
 write_csv(urch_sn_ratio_mod_2024,
           here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
-```
-
-
-```{r Writing the urch sn ratio mod calc df}
-write_csv(urch_sn_ratio_mod_calc_2024,
-          here("./03_clean_data/urch_sn_ratio_mod_calc_data.csv"))
 ```
 
 ###Adding in the fishing variables to the data frame
