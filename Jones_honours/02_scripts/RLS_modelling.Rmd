@@ -29,16 +29,14 @@ library(sf)
 ##Loading in the data with old fetch data
 ```{r Loading in the data}
 env_mod_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
-
-#I added columns for site and wider location in excel before downloading the df
 ```
 
 ```{r Scaling the explanatory variables and converting substrate type to factor}
 env_mod_data$sst_scale <- scale(env_mod_data$sst)
-env_mod_data$avg_fetch_scale <- scale(env_mod_data$avg_fetch)
+env_mod_data$openness_scale <- scale(env_mod_data$openness)
 env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
-env_mod_data$location <- as.factor(env_mod_data$location)
-env_mod_data$site_code <- as.factor(env_mod_data$site_code)
+#env_mod_data$location <- as.factor(env_mod_data$location)
+#env_mod_data$site_code <- as.factor(env_mod_data$site_code)
 levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
 ```
 
@@ -67,7 +65,7 @@ ggplot(env_mod_data, aes(x = dominant_score, y = urch_sn_ratio))+
 
 ###No spatial autocorrelation term
 ```{r Making a gam with no spatial autocorrelation term to start}
-env_mod <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score,
+env_mod <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score,
                data = env_mod_data,
                family = gaussian(link = "identity"),
                method = 'REML',
@@ -369,177 +367,4 @@ arrange(AIC)%>%
   mutate(delta_AIC = AIC - AIC[1])
 ```
 
-
-#Modelling with new fetch data
-
-##Loading in the data
-```{r Loading in the data}
-env_mod_calc_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_calc_data.csv"))
-```
-
-```{r Scaling the explanatory variables and converting substrate type to factor}
-env_mod_calc_data$sst_scale <- scale(env_mod_calc_data$sst)
-env_mod_calc_data$avg_fetch_scale <- scale(env_mod_calc_data$avg_fetch)
-env_mod_calc_data$dominant_score <- as.factor(env_mod_calc_data$dominant_score)
-levels(env_mod_calc_data$dominant_score) <- list(loose = "3", solid = "4")
-```
-
-##Plotting EVs against urch sn ratio
-
-```{r ratio against fetch}
-ggplot(env_mod_calc_data, aes(x = avg_fetch_scale, y = urch_sn_ratio))+
-  geom_point()+
-  theme.figure()
-```
-
-
-##Building the GAM
-
-###No spatial autocorrelation term
-```{r Making a gam with no spatial autocorrelation term to start with calc data}
-env_mod_calc <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score,
-               data = env_mod_calc_data,
-               family = gaussian(link = "identity"),
-               method = 'REML',
-               select = TRUE)
-
-set.seed(13)
-gam.check(env_mod, rep = 500)
-
-plot(env_mod)
-```
-
-
-```{r Checking the model fit with DHARMa}
-env_mod_calc_resids <- simulateResiduals(env_mod_calc)
-plot(env_mod_calc_resids)
-```
-All good
-
-
-
-
-```{r Building the model, this time with fetch fully removed}
-env_mod_no_fetch_calc <- gam(urch_sn_ratio ~ s(sst_scale) + dominant_score,
-                        data = env_mod_calc_data,
-                        method = 'REML',
-                        family = gaussian(link = "identity"),
-                        select = FALSE)
-
-gam.check(env_mod_no_fetch_calc, rep = 500)
-```
-
-```{r}
-env_mod_no_fetch_calc_resid <- simulateResiduals(env_mod_no_fetch_calc)
-plot(env_mod_no_fetch_calc_resid)
-```
-Possible error based on DHARMa output
-
-###With autocorrelation effect
-
-```{r Building the gam with the spatial autocorrelation term}
-env_mod_sp_gp_calc <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
-                  data = env_mod_calc_data, 
-                  family = gaussian(link = "identity"),
-                  method = 'REML',
-                  select = TRUE)   #In this case I have added the lat long as an interaction term directly in the model
-
-set.seed(10)
-gam.check(env_mod_sp_gp_calc, rep = 500)
-plot(env_mod_sp_gp_calc)
-```
-
-```{r DHARMa for model fit}
-env_mod_sp_gp_calc_resid <- simulateResiduals(env_mod_sp_gp_calc)
-plot(env_mod_sp_gp_calc_resid)
-```
-All good
-
-
-```{r Making a dataframe with sites at the same location shifted slightly}
-env_mod_data_shifted_calc <- env_mod_calc_data%>%
-    mutate(latitude = if_else(row_number() == 2, 48.82896, latitude))%>%
-  mutate(latitude = if_else(row_number() == 5, 48.85746, latitude))%>%
-  mutate(latitude = if_else(row_number() == 7, 48.85827, latitude))%>%
-  mutate(latitude = if_else(row_number() == 21, 48.91608, latitude))%>%
-   mutate(latitude = if_else(row_number() == 23, 48.83858, latitude))%>%
-   mutate(latitude = if_else(row_number() == 25, 48.90711, latitude))%>%
-  mutate(latitude = if_else(row_number() == 30, 48.82734, latitude))%>%
-  mutate(latitude = if_else(row_number() == 32, 48.95024, latitude))%>%
-   mutate(latitude = if_else(row_number() == 34, 48.95508, latitude))
-```
-
-
-```{r Building the gam with the spatial autocorrelation term with calc and shifted}
-env_mod_sp_gp_calc_shifted <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
-                  data = env_mod_data_shifted_calc, 
-                  family = gaussian(link = "identity"),
-                  method = 'REML',
-                  select = TRUE)   #In this case I have added the lat long as an interaction term directly in the model
-
-set.seed(10)
-gam.check(env_mod_sp_gp_calc_shifted, rep = 500)
-plot(env_mod_sp_gp_calc_shifted)
-```
-```{r DHARMa for model fit}
-env_mod_sp_gp_calc_shifted_resid <- simulateResiduals(env_mod_sp_gp_calc_shifted)
-plot(env_mod_sp_gp_calc_shifted_resid)
-```
-All good
-
-
-```{r Building gamm with spatial autocorrelation term corSpher with calc}
-env_mod_sp_cor_Spher_calc <- gamm(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score, 
-                        data = env_mod_data_shifted_calc,
-                       family = gaussian(link = "identity"),
-                       correlation = corSpher(form = ~ longitude + latitude), 
-                       method = 'REML',
-                       select = TRUE)
-
-gam.check(env_mod_sp_cor_Spher_calc$gam, rep = 500)
-plot(env_mod_sp_cor_Spher_calc$gam)
-```
-
-
-
-```{r Building gamm with spatial autocorrelation term corExp with calc}
-env_mod_sp_cor_exp_calc <- gamm(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score, 
-                        data = env_mod_data_shifted_calc,
-                       family = gaussian(link = "identity"),
-                       correlation = corExp(form = ~ longitude + latitude), 
-                       method = 'REML',
-                       select = TRUE)
-
-
-gam.check(env_mod_sp_cor_exp_calc$gam, rep = 500)
-plot(env_mod_sp_cor_exp_calc$gam)
-```
-
-###AIC with the different models for calc
-
-```{r Comparing the calc models with an AIC}
-AIC(env_mod_calc, env_mod_no_fetch_calc, env_mod_sp_gp_calc, env_mod_sp_gp_calc_shifted,
-    env_mod_sp_cor_Spher_calc$lme, 
-    env_mod_sp_cor_exp_calc$lme
-    )%>%
-arrange(AIC)%>%
-  mutate(delta_AIC = AIC - AIC[1])
-```
-
-
-```{r Comparing the models with unshifted points in an AIC}
-AIC(env_mod_calc, env_mod_no_fetch_calc, env_mod_sp_gp_calc)%>%
-arrange(AIC)%>%
-  mutate(delta_AIC = AIC - AIC[1])
-```
-
-
-```{r Comparing the calc models with shifted points in an AIC}
-AIC(env_mod_calc, env_mod_no_fetch_calc, env_mod_sp_gp_calc_shifted,
-    env_mod_sp_cor_Spher_calc$lme, 
-    env_mod_sp_cor_exp_calc$lme
-    )%>%
-arrange(AIC)%>%
-  mutate(delta_AIC = AIC - AIC[1])
-```
 

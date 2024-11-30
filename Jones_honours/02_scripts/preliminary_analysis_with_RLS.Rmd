@@ -27,6 +27,7 @@ library(raster)
 library(RColorBrewer)
 library(conflicted)
 library(lwgeom)
+library(ggpubr)
 
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
@@ -833,6 +834,7 @@ fetch_df <- fetch_len_multi(site_sp, bearings, dmax = 30000, shoreline = reduced
 
 
 #2024 Analyses
+
 ##Adding in the 2024 data
 ```{r Loading in the 2024 csv}
 RLS_data_2024 <- read_csv(here("./01_raw_data/RLS_CANADA_Bamfield_2024.csv"))
@@ -959,6 +961,7 @@ urch_m2_macro_ratio_RLS_2024_final <- urch_m2_macro_ratio_RLS_2024%>%
   cbind(Urchins = Urchins)%>%
   mutate(urch_all_ratio = log10((Urchins + 1) / (total_counts + 1)))
 ```
+
 
 
 
@@ -1184,6 +1187,44 @@ fetch_df_2024_openness_long <- fetch_df_2024_openness_final%>%
                values_to = "fetch", 
                names_prefix = "degree")
 ```
+
+###Plotting the openness of each site on the map
+```{r}
+(openness_map <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude, color = norm_openness),
+             size = 3,) +
+    geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude, colour = norm_openness), 
+              shape = 1, size = 3, colour = "black") + 
+  scale_colour_gradient(
+    low = "blue",
+    high = "red") +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = " Site Openness") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Saving the openness map}
+png(filename = here("./04_plots/openness_map_2024.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+openness_map
+
+dev.off()
+```
+
+
 
 ###Plotting the fetch for just one site as a test
 ```{r}
@@ -2373,12 +2414,131 @@ urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, openness, by = c("site_c
 ```
 
 
+
+###Making broader scale groups for using site as a random effect
+
+```{r Making a region column}
+urch_sn_ratio_mod_2024 <- urch_sn_ratio_mod_2024%>%
+  mutate(region1 = case_when(
+    site_code %in% c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC19", "BMSC2", "BMSC20", 
+                     "BMSC21", "BMSC22", "BMSC23", "BMSC25", "BMSC3", "BMSC4", "BMSC5", "BMSC9") ~ "Deer group/Bamfield",
+   site_code %in% c("BMSC13", "BMSC14", "BMSC15", "BMSC16", "BMSC17", "BMSC18") ~ "Broken Group", 
+    site_code %in% c("BMSC24", "BMSC6", "BMSC8") ~ "Deep Imperial Eagle Channel",
+    site_code %in% c("BMSC26", "BMSC27") ~ "Sarita"
+  ))%>%
+   mutate(region2 = case_when(
+    site_code %in% c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC19", "BMSC2", "BMSC20",
+                     "BMSC3",  "BMSC5") ~ "Deer group",
+    site_code %in% c("BMSC21", "BMSC22", "BMSC23", "BMSC25", "BMSC4", "BMSC9") ~ "Bamfield",
+   site_code %in% c("BMSC13", "BMSC14", "BMSC15", "BMSC16", "BMSC17", "BMSC18") ~ "Broken Group", 
+    site_code %in% c("BMSC24", "BMSC6", "BMSC8") ~ "Deep Imperial Eagle Channel",
+    site_code %in% c("BMSC26", "BMSC27") ~ "Sarita"
+  ))%>%
+   mutate(region3 = case_when(
+     site_code%in% c("BMSC19", "BMSC2", "BMSC20", "BMSC3", "BMSC24", "BMSC6", "BMSC8") ~ "Imperial Eagle",
+    site_code %in% c("BMSC1", "BMSC10", "BMSC11", "BMSC12", 
+                     "BMSC21", "BMSC22", "BMSC23", "BMSC25", "BMSC26", "BMSC27",
+                     "BMSC4", "BMSC5", "BMSC9") ~ "Trevor Channel",
+   site_code %in% c("BMSC13", "BMSC14", "BMSC15", "BMSC16", "BMSC17", "BMSC18") ~ "Broken Group", 
+  ))
+```
+
+
+```{r Plotting the region schemes}
+(region_1_map <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude, color = region1),
+             size = 3,) +
+    geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude, colour = region1), 
+              shape = 1, size = 3, colour = "black") + 
+   scale_colour_viridis_d()+
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = "Region M1") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Plotting the region schemes}
+(region_2_map <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude, color = region2),
+             size = 3,) +
+    geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude, colour = region2), 
+              shape = 1, size = 3, colour = "black") + 
+   scale_colour_viridis_d()+
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = "Region M2") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Plotting the region schemes}
+(region_3_map <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude, color = region3),
+             size = 3,) +
+    geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude, colour = region3), 
+              shape = 1, size = 3, colour = "black") + 
+   scale_colour_viridis_d()+
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = "Region M2") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Combining the 3 region schemes into one multipaneled figure, fig.height=5, fig.width=3}
+(region_scheme_figure <- ggarrange(region_1_map, region_2_map, region_3_map,
+                                  labels = c("A", "B", "C"),
+                                  nrow = 2
+                                  ))
+```
+
+```{r Saving the region scheme map}
+png(filename = here("./04_plots/region_scheme_map_2024.png"), width = 10, height = 8, 
+    units = "in", pointsize = 15, res = 600)
+
+region_scheme_figure
+
+dev.off()
+```
+
 ###Writing a final csv for modelling the environmental variables
 
 ```{r Writing the urch sn ratio mod df}
 write_csv(urch_sn_ratio_mod_2024,
           here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
 ```
+
 
 ###Adding in the fishing variables to the data frame
 ```{r making a fishing modelling data frame}
@@ -2505,3 +2665,4 @@ ggplot(urch_sn_ratio_fishing_mod_2024, aes(x = app_fishing_hrs, y = urch_sn_rati
 ggplot(urch_sn_ratio_fishing_mod_2024, aes(x = log(total_rec_boats + 1), y = urch_sn_ratio))+
   geom_point()
 ```
+
