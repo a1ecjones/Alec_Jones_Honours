@@ -40,69 +40,6 @@ env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
 levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
 ```
 
-
-##Plotting EVs against urch sn ratio
-
-```{r ratio against fetch}
-ggplot(env_mod_data, aes(x = avg_fetch_scale, y = urch_sn_ratio))+
-  geom_point()+
-  theme.figure()
-```
-
-```{r ratio against sst}
-ggplot(env_mod_data, aes(x = sst, y = urch_sn_ratio))+
-  geom_point()+
-  theme.figure()
-```
-
-```{r ratio against substrate type}
-ggplot(env_mod_data, aes(x = dominant_score, y = urch_sn_ratio))+
-  geom_point()+
-  theme.figure()
-```
-
-##Building the GAM
-
-###No spatial autocorrelation term
-```{r Making a gam with no spatial autocorrelation term to start}
-env_mod <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score,
-               data = env_mod_data,
-               family = gaussian(link = "identity"),
-               method = 'REML',
-               select = TRUE)
-
-set.seed(13)
-gam.check(env_mod, rep = 500)
-
-plot(env_mod)
-```
-
-
-```{r Checking the model fit with DHARMa}
-env_mod_resids <- simulateResiduals(env_mod)
-plot(env_mod_resids)
-```
-All good
-
-
-
-
-```{r Making a gam with no spatial autocorrelation and no fetch}
-env_mod_no_fetch <- gam(urch_sn_ratio ~ s(sst_scale) + dominant_score, data = env_mod_data,
-                        method = 'REML',
-                        family = gaussian(link = "identity"),
-                        select = FALSE)
-
-gam.check(env_mod_no_fetch, rep = 500)
-plot(env_mod_no_fetch)
-```
-
-```{r}
-env_mod_no_fetch_resid <- simulateResiduals(env_mod_no_fetch)
-plot(env_mod_no_fetch_resid)
-```
-Possible problem with this model according to DHARMa
-
 ###Testing the data to see if it is spatially correlated
 
 ####Moran's I with transects at same site separate
@@ -154,12 +91,12 @@ vario_meters <- variogram(avg_urch_sn_ratio ~ 1, data = urch_sn_ratio_averaged_p
 vario_meters_df <- as.data.frame(vario_meters)
 plot(vario_meters)
 
-ggplot(vario_meters_df, aes(x = dist, y = gamma)) +
-  geom_line() +
-  geom_point() +
-  scale_x_continuous(breaks = seq(0, 15000, by = 1000)) + # Custom x-axis ticks
-  labs(x = "Distance (m)", y = "Semivariance", title = "Variogram") +
-  theme_minimal()
+#ggplot(vario_meters_df, aes(x = dist, y = gamma)) +
+ # geom_line() +
+  #geom_point() +
+  #scale_x_continuous(breaks = seq(0, 15000, by = 1000)) + # Custom x-axis ticks
+  #labs(x = "Distance (m)", y = "Semivariance", title = "Variogram") +
+  #theme_minimal()
 
 ```
 
@@ -182,58 +119,27 @@ vario_2 <- variogram(urch_sn_ratio ~ 1, data = urch_sn_coords_var_2_projected)
 vario_2_df <- as.data.frame(vario_2)
 plot(vario_2)
 
-ggplot(vario_2_df, aes(x = dist, y = gamma)) +
-  geom_line() +
-  geom_point() +
-  scale_x_continuous(breaks = seq(0, 15000, by = 1000)) + # Custom x-axis ticks
-  labs(x = "Distance (m)", y = "Semivariance", title = "Variogram") +
-  theme_minimal()
+#ggplot(vario_2_df, aes(x = dist, y = gamma)) +
+ # geom_line() +
+#  geom_point() +
+ # scale_x_continuous(breaks = seq(0, 15000, by = 1000)) + # Custom x-axis ticks
+  #labs(x = "Distance (m)", y = "Semivariance", title = "Variogram") +
+  #theme_minimal()
 ```
 
 ```{r Fitting a variogram model}
-vario_2_mod <- fit.variogram(vario_2, model = vgm(1, model = c("Exp", "Sph", "Gau"), range = 1000, psill = 1), fit.sills = TRUE, fit.ranges = TRUE)
+vario_2_mod <- fit.variogram(vario_2,
+                             model = vgm(1, model = c("Exp", "Sph", "Gau"), 
+                                         nugget = 0.1, range = 1000, psill = 1),
+                             fit.sills = TRUE, fit.ranges = TRUE)
 vario_2_mod
-summary(vario_2_mod)
 plot(vario_2, vario_2_mod)
 ```
 
 
 #####With shifted points
-
-```{r Plotting an experimental variogram for the data that is shifted by one meter}
-vario_shifted <- variogram(urch_sn_ratio ~ 1, data = env_mod_sf_projected)
-plot(vario_shifted)
-```
-
-```{r Fitting a variogram model to the experimental variogram}
-vario_shifted_mod <- fit.variogram(vario_shifted, model = vgm(nugget = 1, model = c("Exp", "Sph", "Gau"), range = 1000, psill = 1), fit.sills = TRUE, fit.ranges = TRUE)
-vario_shifted_mod
-plot(vario_shifted, vario_shifted_mod)
-```
-
-
-
-###With spatial autocorrelation term
-
-```{r Building the gam with the spatial autocorrelation term}
-####This is likely overfitting the model and just saying that a smooth of lat and long explains the variation in urch ratio
-
-env_mod_sp_gp <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
-                  data = env_mod_data, 
-                  family = gaussian(link = "identity"),
-                  method = 'REML',
-                  select = TRUE)   #In this case I have added the lat long as an interaction term directly in the model
-
-set.seed(10)
-gam.check(env_mod_sp_gp, rep = 500)
-plot(env_mod_sp_gp)
-```
-
-```{r DHARMa for model fit}
-env_mod_sp_gp_resid <- simulateResiduals(env_mod_sp_gp)
-plot(env_mod_sp_gp_resid)
-```
-All good
+In order to use the corSpatial functions within a gamm there cannot be sites at the exact same lat and long so 
+i have shifted the points at the same site by one meter or so to make the function run.
 
 ```{r Making a dataframe with sites at the same location shifted slightly}
 env_mod_data_shifted <- env_mod_data%>%
@@ -257,6 +163,172 @@ env_mod_data_shifted$longitude_proj <- projected_coords[ , 1]
 env_mod_data_shifted$latitude_proj <- projected_coords[ , 2]
 ```
 
+```{r Plotting an experimental variogram for the data that is shifted by one meter}
+vario_shifted <- variogram(urch_sn_ratio ~ 1, data = env_mod_sf_projected)
+plot(vario_shifted)
+```
+
+```{r Fitting a variogram model to the experimental variogram}
+vario_shifted_mod <- fit.variogram(vario_shifted, model = vgm(nugget = 1, model = c("Exp", "Sph", "Gau"), range = 1000, psill = 1), fit.sills = TRUE, fit.ranges = TRUE)
+vario_shifted_mod
+plot(vario_shifted, vario_shifted_mod)
+```
+
+##Plotting EVs against urch sn ratio
+
+```{r ratio against openness}
+ggplot(env_mod_data, aes(x = norm_openness, y = urch_sn_ratio))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against sst}
+ggplot(env_mod_data, aes(x = sst, y = urch_sn_ratio))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against substrate type}
+ggplot(env_mod_data, aes(x = dominant_score, y = urch_sn_ratio))+
+  geom_point()+
+  theme.figure()
+```
+
+
+
+
+##Building glm
+
+
+##Building the GAM
+
+###No spatial autocorrelation term and using norm openness
+
+####temp, norm openness, dominant score, TRUE
+```{r Making a gam with no spatial autocorrelation term to start}
+env_mod_T <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score,
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(env_mod_T)
+
+plot(env_mod_T)
+```
+
+```{r Checking the model fit with DHARMa}
+env_mod_T_resids <- simulateResiduals(env_mod_T)
+plot(env_mod_T_resids)
+```
+
+
+#####temp, norm openness, TRUE
+```{r Making a gam with no spatial autocorrelation term to start}
+env_mod_no_dom <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(env_mod_no_dom)
+
+plot(env_mod_no_dom)
+```
+
+```{r Checking the model fit with DHARMa}
+env_mod_no_dom_resids <- simulateResiduals(env_mod_no_dom)
+plot(env_mod_no_dom_resids)
+```
+
+####Smaller models within the overall environmental one
+Gavin said maybe this is not the best way to do it as you could be biasing your
+p values since summary doesn't know you already did selection.
+
+#####temp, norm openness, dominant score, FALSE
+```{r Making a gam with no spatial autocorrelation term to start}
+env_mod_F <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score,
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = FALSE)
+
+set.seed(13)
+gam.check(env_mod_F)
+
+plot(env_mod_F)
+```
+
+
+```{r Checking the model fit with DHARMa}
+env_mod_F_resids <- simulateResiduals(env_mod_F)
+plot(env_mod_F_resids)
+```
+All good
+
+
+#####temp, dominant score, FALSE
+```{r Making a gam with no spatial autocorrelation and no fetch}
+env_mod_no_fetch <- gam(urch_sn_ratio ~ s(sst_scale) + dominant_score, data = env_mod_data,
+                        method = 'REML',
+                        family = gaussian(link = "identity"),
+                        select = FALSE)
+
+gam.check(env_mod_no_fetch, rep = 500)
+plot(env_mod_no_fetch)
+```
+
+```{r}
+env_mod_no_fetch_resid <- simulateResiduals(env_mod_no_fetch)
+plot(env_mod_no_fetch_resid)
+```
+Possible problem with this model according to DHARMa
+
+#####norm openness, dominant score, FALSE
+```{r Making a gam with no spatial autocorrelation and no temperature}
+env_mod_no_temp <- gam(urch_sn_ratio ~ s(norm_openness) + dominant_score, data = env_mod_data,
+                        method = 'REML',
+                        family = gaussian(link = "identity"),
+                        select = FALSE)
+
+gam.check(env_mod_no_temp, rep = 500)
+plot(env_mod_no_temp)
+```
+
+```{r}
+env_mod_no_temp_resid <- simulateResiduals(env_mod_no_temp)
+plot(env_mod_no_temp_resid)
+```
+
+
+
+###With spatial autocorrelation term
+
+####temp, openness, dom, lat long gp interaction
+```{r Building the gam with the spatial autocorrelation term}
+####This is likely overfitting the model and just saying that a smooth of lat and long explains the variation in urch ratio
+
+env_mod_sp_gp <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
+                  data = env_mod_data, 
+                  family = gaussian(link = "identity"),
+                  method = 'REML',
+                  select = TRUE)   #In this case I have added the lat long as an interaction term directly in the model
+
+set.seed(10)
+gam.check(env_mod_sp_gp, rep = 500)
+plot(env_mod_sp_gp)
+```
+
+```{r DHARMa for model fit}
+env_mod_sp_gp_resid <- simulateResiduals(env_mod_sp_gp)
+plot(env_mod_sp_gp_resid)
+```
+All good
+
+
+####
 
 ```{r Building the gam with the spatial autocorrelation term and shifted points}
 env_mod_sp_gp_shifted <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
@@ -277,13 +349,13 @@ plot(env_mod_sp_gp_shifted_resid)
 All good
 
 ```{r Building gamm with spatial autocorrelation term corSpher}
-env_mod_sp_cor_Spher <- gamm(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score, 
+env_mod_sp_cor_Spher <- gamm(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score, 
                         data = env_mod_data_shifted,
                        family = gaussian(link = "identity"),
                        correlation = corSpher(form = ~ longitude + latitude), 
                        method = 'REML',
                        select = TRUE)
-?corSpher
+
 gam.check(env_mod_sp_cor_Spher$gam, rep = 500)
 plot(env_mod_sp_cor_Spher$gam)
 summary(env_mod_sp_cor_Spher$lme)
