@@ -35,9 +35,11 @@ env_mod_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
 env_mod_data$sst_scale <- scale(env_mod_data$sst)
 env_mod_data$openness_scale <- scale(env_mod_data$openness)
 env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
-#env_mod_data$location <- as.factor(env_mod_data$location)
-#env_mod_data$site_code <- as.factor(env_mod_data$site_code)
+env_mod_data$site_code <- as.factor(env_mod_data$site_code)
 levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
+
+regions <- c("region1", "region2", "region3")
+env_mod_data[regions] <- lapply(env_mod_data[regions], factor)
 ```
 
 ###Testing the data to see if it is spatially correlated
@@ -306,7 +308,7 @@ plot(env_mod_no_temp_resid)
 
 ###With spatial autocorrelation term
 
-####temp, openness, dom, lat long gp interaction
+####temp, openness, dom, lat long gp interaction, TRUE
 ```{r Building the gam with the spatial autocorrelation term}
 ####This is likely overfitting the model and just saying that a smooth of lat and long explains the variation in urch ratio
 
@@ -328,10 +330,10 @@ plot(env_mod_sp_gp_resid)
 All good
 
 
-####
+####temp, openness, dom, lat long gp interaction, TRUE, shifted data point
 
 ```{r Building the gam with the spatial autocorrelation term and shifted points}
-env_mod_sp_gp_shifted <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
+env_mod_sp_gp_shifted <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
                   data = env_mod_data_shifted, 
                   family = gaussian(link = "identity"),
                   method = 'REML',
@@ -348,27 +350,9 @@ plot(env_mod_sp_gp_shifted_resid)
 ```
 All good
 
-```{r Building gamm with spatial autocorrelation term corSpher}
-env_mod_sp_cor_Spher <- gamm(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score, 
-                        data = env_mod_data_shifted,
-                       family = gaussian(link = "identity"),
-                       correlation = corSpher(form = ~ longitude + latitude), 
-                       method = 'REML',
-                       select = TRUE)
-
-gam.check(env_mod_sp_cor_Spher$gam, rep = 500)
-plot(env_mod_sp_cor_Spher$gam)
-summary(env_mod_sp_cor_Spher$lme)
-```
-
-```{r DHARMa for model fit}
-env_mod_sp_cor_Spher_resid <- simulateResiduals(fittedModel = env_mod_sp_cor_Spher$lme)
-plot(env_mod_sp_cor_Spher_resid)
-```
-Problem with DHARMa for gamms
-
+####gamm, temp, openness, dom, corExp, TRUE shifted points
 ```{r Building gamm with spatial autocorrelation term corExp}
-env_mod_sp_cor_exp <- gamm(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score, 
+env_mod_sp_cor_exp <- gamm(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score, 
                         data = env_mod_data_shifted,
                        family = gaussian(link = "identity"),
                        correlation = corExp(form = ~ longitude_proj + latitude_proj, nugget = FALSE, value = 639), 
@@ -378,7 +362,6 @@ env_mod_sp_cor_exp <- gamm(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + d
 
 gam.check(env_mod_sp_cor_exp$gam, rep = 500)
 plot(env_mod_sp_cor_exp$gam)
-summary(env_mod_sp_cor_exp$lme)
 ```
 
 ```{r DHARMa for model fit}
@@ -387,30 +370,91 @@ plot(env_mod_sp_cor_exp_resid)
 ```
 Problem with DHARMa for gamms
 
-```{r}
-env_mod_location <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(location, bs = "re"), 
+####gam, temp, openness, dom, re of site code, TRUE
+```{r Building gam with random effect of site to account for spatial autocorrelation}
+env_mod_re_site_code <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score + s(site_code, bs = "re"), 
                         data = env_mod_data,
                        family = gaussian(link = "identity"),
                        method = 'REML',
                        select = TRUE)
 
-gam.check(env_mod_location, rep = 500)
-plot(env_mod_location)
-summary(env_mod_location)
+gam.check(env_mod_re_site_code, rep = 500)
+plot(env_mod_re_site_code)
 ```
 
-```{r}
-env_mod_site <- gam(urch_sn_ratio ~ s(sst_scale) + s(avg_fetch_scale) + dominant_score + s(site_code, bs = "re"), 
+```{r DHARMa for model fit}
+env_mod_re_site_code_resid <- simulateResiduals(env_mod_re_site_code)
+plot(env_mod_re_site_code_resid)
+```
+
+
+####gam, temp, openness, dom, random effect of region M1, TRUE
+```{r Building a gam with random effect of region M1}
+env_mod_re_region_M1 <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score + s(region1, bs = "re"), 
                         data = env_mod_data,
                        family = gaussian(link = "identity"),
                        method = 'REML',
                        select = TRUE)
 
-gam.check(env_mod_site, rep = 500)
-plot(env_mod_site)
-summary(env_mod_site)
+gam.check(env_mod_re_region_M1, rep = 500)
+plot(env_mod_re_region_M1)
 ```
 
+```{r DHARMa for model fit}
+env_mod_re_region_M1_resid <- simulateResiduals(env_mod_re_region_M1)
+plot(env_mod_re_region_M1_resid)
+```
+
+####gam, temp, openness, dom, random effect of region M2, TRUE
+```{r Building a gam with random effect of region M1}
+env_mod_re_region_M2 <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score + s(region2, bs = "re"), 
+                        data = env_mod_data,
+                       family = gaussian(link = "identity"),
+                       method = 'REML',
+                       select = TRUE)
+
+gam.check(env_mod_re_region_M2, rep = 500)
+plot(env_mod_re_region_M2)
+```
+
+```{r DHARMa for model fit}
+env_mod_re_region_M2_resid <- simulateResiduals(env_mod_re_region_M2)
+plot(env_mod_re_region_M2_resid)
+```
+
+####gam, temp, openness, dom, random effect of region M2, TRUE
+```{r Building a gam with random effect of region M1}
+env_mod_re_region_M2 <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score + s(region2, bs = "re"), 
+                        data = env_mod_data,
+                       family = gaussian(link = "identity"),
+                       method = 'REML',
+                       select = TRUE)
+
+gam.check(env_mod_re_region_M2, rep = 500)
+plot(env_mod_re_region_M2)
+```
+
+```{r DHARMa for model fit}
+env_mod_re_region_M2_resid <- simulateResiduals(env_mod_re_region_M2)
+plot(env_mod_re_region_M2_resid)
+```
+
+####gam, temp, openness, dom, random effect of region M3, TRUE
+```{r Building a gam with random effect of region M1}
+env_mod_re_region_M3 <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score + s(region3, bs = "re"), 
+                        data = env_mod_data,
+                       family = gaussian(link = "identity"),
+                       method = 'REML',
+                       select = TRUE)
+
+gam.check(env_mod_re_region_M3, rep = 500)
+plot(env_mod_re_region_M3)
+```
+
+```{r DHARMa for model fit}
+env_mod_re_region_M3_resid <- simulateResiduals(env_mod_re_region_M3)
+plot(env_mod_re_region_M3_resid)
+```
 
 ###AIC with the different models
 
