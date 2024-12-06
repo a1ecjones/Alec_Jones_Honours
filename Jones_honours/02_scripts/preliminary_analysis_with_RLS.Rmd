@@ -2505,7 +2505,7 @@ urch_sn_ratio_mod_2024 <- urch_sn_ratio_mod_2024%>%
              mapping = aes(x = longitude, y = latitude, colour = region3), 
               shape = 1, size = 3, colour = "black") + 
    scale_colour_viridis_d()+
-  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = "Region M2") +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = "Region M3") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -2517,15 +2517,15 @@ urch_sn_ratio_mod_2024 <- urch_sn_ratio_mod_2024%>%
   annotation_scale(location = "br"))
 ```
 
-```{r Combining the 3 region schemes into one multipaneled figure, fig.height=5, fig.width=3}
-(region_scheme_figure <- ggarrange(region_1_map, region_2_map, region_3_map,
-                                  labels = c("A", "B", "C"),
-                                  nrow = 2
+```{r Combining the 3 region schemes into one multipaneled figure}
+(region_scheme_figure <- plot_grid(region_1_map, region_2_map, region_3_map,
+                                  labels = c("A", "B", "C")
+                                  #nrow = 2
                                   ))
 ```
 
 ```{r Saving the region scheme map}
-png(filename = here("./04_plots/region_scheme_map_2024.png"), width = 10, height = 8, 
+png(filename = here("./04_plots/region_scheme_map_2024.png"), width = 15, height =15, 
     units = "in", pointsize = 15, res = 600)
 
 region_scheme_figure
