@@ -458,4 +458,26 @@ arrange(AIC)%>%
 
 ###Trying with fishing variables now
 
+need to figure out which spatial grouping to pick
 
+VIF test on the model or on the two variables
+5 or higher is very colinear
+
+```{r}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_500m, y = app_fishing_hrs))+
+  geom_point()
+```
+
+
+
+####gam, rec boats 500m, gfw, TRUE
+```{r Building a gam with fishing variables}
+fish_mod <- gam(urch_sn_ratio ~ s(mean_rec_boat_counts_500m) + s(app_fishing_hrs), 
+                        data = env_mod_data,
+                       family = gaussian(link = "identity"),
+                       method = 'REML',
+                       select = TRUE)
+
+gam.check(fish_mod, rep = 500)
+plot(fish_mod)
+```
