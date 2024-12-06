@@ -65,7 +65,8 @@ invert_data_final_clean <- invert_data_clean%>%
 ```
 
 
-####Correcting the lat and longs of the sites
+#### Correcting the lat and longs of the sites
+
 ```{r Correcting the lat and long to be correct}
 invert_data_final_clean_updated_lat_long <- invert_data_final_clean%>%
  mutate(latitude = if_else(site_code == "BMSC1", 48.82894897, latitude))%>%
