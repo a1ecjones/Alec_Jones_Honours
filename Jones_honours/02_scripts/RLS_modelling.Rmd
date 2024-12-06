@@ -406,7 +406,7 @@ plot(env_mod_re_region_M1_resid)
 ```
 
 ####gam, temp, openness, dom, random effect of region M2, TRUE
-```{r Building a gam with random effect of region M1}
+```{r Building a gam with random effect of region M2}
 env_mod_re_region_M2 <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score + s(region2, bs = "re"), 
                         data = env_mod_data,
                        family = gaussian(link = "identity"),
@@ -422,25 +422,9 @@ env_mod_re_region_M2_resid <- simulateResiduals(env_mod_re_region_M2)
 plot(env_mod_re_region_M2_resid)
 ```
 
-####gam, temp, openness, dom, random effect of region M2, TRUE
-```{r Building a gam with random effect of region M1}
-env_mod_re_region_M2 <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score + s(region2, bs = "re"), 
-                        data = env_mod_data,
-                       family = gaussian(link = "identity"),
-                       method = 'REML',
-                       select = TRUE)
-
-gam.check(env_mod_re_region_M2, rep = 500)
-plot(env_mod_re_region_M2)
-```
-
-```{r DHARMa for model fit}
-env_mod_re_region_M2_resid <- simulateResiduals(env_mod_re_region_M2)
-plot(env_mod_re_region_M2_resid)
-```
 
 ####gam, temp, openness, dom, random effect of region M3, TRUE
-```{r Building a gam with random effect of region M1}
+```{r Building a gam with random effect of region M3}
 env_mod_re_region_M3 <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness) + dominant_score + s(region3, bs = "re"), 
                         data = env_mod_data,
                        family = gaussian(link = "identity"),
@@ -459,28 +443,19 @@ plot(env_mod_re_region_M3_resid)
 ###AIC with the different models
 
 ```{r Comparing the models with an AIC}
-AIC(env_mod, env_mod_no_fetch,
-    env_mod_sp_cor_Spher$lme, 
-    env_mod_sp_cor_exp$lme, 
-    env_mod_site
+AIC(env_mod,
+    #env_mod_sp_gp, 
+    #env_mod_sp_gp_shifted,
+    env_mod_sp_cor_exp$lme,
+    env_mod_re_site_code,
+    env_mod_re_region_M1,
+    env_mod_re_region_M2, 
+    env_mod_re_region_M3
     )%>%
 arrange(AIC)%>%
   mutate(delta_AIC = AIC - AIC[1])
 ```
 
-```{r Comparing the models with unshifted points in an AIC}
-AIC(env_mod, env_mod_no_fetch, env_mod_sp_gp)%>%
-arrange(AIC)%>%
-  mutate(delta_AIC = AIC - AIC[1])
-```
-
-```{r Comparing the models with shifted points in an AIC}
-AIC(env_mod, env_mod_no_fetch, env_mod_sp_gp_shifted,
-    env_mod_sp_cor_Spher$lme, 
-    env_mod_sp_cor_exp$lme
-    )%>%
-arrange(AIC)%>%
-  mutate(delta_AIC = AIC - AIC[1])
-```
+###Trying with fishing variables now
 
 

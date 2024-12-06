@@ -2533,12 +2533,6 @@ region_scheme_figure
 dev.off()
 ```
 
-###Writing a final csv for modelling the environmental variables
-
-```{r Writing the urch sn ratio mod df}
-write_csv(urch_sn_ratio_mod_2024,
-          here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
-```
 
 
 ###Adding in the fishing variables to the data frame
@@ -2708,3 +2702,18 @@ ggplot(urch_sn_ratio_fishing_mod_2024, aes(x = log(total_rec_boats + 1), y = urc
 
 
 ###Combining the fishing and environmental data sets
+
+```{r Adding the fishing data into the environmental modelling data}
+urch_sn_ratio_mod_2024 <- urch_sn_ratio_mod_2024%>%
+  left_join(urch_sn_ratio_fishing_mod_2024, by = c("site_code", "site_name", "latitude", "longitude",
+                                                   "survey_date", "depth", "visibility", "hour", 
+                                                   "Urchins", "Turban_Snails", "urch_sn_ratio"))
+```
+
+
+###Writing a final csv for modelling
+
+```{r Writing the urch sn ratio mod df}
+write_csv(urch_sn_ratio_mod_2024,
+          here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
+```
