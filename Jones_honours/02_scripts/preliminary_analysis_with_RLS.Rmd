@@ -2050,10 +2050,10 @@ dev.off()
 
 
 ##Working with the global fishing watch data
-```{r Loading in the global fishing watch data}
-gfw_data_raw <- read_csv(here("./01_raw_data/public-global-fishing-effort-v3.0.csv"))
+```{r Loading in the global fishing watch data 23-24}
+gfw_data_raw_23_24 <- read_csv(here("./01_raw_data/public-global-fishing-effort-v3.0.csv"))
 
-gfw_data_clean <- gfw_data_raw%>%
+gfw_data_clean_23_24 <- gfw_data_raw_23_24%>%
   select(-c(`Time Range`))%>%
   rename(latitude = Lat,
          longitude = Lon,
@@ -2063,12 +2063,40 @@ gfw_data_clean <- gfw_data_raw%>%
          cell_lat_max = latitude + 0.005,
          cell_long_min = longitude - 0.005,
          cell_long_max = longitude + 0.005)
-  
+```
+```{r Loading in the global fishing watch data 22-23}
+gfw_data_raw_22_23 <- read_csv(here("./01_raw_data/public-global-fishing-effort-v3.0-2022-2023.csv"))
+
+gfw_data_clean_22_23 <- gfw_data_raw_22_23%>%
+  select(-c(`Time Range`))%>%
+  rename(latitude = Lat,
+         longitude = Lon,
+         vessel_IDs = `Vessel IDs`,
+         app_fish_hrs = `Apparent Fishing Hours`)%>%
+  mutate(cell_lat_min = latitude - 0.005,
+         cell_lat_max = latitude + 0.005,
+         cell_long_min = longitude - 0.005,
+         cell_long_max = longitude + 0.005)
+```
+
+```{r Loading in the global fishing watch data 21-22}
+gfw_data_raw_21_22 <- read_csv(here("./01_raw_data/public-global-fishing-effort-v3.0_2021_2022.csv"))
+
+gfw_data_clean_21_22 <- gfw_data_raw_21_22%>%
+  select(-c(`Time Range`))%>%
+  rename(latitude = Lat,
+         longitude = Lon,
+         vessel_IDs = `Vessel IDs`,
+         app_fish_hrs = `Apparent Fishing Hours`)%>%
+  mutate(cell_lat_min = latitude - 0.005,
+         cell_lat_max = latitude + 0.005,
+         cell_long_min = longitude - 0.005,
+         cell_long_max = longitude + 0.005)
 ```
 
 
 ```{r Converting the lat long min/maxes into polygons}
-gfw_data_clean_poly <- gfw_data_clean %>%
+gfw_data_clean_poly_21_22 <- gfw_data_clean_21_22 %>%
   rowwise() %>%
   mutate(
     geometry = list(st_polygon(list(rbind(
@@ -2082,9 +2110,44 @@ gfw_data_clean_poly <- gfw_data_clean %>%
   ungroup() %>%
   st_as_sf(crs = 4326)
 
-gfw_data_clean_poly$cell_id <- paste(gfw_data_clean_poly$latitude, gfw_data_clean_poly$longitude, sep = "_")
+gfw_data_clean_poly_21_22$cell_id <- paste(gfw_data_clean_poly_21_22$latitude, gfw_data_clean_poly_21_22$longitude, sep = "_")
 ```
 
+```{r Converting the lat long min/maxes into polygons}
+gfw_data_clean_poly_22_23 <- gfw_data_clean_22_23 %>%
+  rowwise() %>%
+  mutate(
+    geometry = list(st_polygon(list(rbind(
+      c(cell_long_min, cell_lat_min),
+      c(cell_long_min, cell_lat_max),
+      c(cell_long_max, cell_lat_max),
+      c(cell_long_max, cell_lat_min),
+      c(cell_long_min, cell_lat_min)
+    ))))
+  ) %>%
+  ungroup() %>%
+  st_as_sf(crs = 4326)
+
+gfw_data_clean_poly_22_23$cell_id <- paste(gfw_data_clean_poly_22_23$latitude, gfw_data_clean_poly_22_23$longitude, sep = "_")
+```
+
+```{r Converting the lat long min/maxes into polygons}
+gfw_data_clean_poly_23_24 <- gfw_data_clean_23_24 %>%
+  rowwise() %>%
+  mutate(
+    geometry = list(st_polygon(list(rbind(
+      c(cell_long_min, cell_lat_min),
+      c(cell_long_min, cell_lat_max),
+      c(cell_long_max, cell_lat_max),
+      c(cell_long_max, cell_lat_min),
+      c(cell_long_min, cell_lat_min)
+    ))))
+  ) %>%
+  ungroup() %>%
+  st_as_sf(crs = 4326)
+
+gfw_data_clean_poly_23_24$cell_id <- paste(gfw_data_clean_poly_23_24$latitude, gfw_data_clean_poly_23_24$longitude, sep = "_")
+```
 
 ```{r Plotting the apparent fishing hour data on the map}
 (app_fishing_hours_plot <- ggplot(gfw_data_clean_poly) +
@@ -2442,6 +2505,13 @@ urch_sn_ratio_mod_2024 <- urch_sn_ratio_mod_2024%>%
                      "BMSC21", "BMSC22", "BMSC23", "BMSC25", "BMSC26", "BMSC27",
                      "BMSC4", "BMSC5", "BMSC9") ~ "Trevor Channel",
    site_code %in% c("BMSC13", "BMSC14", "BMSC15", "BMSC16", "BMSC17", "BMSC18") ~ "Broken Group", 
+  ))%>%
+  mutate(region4 = case_when(
+    site_code %in% c("BMSC21", "BMSC22", "BMSC23", "BMSC25", "BMSC4", "BMSC9", "BMSC26", "BMSC27") ~ "Bamfield",
+    site_code %in% c("BMSC13", "BMSC14", "BMSC15", "BMSC16", "BMSC17", "BMSC18") ~ "Broken Group",
+    site_code %in% c("BMSC24", "BMSC6", "BMSC8") ~ "Deep Imperial Eagle Channel",
+    site_code %in% c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC19", "BMSC2", "BMSC20",
+                     "BMSC3",  "BMSC5") ~ "Deer group"
   ))
 ```
 
@@ -2518,9 +2588,33 @@ urch_sn_ratio_mod_2024 <- urch_sn_ratio_mod_2024%>%
   annotation_scale(location = "br"))
 ```
 
+```{r Plotting the region schemes}
+(region_4_map <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+  geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude, color = region4),
+             size = 3,) +
+    geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude, colour = region4), 
+              shape = 1, size = 3, colour = "black") + 
+   scale_colour_viridis_d()+
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = "Region M4") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
 ```{r Combining the 3 region schemes into one multipaneled figure}
-(region_scheme_figure <- plot_grid(region_1_map, region_2_map, region_3_map,
-                                  labels = c("A", "B", "C")
+(region_scheme_figure <- plot_grid(region_1_map, region_2_map, region_3_map, region_4_map,
+                                  labels = c("A", "B", "C", "D")
                                   #nrow = 2
                                   ))
 ```
@@ -2553,20 +2647,47 @@ urch_sn_ratio_fishing_mod_2024 <- RLS_data_2024_clean%>%
 ####Adding the GFW data
 
 ```{r Combining the sites with the gfw data to get the app fishing hours for each site}
-urch_sn_ratio_sf <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = st_crs(gfw_data_clean_poly))
+urch_sn_ratio_sf <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = 4326)
 
-urch_sn_ratio_sf <- st_transform(urch_sn_ratio_sf, crs = st_crs(gfw_data_clean_poly))
+combined_urch_sn_GFW_21_22 <- st_join(urch_sn_ratio_sf, gfw_data_clean_poly_21_22)
+combined_urch_sn_GFW_21_22$app_fish_hrs <- combined_urch_sn_GFW_21_22$app_fish_hrs%>%
+  replace(is.na(.), 0)
 
-combined_urch_sn_GFW <- st_join(urch_sn_ratio_sf, gfw_data_clean_poly)
-combined_urch_sn_GFW$app_fish_hrs <- combined_urch_sn_GFW$app_fish_hrs%>%
+combined_urch_sn_GFW_22_23 <- st_join(urch_sn_ratio_sf, gfw_data_clean_poly_22_23)
+combined_urch_sn_GFW_22_23$app_fish_hrs <- combined_urch_sn_GFW_22_23$app_fish_hrs%>%
+  replace(is.na(.), 0)
+
+combined_urch_sn_GFW_23_24 <- st_join(urch_sn_ratio_sf, gfw_data_clean_poly_23_24)
+combined_urch_sn_GFW_23_24$app_fish_hrs <- combined_urch_sn_GFW_23_24$app_fish_hrs%>%
   replace(is.na(.), 0)
 ```
 
 ```{r Extracting the apparent fishing hours from the combined df and adding it to the modelling data}
-urch_sn_ratio_fishing_mod_2024 <- cbind(urch_sn_ratio_fishing_mod_2024, combined_urch_sn_GFW$app_fish_hrs)
+urch_sn_ratio_fishing_mod_2024 <- cbind(urch_sn_ratio_fishing_mod_2024, combined_urch_sn_GFW_21_22$app_fish_hrs)
 
-colnames(urch_sn_ratio_fishing_mod_2024)[12] <- "app_fishing_hrs"
+colnames(urch_sn_ratio_fishing_mod_2024)[12] <- "app_fishing_hrs_21_22"
+
+
+urch_sn_ratio_fishing_mod_2024 <- cbind(urch_sn_ratio_fishing_mod_2024, combined_urch_sn_GFW_22_23$app_fish_hrs)
+
+colnames(urch_sn_ratio_fishing_mod_2024)[13] <- "app_fishing_hrs_22_23"
+
+
+urch_sn_ratio_fishing_mod_2024 <- cbind(urch_sn_ratio_fishing_mod_2024, combined_urch_sn_GFW_23_24$app_fish_hrs)
+
+colnames(urch_sn_ratio_fishing_mod_2024)[14] <- "app_fishing_hrs_23_24"
 ```
+
+```{r Combining the three columns into one average apparent fishing hours per year}
+urch_sn_ratio_fishing_mod_2024$mean_app_fishing_hours <- rowMeans(urch_sn_ratio_fishing_mod_2024[, c("app_fishing_hrs_21_22",
+                                                                                                     "app_fishing_hrs_22_23",
+                                                                                                     "app_fishing_hrs_23_24")])
+
+urch_sn_ratio_fishing_mod_2024 <- urch_sn_ratio_fishing_mod_2024%>%
+  select(-c(app_fishing_hrs_21_22, app_fishing_hrs_22_23, app_fishing_hrs_23_24))
+```
+
+
 
 ####Adding the rec fishing data
 
@@ -2668,7 +2789,7 @@ urch_sn_ratio_fishing_mod_2024 <- urch_sn_ratio_fishing_mod_2024%>%
                                                         "visibility", "hour"))%>%
   replace(is.na(.), 0)%>%
   select(c(site_code, site_name, latitude, longitude, survey_date, depth, visibility,
-           hour, Urchins, Turban_Snails, urch_sn_ratio, app_fishing_hrs,
+           hour, Urchins, Turban_Snails, urch_sn_ratio, mean_app_fishing_hours,
            mean_rec_boat_counts_500m, mean_rec_boat_counts_1km, mean_rec_boat_counts_1.5km))
 ```
 

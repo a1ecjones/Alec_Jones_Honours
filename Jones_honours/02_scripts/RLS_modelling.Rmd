@@ -34,11 +34,16 @@ env_mod_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
 ```{r Scaling the explanatory variables and converting substrate type to factor}
 env_mod_data$sst_scale <- scale(env_mod_data$sst)
 env_mod_data$openness_scale <- scale(env_mod_data$openness)
+env_mod_data$norm_openness_scale <- scale(env_mod_data$norm_openness)
+env_mod_data$mean_app_fishing_hours_scale <- scale(env_mod_data$mean_app_fishing_hours)
+env_mod_data$mean_rec_boat_counts_500m_scale <- scale(env_mod_data$mean_rec_boat_counts_500m)
+env_mod_data$mean_rec_boat_counts_1km_scale <- scale(env_mod_data$mean_rec_boat_counts_1km)
+env_mod_data$mean_rec_boat_counts_1.5km_scale <- scale(env_mod_data$mean_rec_boat_counts_1.5km)
 env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
 env_mod_data$site_code <- as.factor(env_mod_data$site_code)
 levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
 
-regions <- c("region1", "region2", "region3")
+regions <- c("region1", "region2", "region3", "region4")
 env_mod_data[regions] <- lapply(env_mod_data[regions], factor)
 ```
 
