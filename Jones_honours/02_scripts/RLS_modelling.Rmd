@@ -573,3 +573,150 @@ plot(fish_mod)
 fish_mod_resids <- simulateResiduals(fish_mod)
 plot(fish_mod_resids)
 ```
+
+
+####gam, rec boats 1km scaled, mean gfw scaled, TRUE
+```{r Building a gam with fishing variables}
+fish_mod_1km <- gam(urch_sn_ratio ~ s(mean_rec_boat_counts_1km_scale) + s(mean_app_fishing_hours_scale), 
+                        data = env_mod_data,
+                       family = gaussian(link = "identity"),
+                       method = 'REML',
+                       select = TRUE)
+
+gam.check(fish_mod_1km, rep = 500)
+plot(fish_mod_1km)
+```
+
+```{r DHARMa for model fit}
+fish_mod_1km_resids <- simulateResiduals(fish_mod_1km)
+plot(fish_mod_1km_resids)
+```
+
+####gam, rec boats 1.5km scaled, mean gfw scaled, TRUE
+```{r Building a gam with fishing variables}
+fish_mod_1.5km <- gam(urch_sn_ratio ~ s(mean_rec_boat_counts_1.5km_scale) + s(mean_app_fishing_hours_scale), 
+                        data = env_mod_data,
+                       family = gaussian(link = "identity"),
+                       method = 'REML',
+                       select = TRUE)
+
+gam.check(fish_mod_1.5km, rep = 500)
+plot(fish_mod_1.5km)
+```
+
+```{r DHARMa for model fit}
+fish_mod_1.5km_resids <- simulateResiduals(fish_mod_1.5km)
+plot(fish_mod_1.5km_resids)
+```
+
+###AIC of fishing models
+
+```{r Comparing the models with an AIC}
+AIC(fish_mod,
+    fish_mod_1km,
+    fish_mod_1.5km
+    )%>%
+arrange(AIC)%>%
+  mutate(delta_AIC = AIC - AIC[1])
+```
+indicates similar effects with adding distance except that it switches from curve to linear
+
+###Total mod with all variables
+
+####gam, temp scaled, norm openness scaled, dom, rec boats 500m scaled, mean gfw scaled, TRUE
+
+```{r Total model with no spatial autocorrelation}
+total_mod <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   dominant_score + 
+                   s(mean_rec_boat_counts_500m_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod)
+
+plot(total_mod)
+```
+
+```{r DHARMa for model fit}
+total_mod_resids <- simulateResiduals(total_mod)
+plot(total_mod_resids)
+```
+
+####gam, temp scaled, norm openness scaled, dom, rec boats 500m scaled, mean gfw scaled, re of region M1 TRUE
+
+```{r Total model with no spatial autocorrelation}
+total_mod_re_region1 <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   dominant_score + 
+                   s(mean_rec_boat_counts_500m_scale)+
+                   s(mean_app_fishing_hours_scale)+
+                   s(region1, bs = "re"),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_re_region1)
+
+plot(total_mod_re_region1)
+```
+
+```{r DHARMa for model fit}
+total_mod_re_region1_resids <- simulateResiduals(total_mod_re_region1)
+plot(total_mod_re_region1_resids)
+```
+
+####gam, temp scaled, norm openness scaled, dom, rec boats 500m scaled, mean gfw scaled, re of region M2 TRUE
+
+```{r Total model with no spatial autocorrelation}
+total_mod_re_region2 <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   dominant_score + 
+                   s(mean_rec_boat_counts_500m_scale)+
+                   s(mean_app_fishing_hours_scale)+
+                   s(region2, bs = "re"),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_re_region2)
+
+plot(total_mod_re_region2)
+```
+
+```{r DHARMa for model fit}
+total_mod_re_region2_resids <- simulateResiduals(total_mod_re_region2)
+plot(total_mod_re_region2_resids)
+```
+
+
+###AIC with all of the models run
+```{r}
+AIC(env_mod_T,
+    #env_mod_sp_gp, 
+    #env_mod_sp_gp_shifted,
+    env_mod_sp_cor_exp$lme,
+    env_mod_re_site_code,
+    env_mod_re_region_M1,
+    env_mod_re_region_M2, 
+    env_mod_re_region_M3,
+    env_mod_re_region_M4,
+    fish_mod,
+    fish_mod_1km,
+    fish_mod_1.5km,
+    total_mod,
+    total_mod_re_region1,
+    total_mod_re_region2
+    )%>%
+arrange(AIC)%>%
+  mutate(delta_AIC = AIC - AIC[1])
+```
+
