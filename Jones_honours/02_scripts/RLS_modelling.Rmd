@@ -188,25 +188,30 @@ plot(vario_shifted, vario_shifted_mod)
 ##Plotting EVs against urch sn ratio
 
 ```{r ratio against openness}
-ggplot(env_mod_data, aes(x = norm_openness, y = urch_sn_ratio))+
+ggplot(env_mod_data, aes(x = norm_openness, y = urch_sn_ratio, colour = region1))+
   geom_point()+
   theme.figure()
 ```
 
 ```{r ratio against sst}
-ggplot(env_mod_data, aes(x = sst, y = urch_sn_ratio))+
+ggplot(env_mod_data, aes(x = sst, y = urch_sn_ratio, colour = region1))+
   geom_point()+
   theme.figure()
 ```
 
 ```{r ratio against substrate type}
-ggplot(env_mod_data, aes(x = dominant_score, y = urch_sn_ratio))+
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_2km, y = urch_sn_ratio, colour = region1))+
   geom_point()+
   theme.figure()
 ```
 
 
+using raito because some sites are ecologically more productive
 
+also because people count differently at different sites
+
+start with env models of counts
+then 
 
 ##Building glm
 
@@ -214,6 +219,11 @@ ggplot(env_mod_data, aes(x = dominant_score, y = urch_sn_ratio))+
 ##Building the GAM
 
 ###No spatial autocorrelation term and using norm openness
+
+```{r}
+ggplot
+```
+
 
 ####temp scaled, norm openness scaled, dominant score, TRUE
 
@@ -771,28 +781,81 @@ plot(total_mod_2km_resids)
 
 ####gam, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled, re of region M1, TRUE
 
-```{r Total model with random effect of region 1}
-total_mod_re_region1_2km <- gam(urch_sn_ratio ~ s(sst_scale) + 
-                   s(norm_openness_scale) +
+
+Explain why no interaction
+
+region closest to bamfield has most urchins
+
+can do linear model
+
+use cor EXP to show that sites are independent and drop random effect from the model
+
+problem is that the random effect is correlated with fishing
+
+```{r}
+total_mod_test <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   norm_openness_scale:mean_rec_boat_counts_2km_scale  +
                    dominant_score + 
-                   s(mean_rec_boat_counts_2km_scale)+
                    s(mean_app_fishing_hours_scale)+
                    s(region1, bs = "re"),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE) 
+
+plot(total_mod_test)
+summary(total_mod_test)
+```
+
+
+```{r Total model with random effect of region 1}
+total_mod_re_region1_2km <- gam(urch_sn_ratio ~ 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_2km_scale)
+                   
+                  ,
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = FALSE)
+
+set.seed(13)
+gam.check(total_mod_re_region1_2km)
+
+plot(total_mod_re_region1_2km)
+summary(total_mod_re_region1_2km)
+```
+```{r}
+ggplot(env_mod_data, aes(x = region1, y = mean_rec_boat_counts_2km))+
+  geom_boxplot()
+```
+
+
+```{r DHARMa for model fit}
+total_mod_re_region1_2km_resids <- simulateResiduals(total_mod_re_region1_2km)
+plot(total_mod_re_region1_2km_resids)
+```
+####gam, temp scaled, norm openness scaled, dom, rec boats 500m scaled, mean gfw scaled, re of region M1, TRUE
+
+```{r Total model with random effect of region 1}
+total_mod_re_region1_test2 <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   #dominant_score + 
+                   s(mean_rec_boat_counts_2km_scale)
+                   #s(mean_app_fishing_hours_scale)
+                   ,
                data = env_mod_data,
                family = gaussian(link = "identity"),
                method = 'REML',
                select = TRUE)
 
 set.seed(13)
-gam.check(total_mod_re_region1_2km)
+gam.check(total_mod_re_region1_test2)
 
-plot(total_mod_re_region1_2km)
+plot(total_mod_re_region1_test2)
+summary(total_mod_re_region1_test2)
 ```
-
-```{r DHARMa for model fit}
-total_mod_re_region1_2km_resids <- simulateResiduals(total_mod_re_region1_2km)
-plot(total_mod_re_region1_2km_resids)
-```
+theres a regional effect but havent sampled all regions equally
 
 ####gam, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled, re of region M2, TRUE
 
