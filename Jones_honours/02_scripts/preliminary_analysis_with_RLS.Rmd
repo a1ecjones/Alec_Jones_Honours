@@ -2647,6 +2647,9 @@ urch_sn_ratio_fishing_mod_2024 <- RLS_data_2024_clean%>%
 
 ####Adding the GFW data
 
+Combining the gfw polygons with the RLS site points. Makes a column with app fishing hours
+for each site in that year.
+
 ```{r Combining the sites with the gfw data to get the app fishing hours for each site}
 urch_sn_ratio_sf <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = 4326)
 
@@ -2663,6 +2666,8 @@ combined_urch_sn_GFW_23_24$app_fish_hrs <- combined_urch_sn_GFW_23_24$app_fish_h
   replace(is.na(.), 0)
 ```
 
+Add the app fishing hours from each year for each site into the urch sn fishing data frame
+
 ```{r Extracting the apparent fishing hours from the combined df and adding it to the modelling data}
 urch_sn_ratio_fishing_mod_2024 <- cbind(urch_sn_ratio_fishing_mod_2024, combined_urch_sn_GFW_21_22$app_fish_hrs)
 
@@ -2678,6 +2683,9 @@ urch_sn_ratio_fishing_mod_2024 <- cbind(urch_sn_ratio_fishing_mod_2024, combined
 
 colnames(urch_sn_ratio_fishing_mod_2024)[14] <- "app_fishing_hrs_23_24"
 ```
+
+Replace the three years of apparent fishing hours at each site with a column for
+the mean apparent fishing hours across the three years.
 
 ```{r Combining the three columns into one average apparent fishing hours per year}
 urch_sn_ratio_fishing_mod_2024$mean_app_fishing_hours <- rowMeans(urch_sn_ratio_fishing_mod_2024[, c("app_fishing_hrs_21_22",
