@@ -40,6 +40,8 @@ env_mod_data$mean_app_fishing_hours_scale <- scale(env_mod_data$mean_app_fishing
 env_mod_data$mean_rec_boat_counts_500m_scale <- scale(env_mod_data$mean_rec_boat_counts_500m)
 env_mod_data$mean_rec_boat_counts_1km_scale <- scale(env_mod_data$mean_rec_boat_counts_1km)
 env_mod_data$mean_rec_boat_counts_1.5km_scale <- scale(env_mod_data$mean_rec_boat_counts_1.5km)
+env_mod_data$mean_rec_boat_counts_750m_scale <- scale(env_mod_data$mean_rec_boat_counts_750m)
+env_mod_data$mean_rec_boat_counts_2km_scale <- scale(env_mod_data$mean_rec_boat_counts_2km)
 env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
 env_mod_data$site_code <- as.factor(env_mod_data$site_code)
 levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
@@ -551,10 +553,14 @@ arrange(AIC)%>%
 ###Trying with fishing variables now
 
 ```{r}
-ggplot(env_mod_data, aes(x = mean_rec_boat_counts_500m, y = app_fishing_hrs))+
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_750m, y = urch_sn_ratio))+
   geom_point()
 ```
 
+```{r}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_500m, y = urch_sn_ratio))+
+  geom_point()
+```
 
 
 ####gam, rec boats 500m scaled, mean gfw scaled, TRUE
@@ -574,6 +580,22 @@ fish_mod_resids <- simulateResiduals(fish_mod)
 plot(fish_mod_resids)
 ```
 
+####gam, rec boats 750m scaled, mean gfw scaled, TRUE
+```{r Building a gam with fishing variables}
+fish_mod_750m <- gam(urch_sn_ratio ~ s(mean_rec_boat_counts_750m_scale) + s(mean_app_fishing_hours_scale), 
+                        data = env_mod_data,
+                       family = gaussian(link = "identity"),
+                       method = 'REML',
+                       select = TRUE)
+
+gam.check(fish_mod_750m, rep = 500)
+plot(fish_mod_750m)
+```
+
+```{r DHARMa for model fit}
+fish_mod_750m_resids <- simulateResiduals(fish_mod_750m)
+plot(fish_mod_750m_resids)
+```
 
 ####gam, rec boats 1km scaled, mean gfw scaled, TRUE
 ```{r Building a gam with fishing variables}
@@ -593,6 +615,7 @@ plot(fish_mod_1km_resids)
 ```
 
 ####gam, rec boats 1.5km scaled, mean gfw scaled, TRUE
+
 ```{r Building a gam with fishing variables}
 fish_mod_1.5km <- gam(urch_sn_ratio ~ s(mean_rec_boat_counts_1.5km_scale) + s(mean_app_fishing_hours_scale), 
                         data = env_mod_data,
@@ -609,17 +632,39 @@ fish_mod_1.5km_resids <- simulateResiduals(fish_mod_1.5km)
 plot(fish_mod_1.5km_resids)
 ```
 
+####gam, rec boats 2km scaled, mean gfw scaled, TRUE
+
+```{r Building a gam with fishing variables}
+fish_mod_2km <- gam(urch_sn_ratio ~ s(mean_rec_boat_counts_2km_scale) + s(mean_app_fishing_hours_scale), 
+                        data = env_mod_data,
+                       family = gaussian(link = "identity"),
+                       method = 'REML',
+                       select = TRUE)
+
+gam.check(fish_mod_2km, rep = 500)
+plot(fish_mod_2km)
+```
+
+```{r DHARMa for model fit}
+fish_mod_2km_resids <- simulateResiduals(fish_mod_2km)
+plot(fish_mod_2km_resids)
+```
+
+
+
 ###AIC of fishing models
 
 ```{r Comparing the models with an AIC}
 AIC(fish_mod,
+    fish_mod_750m,
     fish_mod_1km,
-    fish_mod_1.5km
+    fish_mod_1.5km,
+    fish_mod_2km
     )%>%
 arrange(AIC)%>%
   mutate(delta_AIC = AIC - AIC[1])
 ```
-indicates similar effects with adding distance except that it switches from curve to linear
+indicates similar effects with adding distance ---- some problems with shorter distances as there are more small counts
 
 ###Total mod with all variables
 
