@@ -553,12 +553,12 @@ arrange(AIC)%>%
 
 ###Trying with fishing variables now
 
-```{r}
+```{r Plot of urch sn ratio vs rec boats}
 ggplot(env_mod_data, aes(x = mean_rec_boat_counts_750m, y = urch_sn_ratio))+
   geom_point()
 ```
 
-```{r}
+```{r plot of urch sn ratio vs rec boat counts}
 ggplot(env_mod_data, aes(x = mean_rec_boat_counts_500m, y = urch_sn_ratio))+
   geom_point()
 ```
@@ -745,6 +745,30 @@ plot(total_mod_re_region2_resids)
 
 
 
+####gam, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled, TRUE
+
+```{r Total model with no spatial autocorrelation}
+total_mod_2km <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   dominant_score + 
+                   s(mean_rec_boat_counts_2km_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_2km)
+
+plot(total_mod_2km)
+```
+
+```{r DHARMa for model fit}
+total_mod_2km_resids <- simulateResiduals(total_mod_2km)
+plot(total_mod_2km_resids)
+```
+
 ####gam, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled, re of region M1, TRUE
 
 ```{r Total model with random effect of region 1}
@@ -795,6 +819,33 @@ total_mod_re_region2_2km_resids <- simulateResiduals(total_mod_re_region2_2km)
 plot(total_mod_re_region2_2km_resids)
 ```
 
+
+####gamm, temp scaled, norm openness scaled, dom, mean rec boats 500m scaled, mean apparent fishing hours scaled, corExp, TRUE shifted points
+
+```{r Building total gamm with spatial autocorrelation term corExp}
+total_mod_sp_cor_exp <- gamm(urch_sn_ratio ~ s(sst_scale) +
+                                   s(norm_openness_scale) +
+                                   dominant_score +
+                                   s(mean_rec_boat_counts_500m_scale) +
+                                   s(mean_app_fishing_hours_scale), 
+                        data = env_mod_data_shifted,
+                       family = gaussian(link = "identity"),
+                       correlation = corExp(form = ~ longitude_proj + latitude_proj, nugget = FALSE, value = 639), 
+                       method = 'REML',
+                       select = TRUE)
+
+
+gam.check(total_mod_sp_cor_exp$gam, rep = 500)
+plot(total_mod_sp_cor_exp$gam)
+```
+
+```{r DHARMa for model fit}
+env_mod_sp_cor_exp_total_resid <- simulateResiduals(env_mod_sp_cor_exp_total$lme)
+plot(env_mod_sp_cor_exp_total_resid)
+```
+
+
+
 ###AIC with all of the models run
 
 ```{r Starting with normal AIC which assumes infinite sample size}
@@ -813,10 +864,12 @@ AIC(env_mod_T,
     fish_mod_750m,
     fish_mod_2km,
     total_mod,
+   total_mod_2km,
     total_mod_re_region1,
     total_mod_re_region2,
    total_mod_re_region1_2km,
-   total_mod_re_region2_2km
+   total_mod_re_region2_2km,
+   total_mod_sp_cor_exp
     )%>%
 arrange(AIC)%>%
   mutate(delta_AIC = AIC - AIC[1])
@@ -841,7 +894,8 @@ AICc(env_mod_T,
     total_mod_re_region1,
     total_mod_re_region2,
      total_mod_re_region1_2km,
-   total_mod_re_region2_2km
+   total_mod_re_region2_2km,
+   total_mod_sp_cor_exp
     )%>%
 arrange(AICc)%>%
   mutate(delta_AICc = AICc - AICc[1])
