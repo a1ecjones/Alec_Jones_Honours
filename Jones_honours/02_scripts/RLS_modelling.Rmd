@@ -20,6 +20,7 @@ library(geosphere)
 library(gstat)
 library(sf)
 library(car)
+library(MuMIn)
 ```
 
 
@@ -692,9 +693,9 @@ total_mod_resids <- simulateResiduals(total_mod)
 plot(total_mod_resids)
 ```
 
-####gam, temp scaled, norm openness scaled, dom, rec boats 500m scaled, mean gfw scaled, re of region M1 TRUE
+####gam, temp scaled, norm openness scaled, dom, rec boats 500m scaled, mean gfw scaled, re of region M1, TRUE
 
-```{r Total model with no spatial autocorrelation}
+```{r Total model with random effect of region 1}
 total_mod_re_region1 <- gam(urch_sn_ratio ~ s(sst_scale) + 
                    s(norm_openness_scale) +
                    dominant_score + 
@@ -717,9 +718,9 @@ total_mod_re_region1_resids <- simulateResiduals(total_mod_re_region1)
 plot(total_mod_re_region1_resids)
 ```
 
-####gam, temp scaled, norm openness scaled, dom, rec boats 500m scaled, mean gfw scaled, re of region M2 TRUE
+####gam, temp scaled, norm openness scaled, dom, rec boats 500m scaled, mean gfw scaled, re of region M2, TRUE
 
-```{r Total model with no spatial autocorrelation}
+```{r Total model with random effect of region 2}
 total_mod_re_region2 <- gam(urch_sn_ratio ~ s(sst_scale) + 
                    s(norm_openness_scale) +
                    dominant_score + 
@@ -743,13 +744,65 @@ plot(total_mod_re_region2_resids)
 ```
 
 
+
+####gam, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled, re of region M1, TRUE
+
+```{r Total model with random effect of region 1}
+total_mod_re_region1_2km <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   dominant_score + 
+                   s(mean_rec_boat_counts_2km_scale)+
+                   s(mean_app_fishing_hours_scale)+
+                   s(region1, bs = "re"),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_re_region1_2km)
+
+plot(total_mod_re_region1_2km)
+```
+
+```{r DHARMa for model fit}
+total_mod_re_region1_2km_resids <- simulateResiduals(total_mod_re_region1_2km)
+plot(total_mod_re_region1_2km_resids)
+```
+
+####gam, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled, re of region M2, TRUE
+
+```{r Total model with random effect of region 2}
+total_mod_re_region2_2km <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   dominant_score + 
+                   s(mean_rec_boat_counts_2km_scale)+
+                   s(mean_app_fishing_hours_scale)+
+                   s(region2, bs = "re"),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_re_region2_2km)
+
+plot(total_mod_re_region2_2km)
+```
+
+```{r DHARMa for model fit}
+total_mod_re_region2_2km_resids <- simulateResiduals(total_mod_re_region2_2km)
+plot(total_mod_re_region2_2km_resids)
+```
+
 ###AIC with all of the models run
-```{r}
+
+```{r Starting with normal AIC which assumes infinite sample size}
 AIC(env_mod_T,
     #env_mod_sp_gp, 
     #env_mod_sp_gp_shifted,
     env_mod_sp_cor_exp$lme,
-    env_mod_re_site_code,
+   # env_mod_re_site_code,
     env_mod_re_region_M1,
     env_mod_re_region_M2, 
     env_mod_re_region_M3,
@@ -757,11 +810,46 @@ AIC(env_mod_T,
     fish_mod,
     fish_mod_1km,
     fish_mod_1.5km,
+    fish_mod_750m,
+    fish_mod_2km,
     total_mod,
     total_mod_re_region1,
-    total_mod_re_region2
+    total_mod_re_region2,
+   total_mod_re_region1_2km,
+   total_mod_re_region2_2km
     )%>%
 arrange(AIC)%>%
   mutate(delta_AIC = AIC - AIC[1])
+```
+
+```{r Using corrected AIC because sample size is small}
+AICc(env_mod_T,
+    #env_mod_sp_gp, 
+    #env_mod_sp_gp_shifted,
+    env_mod_sp_cor_exp$lme,
+    #env_mod_re_site_code,
+    env_mod_re_region_M1,
+    env_mod_re_region_M2, 
+    env_mod_re_region_M3,
+    env_mod_re_region_M4,
+    fish_mod,
+    fish_mod_1km,
+    fish_mod_1.5km,
+    fish_mod_750m,
+    fish_mod_2km,
+    total_mod,
+    total_mod_re_region1,
+    total_mod_re_region2,
+     total_mod_re_region1_2km,
+   total_mod_re_region2_2km
+    )%>%
+arrange(AICc)%>%
+  mutate(delta_AICc = AICc - AICc[1])
+```
+
+###Testing if the best models are significantly different
+
+```{r Using ANOVA to test the best models}
+anova(total_mod_re_region1, total_mod_re_region1_2km, env_mod_re_region_M1)
 ```
 
