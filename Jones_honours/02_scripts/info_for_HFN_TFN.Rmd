@@ -1,0 +1,318 @@
+---
+title: "Information for HFN and TFN"
+author: "Alec"
+date: "2024-12-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#Making maps for HFN
+
+##Loading in HFN data
+
+```{r Selecting only the sites in HFN}
+hfn_data <- urch_sn_ratio_RLS_2024%>%
+  filter(region1 != "Broken Group")
+```
+
+##Selecting range for the map
+
+```{r Making the range for the map}
+#first need to specify the range of the map
+lat_min_hfn = min(hfn_data$latitude) - 0.03
+lat_max_hfn = max(hfn_data$latitude) + 0.03
+
+long_min_hfn = min(hfn_data$longitude) - 0.03
+long_max_hfn = max(hfn_data$longitude) + 0.03
+```
+
+
+```{r Making the plot with the urch to sn ratio on the map 2024 for HFN}
+(urch_sn_ratio_map_2024_HFN <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min_hfn, long_max_hfn),
+           ylim = c(lat_min_hfn, lat_max_hfn)) +
+  geom_point(data = hfn_data,
+             mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
+             size = 3,) +
+    geom_point(data = hfn_data,
+             mapping = aes(x = longitude, y = latitude, colour = urch_sn_ratio), 
+              shape = 1, size = 3, colour = "black") + 
+  #scale_colour_viridis_c() +
+  scale_colour_gradient2(
+    low = "blue",          # Color for negative values
+    mid = "white",         # Color for zero
+    high = "red",          # Color for positive values
+    midpoint = 0           # Set the midpoint to zero
+  ) +
+  labs(title = "2024", x = "Longitude", y = "Latitude\n ", colour = " Log Urchin to\n Snail Ratio") +
+  theme.figure() +
+   theme(axis.text.x = element_text(angle = 45, margin = margin(16)))+
+  #scale_x_continuous(breaks = c(-125.20, -125.05)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+##Saving the plot
+
+```{r Saving the plot of urch sn ratio hfn, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/ratios/urch_sn_ratio_2024_HFN.png"), width = 7, height = 9, 
+    units = "in", pointsize = 15, res = 700)
+
+urch_sn_ratio_map_2024_HFN
+
+dev.off()
+```
+
+
+##Urchin counts
+
+```{r Making the plot with the urch counts on the map 2024 for HFN}
+(urch_count_map_2024_HFN <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min_hfn, long_max_hfn),
+           ylim = c(lat_min_hfn, lat_max_hfn)) +
+  geom_point(data = hfn_data,
+             mapping = aes(x = longitude, y = latitude, color = Urchins),
+             size = 3,) +
+    geom_point(data = hfn_data,
+             mapping = aes(x = longitude, y = latitude, colour = Urchins), 
+              shape = 1, size = 3, colour = "black") + 
+  #scale_colour_viridis_c() +
+   scale_colour_gradient(low = "blue", high = "red")+
+ # scale_colour_gradient2(
+  #  low = "blue",          # Color for negative values
+   # mid = "white",         # Color for zero
+    #high = "red",          # Color for positive values
+  #  midpoint = 0           # Set the midpoint to zero
+  #) +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = "Urchin Counts") +
+  theme.figure() +
+   theme(axis.text.x = element_text(angle = 45, margin = margin(16)))+
+  #scale_x_continuous(breaks = c(-125.20, -125.05)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Saving the plot of urch sn ratio hfn, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/counts/urch_count_2024_HFN.png"), width = 7, height = 9, 
+    units = "in", pointsize = 15, res = 700)
+
+urch_count_map_2024_HFN
+
+dev.off()
+```
+
+
+##Snail counts
+
+
+```{r Making the plot with the snail counts on the map 2024 for HFN}
+(snail_count_map_2024_HFN <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min_hfn, long_max_hfn),
+           ylim = c(lat_min_hfn, lat_max_hfn)) +
+  geom_point(data = hfn_data,
+             mapping = aes(x = longitude, y = latitude, color = Turban_Snails),
+             size = 3,) +
+    geom_point(data = hfn_data,
+             mapping = aes(x = longitude, y = latitude, colour = Turban_Snails), 
+              shape = 1, size = 3, colour = "black") + 
+  #scale_colour_viridis_c() +
+   scale_colour_gradient(low = "blue", high = "red")+
+ # scale_colour_gradient2(
+  #  low = "blue",          # Color for negative values
+   # mid = "white",         # Color for zero
+    #high = "red",          # Color for positive values
+  #  midpoint = 0           # Set the midpoint to zero
+  #) +
+  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ", colour = "Red Turban\nSnail Counts") +
+  theme.figure() +
+   theme(axis.text.x = element_text(angle = 45, margin = margin(16)))+
+  #scale_x_continuous(breaks = c(-125.20, -125.05)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Saving the plot of urch sn ratio hfn, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/counts/snail_count_2024_HFN.png"), width = 7, height = 9, 
+    units = "in", pointsize = 15, res = 700)
+
+snail_count_map_2024_HFN
+
+dev.off()
+```
+
+
+#TFN info
+
+##loading in the data
+
+```{r}
+tfn_data <- urch_sn_ratio_RLS_2024%>%
+  filter(region1 == "Broken Group")
+```
+
+```{r Making the range for the map}
+#first need to specify the range of the map
+lat_min_tfn = min(tfn_data$latitude) - 0.03
+lat_max_tfn = max(tfn_data$latitude) + 0.03
+
+long_min_tfn = min(tfn_data$longitude) - 0.03
+long_max_tfn = max(tfn_data$longitude) + 0.03
+```
+
+##Plotting urch ratio
+
+```{r Making the plot with the urch to sn ratio on the map 2024 for TFN}
+(urch_sn_ratio_map_2024_TFN <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min_tfn, long_max_tfn),
+           ylim = c(lat_min_tfn, lat_max_tfn)) +
+  geom_point(data = tfn_data,
+             mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
+             size = 4,) +
+    geom_point(data = tfn_data,
+             mapping = aes(x = longitude, y = latitude, colour = urch_sn_ratio), 
+              shape = 1, size = 4, colour = "black") + 
+  #scale_colour_viridis_c() +
+  scale_colour_gradient2(
+    low = "blue",          # Color for negative values
+    mid = "white",         # Color for zero
+    high = "red",          # Color for positive values
+    midpoint = 0           # Set the midpoint to zero
+  ) +
+  labs(title = "2024", x = "Longitude", y = "Latitude\n ", colour = "Log Urchin to\nSnail Ratio") +
+  theme.figure() +
+   #theme(axis.text.x = element_text(angle = 45, margin = margin(16)))+
+  #scale_x_continuous(breaks = c(-125.20, -125.05)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+##Saving the plot
+
+```{r Saving the plot of urch sn ratio hfn, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/ratios/urch_sn_ratio_2024_TFN.png"), width = 7, height = 7, 
+    units = "in", pointsize = 15, res = 700)
+
+urch_sn_ratio_map_2024_TFN
+
+dev.off()
+```
+
+
+##Urchin counts
+
+```{r Making the plot with the urch counts on the map 2024 for TFN}
+(urch_count_map_2024_TFN <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min_tfn, long_max_tfn),
+           ylim = c(lat_min_tfn, lat_max_tfn)) +
+  geom_point(data = tfn_data,
+             mapping = aes(x = longitude, y = latitude, color = Urchins),
+             size = 4,) +
+    geom_point(data = tfn_data,
+             mapping = aes(x = longitude, y = latitude, colour = Urchins), 
+              shape = 1, size = 4, colour = "black") + 
+  #scale_colour_viridis_c() +
+     scale_colour_gradient(low = "blue", high = "red")+
+ # scale_colour_gradient2(
+ #   low = "blue",          # Color for negative values
+ #   mid = "white",         # Color for zero
+ #   high = "red",          # Color for positive values
+ #   midpoint = 0           # Set the midpoint to zero
+#  ) +
+  labs(title = "2024", x = "Longitude", y = "Latitude\n ", colour = "Urchin Counts") +
+  theme.figure() +
+   #theme(axis.text.x = element_text(angle = 45, margin = margin(16)))+
+  #scale_x_continuous(breaks = c(-125.20, -125.05)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+##Saving the plot
+
+```{r Saving the plot of urch sn ratio hfn, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/counts/urch_count_2024_TFN.png"), width = 7, height = 7, 
+    units = "in", pointsize = 15, res = 700)
+
+urch_count_map_2024_TFN
+
+dev.off()
+```
+
+
+##Snail counts
+
+```{r Making the plot with the urch counts on the map 2024 for TFN}
+(snail_count_map_2024_TFN <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min_tfn, long_max_tfn),
+           ylim = c(lat_min_tfn, lat_max_tfn)) +
+  geom_point(data = tfn_data,
+             mapping = aes(x = longitude, y = latitude, color = Turban_Snails),
+             size = 4,) +
+    geom_point(data = tfn_data,
+             mapping = aes(x = longitude, y = latitude, colour = Turban_Snails), 
+              shape = 1, size = 4, colour = "black") + 
+  #scale_colour_viridis_c() +
+     scale_colour_gradient(low = "blue", high = "red")+
+ # scale_colour_gradient2(
+ #   low = "blue",          # Color for negative values
+ #   mid = "white",         # Color for zero
+ #   high = "red",          # Color for positive values
+ #   midpoint = 0           # Set the midpoint to zero
+#  ) +
+  labs(title = "2024", x = "Longitude", y = "Latitude\n ", colour = "Red Turban\nSnail Counts") +
+  theme.figure() +
+   #theme(axis.text.x = element_text(angle = 45, margin = margin(16)))+
+  #scale_x_continuous(breaks = c(-125.20, -125.05)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+##Saving the plot
+
+```{r Saving the plot of urch sn ratio hfn, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/counts/snail_count_2024_TFN.png"), width = 7, height = 7, 
+    units = "in", pointsize = 15, res = 700)
+
+snail_count_map_2024_TFN
+
+dev.off()
+```

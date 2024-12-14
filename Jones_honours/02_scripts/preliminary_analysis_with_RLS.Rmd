@@ -886,7 +886,7 @@ mutate(latitude = if_else(site_code == "BMSC24" & depth == 5.5, 48.921000, latit
 mutate(latitude = if_else(site_code == "BMSC25" & depth == 5.5, 48.843000, latitude))%>%
  mutate(longitude = if_else(site_code == "BMSC25" & depth == 5.5, -125.135015, longitude))%>%
 
-mutate(latitude = if_else(site_code == "BMSC26" & depth == 6.5, 48.91500, latitude))%>%
+mutate(latitude = if_else(site_code == "BMSC26" & depth == 6.5, 48.912000, latitude))%>%
  mutate(longitude = if_else(site_code == "BMSC26" & depth == 6.5, -125.037017, longitude))%>%
 
 mutate(latitude = if_else(site_code == "BMSC5" & depth == 6.0, 48.8230000, latitude))%>%
@@ -913,7 +913,14 @@ mutate(latitude = if_else(site_code == "BMSC8" & depth == 7.5, 48.95508194, lati
            visibility, hour, Urchins, Turban_Snails)%>%
   replace(is.na(.), 0)%>%
   mutate(urch_sn_ratio = log10((Urchins +1) / (Turban_Snails + 1)),
-         survey_date = dmy(survey_date))
+         survey_date = dmy(survey_date))%>%
+    mutate(region1 = case_when(
+    site_code %in% c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC19", "BMSC2", "BMSC20", 
+                     "BMSC21", "BMSC22", "BMSC23", "BMSC25", "BMSC3", "BMSC4", "BMSC5", "BMSC9") ~ "Deer group/Bamfield",
+   site_code %in% c("BMSC13", "BMSC14", "BMSC15", "BMSC16", "BMSC17", "BMSC18") ~ "Broken Group", 
+    site_code %in% c("BMSC24", "BMSC6", "BMSC8") ~ "Deep Imperial Eagle Channel",
+    site_code %in% c("BMSC26", "BMSC27") ~ "Sarita"
+  ))
 ```
 
 ###Urch to all others ratio 2024
@@ -1225,6 +1232,13 @@ openness_map
 dev.off()
 ```
 
+```{r Plotting urchin snail ratio against openness}
+ggplot(urch_sn_ratio_mod_2024, aes(x = norm_openness, y = urch_sn_ratio))+
+  geom_point()+
+  theme.figure()+
+  labs(x = "Site Exposure", y = "Log Urchin to Snail Ratio")+
+   geom_hline(yintercept = mean_wind_direction, colour = "red", linetype = "dashed")+
+```
 
 
 ###Plotting the fetch for just one site as a test
