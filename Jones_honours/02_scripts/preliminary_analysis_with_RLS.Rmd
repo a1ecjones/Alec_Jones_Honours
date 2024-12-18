@@ -2426,6 +2426,116 @@ rec_fishing_grid_2023
 dev.off()
 ```
 
+
+##Working with urchin size data
+
+###Loading in the data
+
+```{r Loading in the urchin size data}
+urch_size_data <- read_csv(here("./01_raw_data/Echinoderm_Quadrats_2024.csv"))
+
+urch_size_data <- urch_size_data[-1,]
+urch_size_data <- urch_size_data[,-49:-68]
+```
+
+```{r Cleaning up the data}
+urch_size_data_clean <- urch_size_data%>%
+    select(-c(ID, Diver, Buddy, Direction, `Common name`))%>%
+  mutate(Code = str_to_lower(Code))%>%
+  rename(site_code = `Site No.`,
+         site_name = `Site Name`,
+         latitude = Latitude,
+         longitude = Longitude,
+         survey_date = Date,
+         depth = Depth,
+         visibility = vis,
+         hour = Time,
+         total = Total,
+         quadrat_num = `Quadrat # (m)`,
+         size_2.5 = `2.5`,
+         size_5 = `5`, 
+         size_7.5 = `7.5`,
+         size_10 = `10`,
+         size_12.5 = `12.5`,
+         size_15 = `15`,
+         size_20 = `20`,
+         size_25 = `25`,
+         size_30 = `30`,
+         size_35 = `35`,
+         size_40 = `40`,
+         size_50 = `50`,
+         size_62.5 = `62.5`,
+         size_75 = `75`,
+         size_87.5 = `87.5`,
+         size_100 = `100`,
+         size_112.5 = `112.5`,
+         size_125 = `125`,
+         size_137.5 = `137.5`,
+         size_150 = `150`,
+         size_162.5 = `162.5`,
+         size_175 = `175`,
+         size_187.5 = `187.5`,
+         size_200 = `200`,
+         size_250 = `250`,
+         size_300 = `300`,
+         size_350 = `350`,
+         size_400 = `400`)%>%
+  mutate_at(factor_cols2, factor)%>%
+  filter(Code == "mfra")%>%
+  replace(is.na(.), 0)
+```
+
+
+###Calculating the mean size at each site
+
+```{r Creating an object of the size classes}
+sizes <- c(2.5, 5, 7.5, 10, 12.5, 15, 20, 25, 30, 35, 40, 50, 62.5, 75, 87.5, 100, 112.5, 
+           125, 137.5, 150, 162.5, 175, 187.5, 200, 250, 300, 350, 400)
+```
+
+
+```{r Pivoting data frame to long format with row for each size class}
+urch_size_data_long <- urch_size_data_clean%>%
+  pivot_longer(cols = starts_with("size"), names_to = "size_class", values_to = "count")%>%
+  mutate(sizes = sizes[match(size_class, names(urch_size_data_clean)[16:ncol(urch_size_data_clean)])])
+```
+
+```{r Calculating quadrat level mean}
+urch_size_quadrat_mean <- urch_size_data_long%>%
+  group_by(site_code, site_name, depth, quadrat_num)%>%
+  summarise(mean_size = sum(count * sizes) / sum(count), .groups = "drop")
+```
+
+
+```{r Calculating the site level mean}
+urch_size_site_mean <- urch_size_quadrat_mean%>%
+  group_by(site_code, site_name, depth)%>%
+  summarise(mean_size = mean(mean_size, na.rm = TRUE))
+```
+
+###Combining with a full data frame to plot
+
+```{r Combining the size data with urchin count data}
+urch_count_size_data <- urch_sn_ratio_mod_2024%>%
+  left_join(urch_size_site_mean, by = c("site_code", "site_name", "depth"))
+```
+
+```{r}
+ggplot(urch_count_size_data, aes(x = Urchins, y = mean_size))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  stat_cor(method = "pearson", label.x = -1.5, label.y = 1) # Add R2 and correlation
+```
+
+
+
+
+```{r}
+ggplot(urch_count_size_data, aes(x = mean_rec_boat_counts_2km, y = mean_size))+
+  geom_point()+
+  geom_smooth(method = "lm")
+```
+
 ##Making dataframes for use in modelling
 
 ```{r Urch sn ratio with true lat longs}
