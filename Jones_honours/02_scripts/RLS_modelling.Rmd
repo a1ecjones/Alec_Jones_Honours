@@ -21,6 +21,7 @@ library(gstat)
 library(sf)
 library(car)
 library(MuMIn)
+library(lme4)
 ```
 
 
@@ -188,6 +189,12 @@ plot(vario_shifted, vario_shifted_mod)
 ##Plotting EVs against urch sn ratio
 
 ```{r ratio against openness}
+ggplot(env_mod_data, aes(x = dominant_score, y = urch_sn_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against openness}
 ggplot(env_mod_data, aes(x = norm_openness, y = urch_sn_ratio, colour = region1))+
   geom_point()+
   theme.figure()
@@ -205,25 +212,24 @@ ggplot(env_mod_data, aes(x = mean_rec_boat_counts_2km, y = urch_sn_ratio, colour
   theme.figure()
 ```
 
+```{r}
+ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = urch_sn_ratio))+
+  geom_point()
+```
 
-using raito because some sites are ecologically more productive
+```{r}
+ggplot(env_mod_data, aes(x = region1, y = mean_rec_boat_counts_2km))+
+  geom_boxplot()
+```
 
-also because people count differently at different sites
 
 start with env models of counts
 then 
-
-##Building glm
 
 
 ##Building the GAM
 
 ###No spatial autocorrelation term and using norm openness
-
-```{r}
-ggplot
-```
-
 
 ####temp scaled, norm openness scaled, dominant score, TRUE
 
@@ -770,8 +776,11 @@ total_mod_2km <- gam(urch_sn_ratio ~ s(sst_scale) +
 
 set.seed(13)
 gam.check(total_mod_2km)
+#shapiro.test(total_mod_2km$residuals)
+##normal
 
 plot(total_mod_2km)
+summary(total_mod_2km)
 ```
 
 ```{r DHARMa for model fit}
@@ -781,39 +790,13 @@ plot(total_mod_2km_resids)
 
 ####gam, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled, re of region M1, TRUE
 
-
-Explain why no interaction
-
-region closest to bamfield has most urchins
-
-can do linear model
-
-use cor EXP to show that sites are independent and drop random effect from the model
-
-problem is that the random effect is correlated with fishing
-
-```{r}
-total_mod_test <- gam(urch_sn_ratio ~ s(sst_scale) + 
-                   norm_openness_scale:mean_rec_boat_counts_2km_scale  +
-                   dominant_score + 
-                   s(mean_app_fishing_hours_scale)+
-                   s(region1, bs = "re"),
-               data = env_mod_data,
-               family = gaussian(link = "identity"),
-               method = 'REML',
-               select = TRUE) 
-
-plot(total_mod_test)
-summary(total_mod_test)
-```
-
-
 ```{r Total model with random effect of region 1}
-total_mod_re_region1_2km <- gam(urch_sn_ratio ~ 
+total_mod_re_region1_2km <- gam(urch_sn_ratio ~ s(sst_scale)+
                    s(norm_openness_scale) +
-                   s(mean_rec_boat_counts_2km_scale)
-                   
-                  ,
+                     dominant_score+
+                   s(mean_rec_boat_counts_2km_scale)+
+                     s(mean_app_fishing_hours_scale)+
+                     s(region1, bs = "re"),
                data = env_mod_data,
                family = gaussian(link = "identity"),
                method = 'REML',
@@ -824,10 +807,6 @@ gam.check(total_mod_re_region1_2km)
 
 plot(total_mod_re_region1_2km)
 summary(total_mod_re_region1_2km)
-```
-```{r}
-ggplot(env_mod_data, aes(x = region1, y = mean_rec_boat_counts_2km))+
-  geom_boxplot()
 ```
 
 
@@ -883,13 +862,13 @@ plot(total_mod_re_region2_2km_resids)
 ```
 
 
-####gamm, temp scaled, norm openness scaled, dom, mean rec boats 500m scaled, mean apparent fishing hours scaled, corExp, TRUE shifted points
+####gamm, temp scaled, norm openness scaled, dom, mean rec boats 2km scaled, mean apparent fishing hours scaled, corExp, TRUE shifted points
 
 ```{r Building total gamm with spatial autocorrelation term corExp}
 total_mod_sp_cor_exp <- gamm(urch_sn_ratio ~ s(sst_scale) +
                                    s(norm_openness_scale) +
                                    dominant_score +
-                                   s(mean_rec_boat_counts_500m_scale) +
+                                   s(mean_rec_boat_counts_2km_scale) +
                                    s(mean_app_fishing_hours_scale), 
                         data = env_mod_data_shifted,
                        family = gaussian(link = "identity"),
@@ -900,12 +879,44 @@ total_mod_sp_cor_exp <- gamm(urch_sn_ratio ~ s(sst_scale) +
 
 gam.check(total_mod_sp_cor_exp$gam, rep = 500)
 plot(total_mod_sp_cor_exp$gam)
+summary(total_mod_sp_cor_exp$lme)
 ```
 
 ```{r DHARMa for model fit}
 env_mod_sp_cor_exp_total_resid <- simulateResiduals(env_mod_sp_cor_exp_total$lme)
 plot(env_mod_sp_cor_exp_total_resid)
 ```
+
+
+
+
+
+###Testing for interaction
+
+####gam, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled, TRUE
+
+```{r Running a model with an interaction}
+total_mod_2km_int <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   norm_openness_scale:mean_rec_boat_counts_2km_scale  +
+                      s(norm_openness_scale) +
+                      s(mean_rec_boat_counts_2km_scale)+
+                   dominant_score + 
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE) 
+
+plot(total_mod_2km_int)
+summary(total_mod_2km_int)
+```
+
+####Using ANOVA to see if its worth including the interaction
+
+```{r Comparing models with ANOVA}
+anova(total_mod_2km, total_mod_2km_int)
+```
+Adding the model does not significantly change the model fit. So no point to include.
 
 
 
@@ -954,6 +965,7 @@ AICc(env_mod_T,
     fish_mod_750m,
     fish_mod_2km,
     total_mod,
+    total_mod_2km,
     total_mod_re_region1,
     total_mod_re_region2,
      total_mod_re_region1_2km,
@@ -970,3 +982,28 @@ arrange(AICc)%>%
 anova(total_mod_re_region1, total_mod_re_region1_2km, env_mod_re_region_M1)
 ```
 
+
+##Building a glm of the final model to compare
+
+###glm, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled
+
+```{r GLM of the main model to see if there is much of a difference}
+total_mod_2km_glm <- lm(urch_sn_ratio ~ sst_scale + 
+                   norm_openness_scale +
+                   dominant_score + 
+                   mean_rec_boat_counts_2km_scale+
+                   mean_app_fishing_hours_scale,
+               data = env_mod_data)
+
+set.seed(13)
+#shapiro.test(total_mod_2km$residuals)
+##normal
+
+plot(total_mod_2km_glm)
+summary(total_mod_2km_glm)
+```
+
+```{r DHARMa for model fit}
+total_mod_2km_glm_resids <- simulateResiduals(total_mod_2km_glm)
+plot(total_mod_2km_glm_resids)
+```
