@@ -218,7 +218,7 @@ ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = urch_sn_ratio))+
 ```
 
 ```{r}
-ggplot(env_mod_data, aes(x = region1, y = mean_rec_boat_counts_2km))+
+ggplot(env_mod_data, aes(x = region1, y = mean_rec_boat_counts_1.5km))+
   geom_boxplot()
 ```
 
@@ -585,7 +585,7 @@ ggplot(env_mod_data, aes(x = mean_rec_boat_counts_500m, y = urch_sn_ratio))+
 fish_mod <- gam(urch_sn_ratio ~ s(mean_rec_boat_counts_500m_scale) + s(mean_app_fishing_hours_scale), 
                         data = env_mod_data,
                        family = gaussian(link = "identity"),
-                       method = 'REML',
+                       method = 'ML',
                        select = TRUE)
 
 gam.check(fish_mod, rep = 500)
@@ -619,7 +619,7 @@ plot(fish_mod_750m_resids)
 fish_mod_1km <- gam(urch_sn_ratio ~ s(mean_rec_boat_counts_1km_scale) + s(mean_app_fishing_hours_scale), 
                         data = env_mod_data,
                        family = gaussian(link = "identity"),
-                       method = 'REML',
+                       method = 'ML',
                        select = TRUE)
 
 gam.check(fish_mod_1km, rep = 500)
@@ -637,7 +637,7 @@ plot(fish_mod_1km_resids)
 fish_mod_1.5km <- gam(urch_sn_ratio ~ s(mean_rec_boat_counts_1.5km_scale) + s(mean_app_fishing_hours_scale), 
                         data = env_mod_data,
                        family = gaussian(link = "identity"),
-                       method = 'REML',
+                       method = 'ML',
                        select = TRUE)
 
 gam.check(fish_mod_1.5km, rep = 500)
@@ -655,11 +655,12 @@ plot(fish_mod_1.5km_resids)
 fish_mod_2km <- gam(urch_sn_ratio ~ s(mean_rec_boat_counts_2km_scale) + s(mean_app_fishing_hours_scale), 
                         data = env_mod_data,
                        family = gaussian(link = "identity"),
-                       method = 'REML',
+                       method = 'ML',
                        select = TRUE)
 
 gam.check(fish_mod_2km, rep = 500)
 plot(fish_mod_2km)
+summary(fish_mod_2km)
 ```
 
 ```{r DHARMa for model fit}
@@ -896,10 +897,11 @@ plot(env_mod_sp_cor_exp_total_resid)
 ####gam, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled, TRUE
 
 ```{r Running a model with an interaction}
-total_mod_2km_int <- gam(urch_sn_ratio ~ s(sst_scale) + 
-                   norm_openness_scale:mean_rec_boat_counts_2km_scale  +
+total_mod_1km_int <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                 #  norm_openness_scale:mean_rec_boat_counts_2km_scale  +
                       s(norm_openness_scale) +
-                      s(mean_rec_boat_counts_2km_scale)+
+                      s(mean_rec_boat_counts_750m_scale)+
+                 #  ti(norm_openness_scale, mean_rec_boat_counts_1km_scale, k= 8)+
                    dominant_score + 
                    s(mean_app_fishing_hours_scale),
                data = env_mod_data,
@@ -907,9 +909,15 @@ total_mod_2km_int <- gam(urch_sn_ratio ~ s(sst_scale) +
                method = 'REML',
                select = TRUE) 
 
-plot(total_mod_2km_int)
-summary(total_mod_2km_int)
+plot(total_mod_1km_int)
+summary(total_mod_1km_int)
 ```
+
+```{r}
+vis.gam(total_mod_1km_int, theta = -45, view = c("norm_openness_scale", "mean_rec_boat_counts_1km_scale"))
+?vis.gam
+```
+
 
 ####Using ANOVA to see if its worth including the interaction
 

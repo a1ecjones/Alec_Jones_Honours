@@ -2521,7 +2521,7 @@ urch_count_size_data <- urch_sn_ratio_mod_2024%>%
 ```
 
 ```{r}
-ggplot(urch_count_size_data, aes(x = Urchins, y = mean_size))+
+ggplot(urch_count_size_data, aes(x = Urchins, y = mean_size, colour = urch_sn_ratio))+
   geom_point()+
   geom_smooth(method = "lm")+
   stat_cor(method = "pearson", label.x = -1.5, label.y = 1) # Add R2 and correlation
@@ -2531,7 +2531,13 @@ ggplot(urch_count_size_data, aes(x = Urchins, y = mean_size))+
 
 
 ```{r}
-ggplot(urch_count_size_data, aes(x = mean_rec_boat_counts_2km, y = mean_size))+
+ggplot(urch_count_size_data, aes(x = Turban_Snails, y = mean_size))+
+  geom_point()+
+  geom_smooth(method = "lm")
+```
+
+```{r}
+ggplot(urch_count_size_data, aes(x = Turban_Snails, y = Urchins))+
   geom_point()+
   geom_smooth(method = "lm")
 ```
