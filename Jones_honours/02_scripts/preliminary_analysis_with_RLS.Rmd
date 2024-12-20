@@ -2062,6 +2062,26 @@ avg_temp_map_2023_24
 dev.off()
 ```
 
+###Trying the three year temperature data
+
+```{r Loading in the temp .nc file downloaded from Copernicus}
+temp_2021_2024 <- brick(here("./01_raw_data/new_temp_data/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2_1734670920147.nc"))
+crs(temp_2021_2024) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+```
+
+```{r Calculating the average temperature for each pixel}
+average_temperature_new_data <- calc(temp_2021_2024, fun = mean, na.rm = TRUE)
+
+writeRaster(average_temperature_new_data, 
+            here("./01_raw_data/average_temperature_new_data.nc"), 
+            format = "CDF", 
+            overwrite = TRUE)
+```
+
+```{r Checking output}
+avg_temp_check_new_data <- brick(here("./01_raw_data/average_temperature_new_data.nc"))
+plot(avg_temp_check_new_data) 
+```
 
 ##Working with the global fishing watch data
 ```{r Loading in the global fishing watch data 23-24}
@@ -2521,10 +2541,13 @@ urch_count_size_data <- urch_sn_ratio_mod_2024%>%
 ```
 
 ```{r}
-ggplot(urch_count_size_data, aes(x = Urchins, y = mean_size, colour = urch_sn_ratio))+
+ggplot(urch_count_size_data, aes(x = Urchins, y = mean_size))+
   geom_point()+
   geom_smooth(method = "lm")+
-  stat_cor(method = "pearson", label.x = -1.5, label.y = 1) # Add R2 and correlation
+  xlim(150, 725)+
+  labs(x = "Urchin Counts", y = "Mean Urchin Size Class")+
+  #stat_cor(method = "pearson", label.x = 200, label.y = 2)+ # Add R2 and correlation
+  theme.figure()
 ```
 
 
