@@ -2330,20 +2330,32 @@ rec_boats_fishing_total <- rbind(rec_boats_fishing2021, rec_boats_fishing2022, r
 ```{r Making a plot of the points, fig.height= 10, fig.width= 8}
 (rec_fishing_boats_2023_plot <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
-    coord_sf(xlim = c(long_min, long_max),
-           ylim = c(lat_min, lat_max)) +
+    coord_sf(xlim = c(long_min_tfn, long_max_tfn),
+           ylim = c(lat_min_tfn, lat_max_tfn)) +
+    geom_label_repel(
+    data = urch_sn_ratio_mod_2024, 
+    mapping = aes(x = longitude, y = latitude, label = site_code), 
+    size = 2,
+    box.padding = 0.45,  # Add padding between labels and points
+  #  point.padding = 0.5, # Add padding between points and text
+    segment.color = 'grey50', # Line from label to point
+    max.overlaps = 15      # Adjust maximum number of overlaps
+  )+
     geom_point(data = rec_boats_fishing2023,
              mapping = aes(x = Longitude, y = Latitude, color = rec_boats_fishing),
-             size = 1,) +
+             size = 1.5,) +
     scale_colour_gradient(low = "blue", high = "red")+
    geom_point(data = rec_boats_fishing2023,
              mapping = aes(x = Longitude, y = Latitude, colour = rec_boats_fishing), 
-              shape = 1, size = 1, colour = "black") +
+              shape = 1, size = 1.5, colour = "black") +
+      geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude), 
+              shape = 21, size = 3, colour = "black", fill = "black")+
  # scale_colour_viridis_c() +
   labs(title = "2023", x = " \nLongitude", y = "Latitude\n ", colour = "# of Rec Fishing\nBoats Observed") +
   theme.figure() +
-  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
-  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+ # scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
   annotation_north_arrow(
     location = "tr",
     which_north = "true",
@@ -2361,6 +2373,99 @@ rec_fishing_boats_2023_plot
 dev.off()
 ```
 
+
+
+```{r Making a plot of the points, fig.height= 10, fig.width= 8}
+(rec_fishing_boats_2022_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min_tfn, long_max_tfn),
+           ylim = c(lat_min_tfn, lat_max_tfn)) +
+    geom_label_repel(
+    data = urch_sn_ratio_mod_2024, 
+    mapping = aes(x = longitude, y = latitude, label = site_code), 
+    size = 2,
+    box.padding = 0.45,  # Add padding between labels and points
+  #  point.padding = 0.5, # Add padding between points and text
+    segment.color = 'grey50', # Line from label to point
+    max.overlaps = 15      # Adjust maximum number of overlaps
+  )+
+    geom_point(data = rec_boats_fishing2022,
+             mapping = aes(x = Longitude, y = Latitude, color = rec_boats_fishing),
+             size = 1.5,) +
+    scale_colour_gradient(low = "blue", high = "red")+
+   geom_point(data = rec_boats_fishing2022,
+             mapping = aes(x = Longitude, y = Latitude, colour = rec_boats_fishing), 
+              shape = 1, size = 1.5, colour = "black") +
+      geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude), 
+              shape = 21, size = 3, colour = "black", fill = "black")+
+ # scale_colour_viridis_c() +
+  labs(title = "2022", x = " \nLongitude", y = "Latitude\n ", colour = "# of Rec Fishing\nBoats Observed") +
+  theme.figure() +
+ # scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Saving the Rec boat points 2023 map}
+png(filename = here("./04_plots/explanatory/rec_fishing_boats_2022_plot.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+rec_fishing_boats_2022_plot
+
+dev.off()
+```
+
+```{r Making a plot of the points, fig.height= 10, fig.width= 8}
+(rec_fishing_boats_2021_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min_tfn, long_max_tfn),
+           ylim = c(lat_min_tfn, lat_max_tfn)) +
+    geom_label_repel(
+    data = urch_sn_ratio_mod_2024, 
+    mapping = aes(x = longitude, y = latitude, label = site_code), 
+    size = 2,
+    box.padding = 0.45,  # Add padding between labels and points
+  #  point.padding = 0.5, # Add padding between points and text
+    segment.color = 'grey50', # Line from label to point
+    max.overlaps = 15      # Adjust maximum number of overlaps
+  )+
+    geom_point(data = rec_boats_fishing2021,
+             mapping = aes(x = Longitude, y = Latitude, color = rec_boats_fishing),
+             size = 1.5,) +
+    scale_colour_gradient(low = "blue", high = "red")+
+   geom_point(data = rec_boats_fishing2021,
+             mapping = aes(x = Longitude, y = Latitude, colour = rec_boats_fishing), 
+              shape = 1, size = 1.5, colour = "black") +
+      geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude), 
+              shape = 21, size = 3, colour = "black", fill = "black")+
+ # scale_colour_viridis_c() +
+  labs(title = "2021", x = " \nLongitude", y = "Latitude\n ", colour = "# of Rec Fishing\nBoats Observed") +
+  theme.figure() +
+ # scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Saving the Rec boat points 2023 map}
+png(filename = here("./04_plots/explanatory/rec_fishing_boats_2021_plot.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+rec_fishing_boats_2021_plot
+
+dev.off()
+```
 
 ```{r Making a plot of the points, fig.height=10, fig.width=10}
 (rec_fishing_boats_total_plot <- ggplot()+
@@ -2849,7 +2954,113 @@ urch_sn_ratio_fishing_mod_2024 <- urch_sn_ratio_fishing_mod_2024%>%
   select(-c(app_fishing_hrs_21_22, app_fishing_hrs_22_23, app_fishing_hrs_23_24))
 ```
 
+```{r Plotting the mean apparent fishing hour data on the map}
+(app_fishing_hours_21_22_plot <- ggplot(gfw_data_clean_poly_21_22) +
+  geom_sf(aes(fill = app_fish_hrs)) +
+  scale_fill_gradient(low = "blue", high = "red")+
+   #scale_fill_viridis_c()+
+   geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min_tfn, long_max_tfn),
+           ylim = c(lat_min_tfn, lat_max_tfn))+
+     geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude), 
+              shape = 21, size = 3, colour = "black", fill = "black")+
+  theme.figure() +
+  labs(fill = "Fishing Hours",
+       x = "Longitude",
+       y = "Latitude",
+       title = "2021-22")+
+     geom_label_repel(
+    data = urch_sn_ratio_mod_2024, 
+    mapping = aes(x = longitude, y = latitude, label = site_code), 
+    size = 2,
+    box.padding = 0.45,  # Add padding between labels and points
+  #  point.padding = 0.5, # Add padding between points and text
+    segment.color = 'grey50', # Line from label to point
+    max.overlaps = 15      # Adjust maximum number of overlaps
+  ))
+```
+```{r Saving the fishing hours plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/explanatory/app_fishing_hours_plot_21_22.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
 
+app_fishing_hours_21_22_plot
+
+dev.off()
+```
+
+
+```{r Plotting the mean apparent fishing hour data on the map}
+(app_fishing_hours_22_23_plot <- ggplot(gfw_data_clean_poly_22_23) +
+  geom_sf(aes(fill = app_fish_hrs)) +
+  scale_fill_gradient(low = "blue", high = "red")+
+   #scale_fill_viridis_c()+
+   geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min_tfn, long_max_tfn),
+           ylim = c(lat_min_tfn, lat_max_tfn))+
+     geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude), 
+              shape = 21, size = 3, colour = "black", fill = "black")+
+  theme.figure() +
+  labs(fill = "Fishing Hours",
+       x = "Longitude",
+       y = "Latitude",
+       title = "2022-23")+
+     geom_label_repel(
+    data = urch_sn_ratio_mod_2024, 
+    mapping = aes(x = longitude, y = latitude, label = site_code), 
+    size = 2,
+    box.padding = 0.45,  # Add padding between labels and points
+  #  point.padding = 0.5, # Add padding between points and text
+    segment.color = 'grey50', # Line from label to point
+    max.overlaps = 15      # Adjust maximum number of overlaps
+  ))
+```
+
+```{r Saving the fishing hours plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/explanatory/app_fishing_hours_plot_22_23.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+app_fishing_hours_22_23_plot
+
+dev.off()
+```
+
+```{r Plotting the mean apparent fishing hour data on the map}
+(app_fishing_hours_23_24_plot <- ggplot(gfw_data_clean_poly_23_24) +
+  geom_sf(aes(fill = app_fish_hrs)) +
+  scale_fill_gradient(low = "blue", high = "red")+
+   #scale_fill_viridis_c()+
+   geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min_tfn, long_max_tfn),
+           ylim = c(lat_min_tfn, lat_max_tfn))+
+     geom_point(data = urch_sn_ratio_mod_2024,
+             mapping = aes(x = longitude, y = latitude), 
+              shape = 21, size = 3, colour = "black", fill = "black")+
+  theme.figure() +
+  labs(fill = "Fishing Hours",
+       x = "Longitude",
+       y = "Latitude",
+       title = "2023-24")+
+     geom_label_repel(
+    data = urch_sn_ratio_mod_2024, 
+    mapping = aes(x = longitude, y = latitude, label = site_code), 
+    size = 2,
+    box.padding = 0.45,  # Add padding between labels and points
+  #  point.padding = 0.5, # Add padding between points and text
+    segment.color = 'grey50', # Line from label to point
+    max.overlaps = 15      # Adjust maximum number of overlaps
+  ))
+```
+
+```{r Saving the fishing hours plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/explanatory/app_fishing_hours_plot_23_24.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+app_fishing_hours_23_24_plot
+
+dev.off()
+```
 
 ####Adding the rec fishing data
 
