@@ -1015,3 +1015,121 @@ summary(total_mod_2km_glm)
 total_mod_2km_glm_resids <- simulateResiduals(total_mod_2km_glm)
 plot(total_mod_2km_glm_resids)
 ```
+
+
+##Modelling Urchin Counts
+
+###Plotting EVs against urchin counts
+
+##Plotting EVs against urch sn ratio
+
+```{r urchins against openness}
+ggplot(env_mod_data, aes(x = dominant_score, y = Urchins, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r urchins against openness}
+ggplot(env_mod_data, aes(x = norm_openness, y = Urchins, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r urchins against sst}
+ggplot(env_mod_data, aes(x = sst, y = Urchins, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r urchins against rec boat counts type}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1.5km, y = Urchins, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r}
+ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = Urchins))+
+  geom_point()
+```
+
+None of the explanatory variables appear to have much of a relationship with urchin counts
+
+
+###gam, temp scaled, openness scaled, dom substrate
+
+```{r Modelling the urchin counts with a simple environmental model}
+env_mod_urchin_counts <- gam(Urchins ~ s(sst_scale)+
+                               s(norm_openness_scale),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+set.seed(10)
+gam.check(env_mod_urchin_counts, rep = 500)
+plot(env_mod_urchin_counts)
+```
+
+```{r DHARMa for model fit}
+env_mod_urchin_counts_resids <- simulateResiduals(env_mod_urchin_counts)
+plot(env_mod_urchin_counts_resids)
+```
+
+###gam, temp scaled, openness scaled, dom substrate, mean rec 1.5km scaled, mean gfw scaled, TRUE
+
+```{r Modelling the urchin counts with a simple environmental model}
+total_mod_urchin_counts <- gam(Urchins ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                               dominant_score+
+                               s(mean_rec_boat_counts_1.5km_scale)+
+                               s(mean_app_fishing_hours_scale),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+set.seed(10)
+gam.check(total_mod_urchin_counts, rep = 500)
+plot(total_mod_urchin_counts)
+```
+
+```{r DHARMa for model fit}
+total_mod_urchin_counts_resids <- simulateResiduals(total_mod_urchin_counts)
+plot(total_mod_urchin_counts_resids)
+```
+
+
+##Modelling the snail counts
+
+###Plotting the EVs against the snail counts
+
+##Plotting EVs against urch sn ratio
+
+```{r snails against substrate}
+ggplot(env_mod_data, aes(x = dominant_score, y = Turban_Snails, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r snails against openness}
+ggplot(env_mod_data, aes(x = norm_openness, y = Turban_Snails, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r snails against sst}
+ggplot(env_mod_data, aes(x = sst, y = Turban_Snails, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r snails against rec boats}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_2km, y = Turban_Snails, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r snails against gfw}
+ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = Turban_Snails))+
+  geom_point()+
+  theme.figure()
+```
+
