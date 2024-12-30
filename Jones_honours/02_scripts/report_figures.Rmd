@@ -1,0 +1,118 @@
+---
+title: "Report Figures"
+author: "Alec"
+date: "2024-12-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+library(sf)
+library(ggspatial)
+library(ggrepel)
+```
+
+#Loading in the data
+
+##True unshifted data
+
+```{r Loading in the data}
+plotting_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
+```
+
+##Shifted data for better visualization
+
+```{r}
+plotting_data_shifted <- read_csv(here("./03_clean_data/plotting_data_shifted.csv"))
+```
+
+##Site maps
+
+###Making the map ranges
+
+```{r Seting the ranges for the maps}
+#first need to specify the range of the map
+lat_min = min(plotting_data$latitude) - 0.05
+lat_max = max(plotting_data$latitude) + 0.05
+
+long_min = min(plotting_data$longitude) - 0.05
+long_max = max(plotting_data$longitude) + 0.05
+```
+
+###Loading in the shape file
+
+```{r Loading in the new high res shape file}
+VI_base_layer_hi_res <- read_sf(dsn = here("./01_raw_data/hakai_zip"),
+                                stringsAsFactors = F)
+
+VI_base_layer_hi_res_sf <- st_as_sf(VI_base_layer_hi_res)
+
+#specifying the projection to use for the sf
+st_crs(VI_base_layer_hi_res_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
+```
+
+```{r Loading in the base layer}
+VI_base_layer <- read_sf(dsn = here("./01_raw_data/canada_sf_data", ""), 
+                         stringsAsFactors = F)
+VI_base_layer_sf <- st_as_sf(VI_base_layer)
+
+#specifying the projection for the sf
+st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
+```
+
+###Overall site map
+
+```{r Overall site map with the site locations}
+(overall_Barkley_sound_map <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min - 0.1, long_max),
+           ylim = c(lat_min - 0.05, lat_max)) +
+  labs(x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+ scale_x_continuous(breaks = c(-125.5, -125.25, -125.0)) +
+  scale_y_continuous(breaks = c(48.75, 48.85, 48.95))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r Making the inset map}
+(van_isl_map <- ggplot(VI_base_layer_sf) +
+  geom_sf() +
+  coord_sf(ylim = c(48.3, 50), xlim = c(-126.5, -122.5)) +
+  theme.figure() +
+  geom_rect(xmin = long_min, xmax = long_max, ymin = lat_min, ymax = lat_max,
+            color = "red", fill = NA, linewidth = 1.5) +
+  labs(x = "Longitude", y = "Latitude") +
+    theme(axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          axis.title = element_blank())+
+   geom_point(
+             mapping = aes(x = -123.365041, y = 48.430887), shape = 23,
+             fill = "red", size = 6))
+```
+
+
+```{r basemap with inset, fig.width=7.5, fig.height=5.5}
+
+(map_w_inset <- ggdraw(overall_Barkley_sound_map) +
+  draw_plot(van_isl_map, x = 0.125, y = 0.138, width = 0.5, height = 0.3))
+
+```
+
+####Saving the overall site map
+
+```{r Saving the overall site map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/report_figures/overall_site_map.png"), width = 8, height = 6, 
+    units = "in", pointsize = 15, res = 600)
+
+map_w_inset
+
+dev.off()
+```

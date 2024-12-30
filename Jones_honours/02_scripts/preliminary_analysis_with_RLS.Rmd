@@ -923,6 +923,12 @@ mutate(latitude = if_else(site_code == "BMSC8" & depth == 7.5, 48.95508194, lati
   ))
 ```
 
+```{r Writing the shifted lat long df for plotting for report figures}
+write_csv(urch_sn_ratio_RLS_2024,
+          here("./03_clean_data/plotting_data_shifted.csv"))
+```
+
+
 ###Urch to all others ratio 2024
 ```{r Making a data frame of urchin to all other macrofauna ratio}
 Urchins <- urch_sn_ratio_RLS_2024$Urchins

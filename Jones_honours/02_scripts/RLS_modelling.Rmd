@@ -22,6 +22,7 @@ library(sf)
 library(car)
 library(MuMIn)
 library(lme4)
+library(flextable)
 ```
 
 
@@ -29,7 +30,7 @@ library(lme4)
 
 #Modelling the environmental variables
 
-##Loading in the data with old fetch data
+##Loading in the data
 ```{r Loading in the data}
 env_mod_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
 ```
@@ -782,11 +783,174 @@ gam.check(total_mod_2km)
 
 plot(total_mod_2km)
 summary(total_mod_2km)
+as_flextable(total_mod_2km)
 ```
 
 ```{r DHARMa for model fit}
 total_mod_2km_resids <- simulateResiduals(total_mod_2km)
 plot(total_mod_2km_resids)
+```
+
+```{r Testing concurvity}
+concurvity(total_mod_2km, full = FALSE)
+```
+
+#####gam, subset of total 2km without stuff that has no impact
+
+```{r}
+total_mod_2km_no_extra <- gam(urch_sn_ratio ~ s(sst_scale)+
+                                s(norm_openness_scale)+
+                   s(mean_rec_boat_counts_2km_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_2km_no_extra)
+#shapiro.test(total_mod_2km_no_extra$residuals)
+##normal
+
+plot(total_mod_2km_no_extra)
+summary(total_mod_2km_no_extra)
+as_flextable(total_mod_2km_no_extra)
+```
+
+```{r DHARMa for model fit}
+total_mod_2km_no_extra_resids <- simulateResiduals(total_mod_2km_no_extra)
+plot(total_mod_2km_no_extra_resids)
+```
+
+```{r Testing concurvity}
+concurvity(total_mod_2km_no_extra, full = FALSE)
+```
+
+
+
+
+####gam, temp scaled, norm openness scaled, dom, rec boats 1km scaled, mean gfw scaled, TRUE
+
+```{r Total model with no spatial autocorrelation}
+total_mod_1km <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   dominant_score + 
+                   s(mean_rec_boat_counts_1km_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_1km)
+#shapiro.test(total_mod_1km$residuals)
+##slightly not normal
+
+plot(total_mod_1km)
+summary(total_mod_1km)
+as_flextable(total_mod_1km)
+```
+
+```{r DHARMa for model fit}
+total_mod_1km_resids <- simulateResiduals(total_mod_1km)
+plot(total_mod_1km_resids)
+```
+
+```{r Testing concurvity}
+concurvity(total_mod_1km, full = FALSE)
+```
+
+#####gam, subset of total 1km without stuff that has no impact
+
+```{r}
+total_mod_1km_no_extra <- gam(urch_sn_ratio ~ s(sst_scale)+
+                                s(norm_openness_scale)+
+                   s(mean_rec_boat_counts_1km_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_1km_no_extra)
+#shapiro.test(total_mod_1km_no_extra$residuals)
+##normal
+
+plot(total_mod_1km_no_extra)
+summary(total_mod_1km_no_extra)
+as_flextable(total_mod_1km_no_extra)
+```
+
+```{r DHARMa for model fit}
+total_mod_1km_no_extra_resids <- simulateResiduals(total_mod_1km_no_extra)
+plot(total_mod_1km_no_extra_resids)
+```
+
+```{r Testing concurvity}
+concurvity(total_mod_1km_no_extra, full = FALSE)
+```
+
+
+####gam, temp scaled, norm openness scaled, dom, rec boats 1.5km scaled, mean gfw scaled, TRUE
+
+```{r Total model with no spatial autocorrelation}
+total_mod_1.5km <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   dominant_score + 
+                   s(mean_rec_boat_counts_1.5km_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_1.5km)
+#shapiro.test(total_mod_1.5km$residuals)
+##slightly not normal
+
+plot(total_mod_1.5km)
+summary(total_mod_1.5km)
+as_flextable(total_mod_1.5km)
+```
+
+```{r DHARMa for model fit}
+total_mod_1.5km_resids <- simulateResiduals(total_mod_1.5km)
+plot(total_mod_1.5km_resids)
+```
+
+```{r Testing concurvity}
+concurvity(total_mod_1.5km, full = FALSE)
+```
+
+#####gam, subset of total 1.5km without stuff that has no impact
+
+```{r}
+total_mod_1.5km_no_extra <- gam(urch_sn_ratio ~ s(sst_scale)+
+                                s(norm_openness_scale)+
+                   s(mean_rec_boat_counts_1.5km_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_1.5km_no_extra)
+#shapiro.test(total_mod_1.5km_no_extra$residuals)
+##slightly not normal
+
+plot(total_mod_1.5km_no_extra)
+summary(total_mod_1.5km_no_extra)
+as_flextable(total_mod_1.5km_no_extra)
+```
+
+```{r DHARMa for model fit}
+total_mod_1.5km_no_extra_resids <- simulateResiduals(total_mod_1.5km_no_extra)
+plot(total_mod_1.5km_no_extra_resids)
+```
+
+```{r Testing concurvity}
+concurvity(total_mod_1.5km_no_extra, full = FALSE)
 ```
 
 ####gam, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled, re of region M1, TRUE
@@ -887,6 +1051,8 @@ summary(total_mod_sp_cor_exp$lme)
 env_mod_sp_cor_exp_total_resid <- simulateResiduals(env_mod_sp_cor_exp_total$lme)
 plot(env_mod_sp_cor_exp_total_resid)
 ```
+
+
 
 
 
