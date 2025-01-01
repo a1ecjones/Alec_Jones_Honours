@@ -65,11 +65,14 @@ st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 
 ###Overall site map
 
-```{r Overall site map with the site locations}
+```{r Overall Barkley Sound Map}
 (overall_Barkley_sound_map <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min - 0.1, long_max),
            ylim = c(lat_min - 0.05, lat_max)) +
+      geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 2, fill = "red")+
   labs(x = " \nLongitude", y = "Latitude\n ") +
   theme.figure() +
  scale_x_continuous(breaks = c(-125.5, -125.25, -125.0)) +
@@ -79,7 +82,10 @@ st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
     which_north = "true",
     style = north_arrow_fancy_orienteering
   ) +
-  annotation_scale(location = "br"))
+  annotation_scale(location = "br")+
+      geom_point( 
+             mapping = aes(x = -125.134813, y = 48.83), shape = 23,
+                           fill = "yellow", size = 3))
 ```
 
 ```{r Making the inset map}
@@ -109,10 +115,93 @@ st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 ####Saving the overall site map
 
 ```{r Saving the overall site map, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/report_figures/overall_site_map.png"), width = 8, height = 6, 
+png(filename = here("./04_plots/report_figures/overall_Barkley_sound_map.png"), width = 8, height = 6, 
     units = "in", pointsize = 15, res = 600)
 
 map_w_inset
+
+dev.off()
+```
+
+
+###Site map with points
+
+```{r Overall site map with the site locations}
+(overall_site_map <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min + 0.04, long_max - 0.04),
+           ylim = c(lat_min + 0.04, lat_max - 0.04)) +
+   geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 3, fill = "red")+
+  labs(x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br")+
+      geom_point( 
+             mapping = aes(x = -125.134813, y = 48.83), shape = 23,
+                           fill = "yellow", size = 4))
+```
+
+
+####Saving the site map
+
+```{r Saving the overall site map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/report_figures/overall_site_map.png"), width = 8, height = 6, 
+    units = "in", pointsize = 15, res = 600)
+
+overall_site_map
+
+dev.off()
+```
+
+###Urchin Ratio map
+
+```{r Making the plot with the urch to sn ratio on the map 2024}
+(urch_sn_ratio_map_figures <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min + 0.04, long_max - 0.04),
+           ylim = c(lat_min + 0.04, lat_max - 0.04)) +
+  geom_point(data = plotting_data_shifted,
+             mapping = aes(x = longitude, y = latitude, color = urch_sn_ratio),
+             size = 3,) +
+    geom_point(data = plotting_data_shifted,
+             mapping = aes(x = longitude, y = latitude, colour = urch_sn_ratio), 
+              shape = 1, size = 3, colour = "black") + 
+  scale_colour_gradient2(
+    low = "blue",          # Color for negative values
+    mid = "white",         # Color for zero
+    high = "red",          # Color for positive values
+    midpoint = 0           # Set the midpoint to zero
+  ) +
+  labs(x = " \nLongitude", y = "Latitude\n ", colour = " Log Urchin to\n Snail Ratio") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br")+
+     geom_point( 
+             mapping = aes(x = -125.134813, y = 48.83), shape = 23,
+                           fill = "yellow", size = 4))
+```
+
+####Saving the site map
+
+```{r Saving the overall site map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/report_figures/urch_sn_ratio_map.png"), width = 7.5, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_sn_ratio_map_figures
 
 dev.off()
 ```
