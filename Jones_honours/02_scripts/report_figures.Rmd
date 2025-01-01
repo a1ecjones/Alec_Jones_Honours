@@ -88,14 +88,14 @@ st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
   coord_sf(ylim = c(48.3, 50), xlim = c(-126.5, -122.5)) +
   theme.figure() +
   geom_rect(xmin = long_min, xmax = long_max, ymin = lat_min, ymax = lat_max,
-            color = "red", fill = NA, linewidth = 1.5) +
+            color = "red", fill = NA, linewidth = 1) +
   labs(x = "Longitude", y = "Latitude") +
     theme(axis.text = element_blank(),
           axis.ticks = element_blank(),
           axis.title = element_blank())+
    geom_point(
              mapping = aes(x = -123.365041, y = 48.430887), shape = 23,
-             fill = "red", size = 6))
+             fill = "red", size = 5))
 ```
 
 
