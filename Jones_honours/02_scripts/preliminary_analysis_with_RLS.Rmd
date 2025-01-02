@@ -2613,7 +2613,22 @@ urch_size_data_clean <- urch_size_data%>%
          size_400 = `400`)%>%
   mutate_at(factor_cols2, factor)%>%
   filter(Code == "mfra")%>%
-  replace(is.na(.), 0)
+  replace(is.na(.), 0)%>%
+  
+  #convert site code and site name to characters to add in Eussen which isn't an existing factor level
+  urch_size_data_clean$site_code <- as.character(urch_size_data_clean$site_code)
+urch_size_data_clean$site_name <- as.character(urch_size_data_clean$site_name)
+
+  #urch_size_data_clean[urch_size_data_clean$site_code == "BMSC16" & urch_size_data_clean$hour == hms::as_hms("11:39:00"),
+                 #      c("site_code", "site_name", "latitude", "longitude",
+                     #    "depth")] <- list("BMSC18", "Eussen Rock", 48.91162, -125.2670, 8.5)
+
+# urch_size_data_clean[urch_size_data_clean$site_code == "BMSC25" & urch_size_data_clean$hour == hms::as_hms("09:48:00"),
+                   #   c("visibility", "hour", "depth")] <- list(3.0, hms::as.hms("14:50:00"), 5.5)
+ 
+ #convert back to factors
+   urch_size_data_clean$site_code <- as.factor(urch_size_data_clean$site_code)
+urch_size_data_clean$site_name <- as.factor(urch_size_data_clean$site_name)
 ```
 
 
@@ -2675,6 +2690,32 @@ ggplot(urch_count_size_data, aes(x = Turban_Snails, y = Urchins))+
   geom_point()+
   geom_smooth(method = "lm")
 ```
+
+###Calculating the biomass at each site
+
+####Making a total size sidtribution for each transect
+
+```{r Summing the numbers of each size at each transect}
+total_urch_size_dist <- urch_size_data_long%>%
+  group_by(site_code, site_name, latitude, 
+           longitude, survey_date, 
+           visibility, hour, 
+           depth,size_class)%>%
+  summarise(total_count = sum(count))%>%
+  mutate(percentage = total_count / sum(total_count))
+
+#total_urch_size_dist$survey_date <- as.Date(total_urch_size_dist$survey_date)
+```
+
+```{r Adding a column with the total count from that site}
+total_urch_size_dist <- total_urch_size_dist%>%
+  left_join(urch_sn_ratio_RLS_2024,
+        by = c("site_code", "site_name", "visibility", "hour", "depth"))%>%
+  select(-c(latitude.y, longitude.y, Turban_Snails, urch_sn_ratio, region1))
+```
+
+No quadrats for urchins for Hosie South or Raymond Kelp Rock because there were either 0 or 1.
+Too few to have them appear in quadrats.
 
 ##Making dataframes for use in modelling
 
