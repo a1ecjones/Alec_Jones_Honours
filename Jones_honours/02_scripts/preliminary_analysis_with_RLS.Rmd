@@ -2693,7 +2693,7 @@ ggplot(urch_count_size_data, aes(x = Turban_Snails, y = Urchins))+
 
 ###Calculating the biomass at each site
 
-####Making a total size sidtribution for each transect
+####Making a total size distribution for each transect
 
 ```{r Summing the numbers of each size at each transect}
 total_urch_size_dist <- urch_size_data_long%>%
@@ -2708,14 +2708,58 @@ total_urch_size_dist <- urch_size_data_long%>%
 ```
 
 ```{r Adding a column with the total count from that site}
+###will need to adjust once data is cleaned up after valesca responds
+
 total_urch_size_dist <- total_urch_size_dist%>%
   left_join(urch_sn_ratio_RLS_2024,
         by = c("site_code", "site_name", "visibility", "hour", "depth"))%>%
-  select(-c(latitude.y, longitude.y, Turban_Snails, urch_sn_ratio, region1))
+  select(-c(latitude.y, longitude.y, Turban_Snails, urch_sn_ratio, region1))%>%
+  mutate(total_count_sized = percentage * Urchins) # adding a column with the total size distribution at each site
 ```
 
 No quadrats for urchins for Hosie South or Raymond Kelp Rock because there were either 0 or 1.
 Too few to have them appear in quadrats.
+
+```{r Making a vector of the weights based on each size}
+urchin_weights = (0.0010169 * ((sizes * 10) ^ 2.7787))
+
+size_class = c("size_2.5", "size_5", "size_7.5", "size_10", 
+               "size_12.5", "size_15", "size_20", "size_25",
+               "size_30", "size_35", "size_40", "size_50",
+               "size_62.5", "size_75", "size_87.5", "size_100",
+               "size_112.5", "size_125", "size_137.5", "size_150",
+               "size_162.5", "size_175", "size_187.5", "size_200",
+               "size_250", "size_300", "size_350", "size_400")
+
+urchin_weights_sizes_df <- cbind(sizes, urchin_weights, size_class)
+urchin_weights_sizes_df <- as.data.frame(urchin_weights_sizes_df)
+urchin_weights_sizes_df$urchin_weights <- as.numeric(urchin_weights_sizes_df$urchin_weights)
+```
+
+
+```{r Adding the urchin weights to the total urch size distribution df and making a column of biomass}
+total_urch_size_dist <- total_urch_size_dist%>%
+  left_join(urchin_weights_sizes_df, by = "size_class")%>%
+  select(-sizes)%>%
+  mutate(biomass_size_classes = total_count_sized * urchin_weights)
+```
+
+```{r Making a data frame with the final biomass for each transect}
+max_biomass_df <- total_urch_size_dist%>%
+  group_by(site_code, site_name, latitude.x, longitude.x,
+           visibility, hour,depth)%>%
+  summarise(total_site_biomass = sum(biomass_size_classes))
+```
+There are a couple rows with NA currently but these should be fixed once this is updated
+
+```{r}
+test_size_df <- env_mod_data%>%
+  left_join(max_biomass_df, by = c("site_code", "depth"))
+
+ggplot(test_size_df, aes(x = Urchins, y = total_site_biomass))+
+  geom_point()
+```
+
 
 ##Making dataframes for use in modelling
 
