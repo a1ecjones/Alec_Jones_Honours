@@ -2637,6 +2637,10 @@ urch_size_data_clean$site_name <- as.factor(urch_size_data_clean$site_name)
 ```{r Creating an object of the size classes}
 sizes <- c(2.5, 5, 7.5, 10, 12.5, 15, 20, 25, 30, 35, 40, 50, 62.5, 75, 87.5, 100, 112.5, 
            125, 137.5, 150, 162.5, 175, 187.5, 200, 250, 300, 350, 400)
+
+inbetween_sizes <- c(1.25, 3.75, 6.25, 8.75, 11.25, 13.75, 17.5, 22.5, 27.5, 32.5, 
+                    37.5, 45, 56.25, 81.25, 93.75, 106.25, 118.75, 131.25, 143.75, 
+                    156.25, 168.75, 181.25, 193.75, 225, 275, 325, 375)
 ```
 
 
@@ -2723,6 +2727,8 @@ Too few to have them appear in quadrats.
 ```{r Making a vector of the weights based on each size}
 urchin_weights = (0.0010169 * ((sizes * 10) ^ 2.7787))
 
+inbetween_urchin_weights = (0.0010169 * ((inbetween_sizes * 10) ^ 2.7787))
+
 size_class = c("size_2.5", "size_5", "size_7.5", "size_10", 
                "size_12.5", "size_15", "size_20", "size_25",
                "size_30", "size_35", "size_40", "size_50",
@@ -2731,9 +2737,10 @@ size_class = c("size_2.5", "size_5", "size_7.5", "size_10",
                "size_162.5", "size_175", "size_187.5", "size_200",
                "size_250", "size_300", "size_350", "size_400")
 
-urchin_weights_sizes_df <- cbind(sizes, urchin_weights, size_class)
+urchin_weights_sizes_df <- cbind(sizes, urchin_weights, size_class, inbetween_urchin_weights)
 urchin_weights_sizes_df <- as.data.frame(urchin_weights_sizes_df)
 urchin_weights_sizes_df$urchin_weights <- as.numeric(urchin_weights_sizes_df$urchin_weights)
+urchin_weights_sizes_df$inbetween_urchin_weights <- as.numeric(urchin_weights_sizes_df$inbetween_urchin_weights)
 ```
 
 
@@ -2741,16 +2748,25 @@ urchin_weights_sizes_df$urchin_weights <- as.numeric(urchin_weights_sizes_df$urc
 total_urch_size_dist <- total_urch_size_dist%>%
   left_join(urchin_weights_sizes_df, by = "size_class")%>%
   select(-sizes)%>%
-  mutate(biomass_size_classes = total_count_sized * urchin_weights)
+  mutate(biomass_size_classes = total_count_sized * urchin_weights,
+         inbetween_biomass_size_classes = total_count_sized * inbetween_urchin_weights)
 ```
 
 ```{r Making a data frame with the final biomass for each transect}
 max_biomass_df <- total_urch_size_dist%>%
   group_by(site_code, site_name, latitude.x, longitude.x,
-           visibility, hour,depth)%>%
+           visibility, hour, depth)%>%
   summarise(total_site_biomass = sum(biomass_size_classes))
 ```
 There are a couple rows with NA currently but these should be fixed once this is updated
+
+```{r Making a data frame with the final inbetween biomass for each transect}
+inbetween_biomass_df <- total_urch_size_dist%>%
+  group_by(site_code, site_name, latitude.x, longitude.x,
+           visibility, hour, depth)%>%
+  summarise(total_inbetween_site_biomass = sum(inbetween_biomass_size_classes))
+```
+
 
 ```{r}
 test_size_df <- env_mod_data%>%
@@ -2759,6 +2775,7 @@ test_size_df <- env_mod_data%>%
 ggplot(test_size_df, aes(x = Urchins, y = total_site_biomass))+
   geom_point()
 ```
+
 
 
 ##Making dataframes for use in modelling
