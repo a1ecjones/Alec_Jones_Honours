@@ -1187,39 +1187,69 @@ plot(total_mod_2km_glm_resids)
 
 ###Plotting EVs against urchin counts
 
-##Plotting EVs against urch sn ratio
-
 ```{r urchins against openness}
-ggplot(env_mod_data, aes(x = dominant_score, y = Urchins, colour = region1))+
+(urchins_dom_substrate_plot <- ggplot(env_mod_data, aes(x = dominant_score, y = Urchins, colour = region1))+
   geom_point()+
-  theme.figure()
+    labs(x = "\nDominant substrate type", y = "Red urchin counts\n",
+       colour = "Region")+
+  theme.figure())
 ```
 
 ```{r urchins against openness}
-ggplot(env_mod_data, aes(x = norm_openness, y = Urchins, colour = region1))+
+(urchins_norm_openness_plot <- ggplot(env_mod_data, aes(x = norm_openness, y = Urchins, colour = region1))+
   geom_point()+
-  theme.figure()
+      labs(x = "\nNormalized openness", y = "Red urchin counts\n",
+       colour = "Region")+
+  theme.figure())
 ```
 
 ```{r urchins against sst}
-ggplot(env_mod_data, aes(x = sst, y = Urchins, colour = region1))+
+(urchins_sst_plot <- ggplot(env_mod_data, aes(x = sst, y = Urchins, colour = region1))+
   geom_point()+
-  theme.figure()
+      labs(x = "\nSea surface temperature (ºC)", y = "Red urchin counts\n",
+       colour = "Region")+
+  theme.figure())
 ```
 
 ```{r urchins against rec boat counts type}
-ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1.5km, y = Urchins, colour = region1))+
+(urchins_mean_rec_boats_1.5km_plot <- ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1.5km, y = Urchins, colour = region1))+
   geom_point()+
-  theme.figure()
+      labs(x = "\nMean # of recreational boats fishing (1.5km radius)", y = "Red urchin counts\n",
+       colour = "Region")+
+  theme.figure())
 ```
 
 ```{r}
-ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = Urchins))+
-  geom_point()
+(urchins_mean_app_fishing_hours_plot <- ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = Urchins,
+                         colour = region1))+
+  geom_point()+
+      labs(x = "\nMean apparent fishing hours", y = "Red urchin counts\n",
+       colour = "Region")+
+  theme.figure())
 ```
 
 None of the explanatory variables appear to have much of a relationship with urchin counts
 
+```{r Combining into one figure, fig.height=8, fig.width=12}
+(urchin_counts_evs_figure <- ggarrange(urchins_dom_substrate_plot, urchins_norm_openness_plot,
+                                      urchins_sst_plot, urchins_mean_app_fishing_hours_plot, 
+                                      urchins_mean_rec_boats_1.5km_plot,
+                                     labels = c("A", "B", "C", "D", "E"),
+                                     common.legend = TRUE,
+                                     legend = "bottom",
+                                     ncol = 3,
+                                     nrow = 2))
+#annotate_figure(snail_counts_evs_figure, left = textGrob("Common y-axis", rot = 90, vjust = 1, gp = gpar(cex = 1.3)))
+```
+
+```{r Saving the multi-panelled plot}
+png(filename = here("./04_plots/report_figures/urchin_counts_evs.png"), width = 12, height = 8, 
+    units = "in", pointsize = 15, res = 600)
+
+urchin_counts_evs_figure
+
+dev.off()
+```
 
 ###gam, temp scaled, openness scaled, dom substrate
 
@@ -1242,7 +1272,7 @@ plot(env_mod_urchin_counts_resids)
 
 ###gam, temp scaled, openness scaled, dom substrate, mean rec 1.5km scaled, mean gfw scaled, TRUE
 
-```{r Modelling the urchin counts with a simple environmental model}
+```{r Modelling the urchin counts with a total model}
 total_mod_urchin_counts <- gam(Urchins ~ s(sst_scale)+
                                s(norm_openness_scale)+
                                dominant_score+
@@ -1267,35 +1297,107 @@ plot(total_mod_urchin_counts_resids)
 
 ###Plotting the EVs against the snail counts
 
-##Plotting EVs against urch sn ratio
-
 ```{r snails against substrate}
-ggplot(env_mod_data, aes(x = dominant_score, y = Turban_Snails, colour = region1))+
+(snails_dom_substrate_plot <- ggplot(env_mod_data, aes(x = dominant_score, y = Turban_Snails, colour = region1))+
   geom_point()+
-  theme.figure()
+  labs(x = "Dominant substrate type", y = "Turban Snail counts",
+       colour = "Region")+
+  theme.figure())
 ```
 
 ```{r snails against openness}
-ggplot(env_mod_data, aes(x = norm_openness, y = Turban_Snails, colour = region1))+
+(snails_norm_openness_plot <- ggplot(env_mod_data, aes(x = norm_openness, y = Turban_Snails, colour = region1))+
   geom_point()+
-  theme.figure()
+   labs(x = "Normalized openness", y = "Turban Snail counts",
+       colour = "Region")+
+  theme.figure())
 ```
 
 ```{r snails against sst}
-ggplot(env_mod_data, aes(x = sst, y = Turban_Snails, colour = region1))+
+(snails_sst_plot <- ggplot(env_mod_data, aes(x = sst, y = Turban_Snails, colour = region1))+
   geom_point()+
-  theme.figure()
+   labs(x = "Sea surface temperature (ºC)", y = "Turban Snail counts",
+       colour = "Region")+
+  theme.figure())
 ```
 
 ```{r snails against rec boats}
-ggplot(env_mod_data, aes(x = mean_rec_boat_counts_2km, y = Turban_Snails, colour = region1))+
+(snails_mean_rec_boats_plot <- ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1.5km, y = Turban_Snails, colour = region1))+
   geom_point()+
-  theme.figure()
+   labs(x = "Mean # of recreational boats fishing (1.5km radius)", y = "Turban Snail counts",
+       colour = "Region")+
+  theme.figure())
 ```
 
 ```{r snails against gfw}
-ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = Turban_Snails))+
+(snails_app_fishing_hours_plot <- ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = Turban_Snails,
+                         colour = region1))+
   geom_point()+
-  theme.figure()
+   labs(x = "Mean apparent fishing hours", y = "Turban Snail counts",
+       colour = "Region")+
+  theme.figure())
 ```
 
+```{r Combining into one figure, fig.height=8, fig.width=12}
+(snail_counts_evs_figure <- ggarrange(snails_dom_substrate_plot, snails_norm_openness_plot,
+                                     snails_sst_plot, snails_app_fishing_hours_plot,
+                                     snails_mean_rec_boats_plot,
+                                     labels = c("A", "B", "C", "D", "E"),
+                                     common.legend = TRUE,
+                                     legend = c("bottom"),
+                                     nrow = 2,
+                                     ncol = 3))
+#annotate_figure(snail_counts_evs_figure, left = textGrob("Common y-axis", rot = 90, vjust = 1, gp = gpar(cex = 1.3)))
+```
+
+```{r Saving the multi-panelled plot}
+png(filename = here("./04_plots/report_figures/snail_counts_evs.png"), width = 12, height = 8, 
+    units = "in", pointsize = 15, res = 600)
+
+snail_counts_evs_figure
+
+dev.off()
+```
+
+
+###gam, temp scaled, openness scaled, dom substrate
+
+```{r Modelling the snail counts with a simple environmental model}
+env_mod_snail_counts <- gam(Turban_Snails ~ s(sst_scale)+
+                               s(norm_openness_scale),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+set.seed(10)
+gam.check(env_mod_snail_counts, rep = 500)
+plot(env_mod_snail_counts)
+```
+
+```{r DHARMa for model fit}
+env_mod_snail_counts_resids <- simulateResiduals(env_mod_snail_counts)
+plot(env_mod_snail_counts_resids)
+```
+
+###gam, temp scaled, openness scaled, dom substrate, mean rec 1.5km scaled, mean gfw scaled, TRUE
+
+```{r Modelling the snail counts with a total model}
+total_mod_snail_counts <- gam(Turban_Snails ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                               dominant_score+
+                               s(mean_rec_boat_counts_1.5km_scale)+
+                               s(mean_app_fishing_hours_scale),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+set.seed(10)
+gam.check(total_mod_snail_counts, rep = 500)
+plot(total_mod_snail_counts)
+summary(total_mod_snail_counts)
+```
+
+```{r DHARMa for model fit}
+total_mod_snail_counts_resids <- simulateResiduals(total_mod_snail_counts)
+plot(total_mod_snail_counts_resids)
+```
