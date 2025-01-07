@@ -63,16 +63,31 @@ VI_base_layer_sf <- st_as_sf(VI_base_layer)
 st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 ```
 
+###Loading in the shapefiles for the protected areas
+
+```{r loading in the RCA polygon}
+broken_group_RCA <- st_read(here("./01_raw_data/Broken_group_RCA.kml"))
+```
+
+```{r Loading in the Numukamis area}
+numukamis_area <- st_read(here("./01_raw_data/Numukamis_closed_area.kml"))
+```
+
+```{r Loading in the Baeria rocks}
+baeria_rocks_er <- st_read(here("./01_raw_data/baeria_rocks.kml"))
+```
+
+
 ###Overall site map
 
 ```{r Overall Barkley Sound Map}
 (overall_Barkley_sound_map <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
-    coord_sf(xlim = c(long_min - 0.1, long_max),
-           ylim = c(lat_min - 0.05, lat_max)) +
       geom_point(plotting_data, 
               mapping = aes(x = longitude, y = latitude),
               shape = 21, size = 2, fill = "red")+
+   coord_sf(xlim = c(long_min - 0.1, long_max),
+           ylim = c(lat_min - 0.05, lat_max)) +
   labs(x = " \nLongitude", y = "Latitude\n ") +
   theme.figure() +
  scale_x_continuous(breaks = c(-125.5, -125.25, -125.0)) +
@@ -129,11 +144,14 @@ dev.off()
 ```{r Overall site map with the site locations}
 (overall_site_map <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
-    coord_sf(xlim = c(long_min + 0.04, long_max - 0.04),
-           ylim = c(lat_min + 0.04, lat_max - 0.04)) +
-   geom_point(plotting_data, 
+     geom_sf(data = broken_group_RCA, fill = "blue", colour ="blue", alpha = 0.1)+
+   geom_sf(data = numukamis_area, fill = "#481567FF", colour = "#481567FF", alpha = 0.2)+
+   geom_sf(data = baeria_rocks_er, fill = "#CD2626", colour = "#CD2626", alpha = 0.2)+
+     geom_point(plotting_data, 
               mapping = aes(x = longitude, y = latitude),
               shape = 21, size = 3, fill = "red")+
+       coord_sf(xlim = c(long_min + 0.04, long_max - 0.04),
+           ylim = c(lat_min + 0.04, lat_max - 0.04)) +
   labs(x = " \nLongitude", y = "Latitude\n ") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +

@@ -3202,8 +3202,6 @@ site_locations_radius_2km <- st_buffer(x = site_locations_u_proj_m, dist = 2000)
 ```{r Plotting to see if radius is correct}
 ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
-    coord_sf(xlim = c(long_min, long_max),
-           ylim = c(lat_min, lat_max))+
   geom_sf(data = site_locations_radius_1.5km, fill = "red", alpha = 0.3)+
       coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max))+
