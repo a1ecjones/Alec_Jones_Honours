@@ -23,11 +23,25 @@ library(ggrepel)
 plotting_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
 ```
 
+###Shifting a couple of the sites to make it clearer
+
+```{r Shifting some sites}
+plotting_data_minor_shifted <- plotting_data%>%
+    #mutate(latitude = if_else(site_code == "BMSC11", 48.85828, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC11", -125.153, longitude))%>%
+  mutate(latitude = if_else(site_code == "BMSC5", 48.82333, latitude))%>%
+  mutate(latitude = if_else(site_code == "BMSC9", 48.83179, latitude))%>%
+  mutate(longitude = if_else(site_code == "BMSC9", -125.1490, longitude))
+```
+
+
 ##Shifted data for better visualization
 
 ```{r}
 plotting_data_shifted <- read_csv(here("./03_clean_data/plotting_data_shifted.csv"))
 ```
+
+
 
 ##Site maps
 
@@ -142,7 +156,7 @@ dev.off()
      geom_sf(data = broken_group_RCA, fill = "blue", colour ="blue", alpha = 0.1)+
    geom_sf(data = numukamis_area, fill = "#481567FF", colour = "#481567FF", alpha = 0.2)+
    geom_sf(data = baeria_rocks_er, fill = "#CD2626", colour = "#CD2626", alpha = 0.2)+
-     geom_point(plotting_data, 
+     geom_point(plotting_data_minor_shifted, 
               mapping = aes(x = longitude, y = latitude),
               shape = 21, size = 3, fill = "red")+
        coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
@@ -238,12 +252,24 @@ urch_sn_ratio_map_figures
 dev.off()
 ```
 
+###Urchin Counts
+
+
+
+###Snail Counts
+
 ###Site openness map
+
+```{r Making a non-linear colour palette to effectively show the normalized openness}
+colour_breaks <- c(0, 0.1, 0.2, 0.5, 1)
+openness_colours <- c("#440154", "#3b528b", "#21918c", "#5ec962", "#fde725")
+```
+
 
 ```{r Openness values at each site map}
 (site_openness_map <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
-     geom_point(plotting_data, 
+     geom_point(plotting_data_minor_shifted, 
               mapping = aes(x = longitude, y = latitude, fill = norm_openness),
               shape = 21, size = 3, colour = "black")+
        coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
@@ -251,8 +277,9 @@ dev.off()
   labs(x = " \nLongitude", y = "Latitude\n ",
        fill = "Normalized\nOpenness") +
   theme.figure() +
-   scale_fill_gradient2(low = "white", 
-                        high = "black")+
+   scale_fill_gradientn(colours = openness_colours,
+                        values = scales::rescale(colour_breaks),
+                        limits = c(0, 1))+
   scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
  # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
   annotation_north_arrow(
@@ -265,3 +292,15 @@ dev.off()
              mapping = aes(x = -125.134813, y = 48.83), shape = 23,
                            fill = "yellow", size = 4))
 ```
+
+####Saving the openness map
+
+```{r Saving the openness map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/report_figures/site_openness_map.png"), width = 6.5, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+site_openness_map
+
+dev.off()
+```
+
