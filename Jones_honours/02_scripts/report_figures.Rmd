@@ -254,9 +254,92 @@ dev.off()
 
 ###Urchin Counts
 
+```{r Making a non-linear colour palette to effectively show the urchin counts}
+colour_breaks_urchins <- c(0, 100, 250, 350, 529, 709)
+openness_colours_urchins <- c("#440154", "#414487", "#2a788e", "#22a884", "#7ad151", "#fde725")
+```
 
+```{r Urchin Counts plot}
+(urchin_counts_map_figs <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+     geom_point(plotting_data_shifted, 
+              mapping = aes(x = longitude, y = latitude, fill = Urchins),
+              shape = 21, size = 3, colour = "black")+
+       coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  labs(x = " \nLongitude", y = "Latitude\n ",
+       fill = "Urchin\nCounts") +
+  theme.figure() +
+   scale_fill_gradientn(colours = openness_colours_urchins,
+                        values = scales::rescale(colour_breaks_urchins),
+                        limits = c(0, 709))+
+  # scale_fill_gradient(low = "blue", high = "red")+
+  scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br")+
+      geom_point( 
+             mapping = aes(x = -125.134813, y = 48.83), shape = 23,
+                           fill = "yellow", size = 4))
+```
+
+```{r Saving the urchin counts map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/report_figures/urchin_counts_map.png"), width = 6.5, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+urchin_counts_map_figs
+
+dev.off()
+```
 
 ###Snail Counts
+
+```{r Making a non-linear colour palette to effectively show the snail counts}
+colour_breaks_snails <- c(0, 50, 100, 200, 300, 645)
+openness_colours_snails <- c("#440154", "#414487", "#2a788e", "#22a884", "#7ad151", "#fde725")
+```
+
+```{r Snail Counts plot}
+(snail_counts_map_figs <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+     geom_point(plotting_data_shifted, 
+              mapping = aes(x = longitude, y = latitude, fill = Turban_Snails),
+              shape = 21, size = 3, colour = "black")+
+       coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  labs(x = " \nLongitude", y = "Latitude\n ",
+       fill = "Turban Snail\nCounts") +
+  theme.figure() +
+   scale_fill_gradientn(colours = openness_colours_snails,
+                        values = scales::rescale(colour_breaks_snails),
+                        limits = c(0, 645))+
+   #scale_fill_gradient(low = "blue", high = "red")+
+  scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br")+
+      geom_point( 
+             mapping = aes(x = -125.134813, y = 48.83), shape = 23,
+                           fill = "yellow", size = 4))
+```
+
+```{r Saving the snail counts map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/report_figures/snail_counts_map.png"), width = 7, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+snail_counts_map_figs
+
+dev.off()
+```
+
 
 ###Site openness map
 

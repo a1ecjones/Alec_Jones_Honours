@@ -869,11 +869,14 @@ RLS_data_2024_clean <- RLS_data_2024%>%
 ```{r Making a data frame with different lat/longs for transects at same sites}
 RLS_data_2024_clean_updated_lat_long <- RLS_data_2024_clean%>%
    mutate(latitude = if_else(site_code == "BMSC1" & depth == 6.5, 48.8290000, latitude))%>%
- mutate(longitude = if_else(site_code == "BMSC1" & depth == 6.5, -125.191000, longitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC1" & depth == 6.5, -125.187000, longitude))%>%
 
-mutate(latitude = if_else(site_code == "BMSC11" & depth == 5, 48.8560000, latitude))%>%
+mutate(latitude = if_else(site_code == "BMSC11" & depth == 5, 48.8570000, latitude))%>%
  mutate(longitude = if_else(site_code == "BMSC11" & depth == 5, -125.1520000, longitude))%>%
 
+mutate(latitude = if_else(site_code == "BMSC11" & depth == 7.5, 48.85547, latitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC11" & depth == 7.5, -125.1582, longitude))%>%  
+  
 mutate(latitude = if_else(site_code == "BMSC12" & depth == 4.5, 48.8620000, latitude))%>%
  mutate(longitude = if_else(site_code == "BMSC12" & depth == 4.5, -125.1600000, longitude))%>%
 
@@ -893,13 +896,16 @@ mutate(latitude = if_else(site_code == "BMSC5" & depth == 6.0, 48.8230000, latit
  mutate(longitude = if_else(site_code == "BMSC5" & depth == 6.0, -125.1980000, longitude))%>%
 
 mutate(latitude = if_else(site_code == "BMSC5" & depth == 6.5, 48.82733154, latitude))%>%
- mutate(longitude = if_else(site_code == "BMSC5" & depth == 6.5, -125.2010000, longitude))%>%
+ mutate(longitude = if_else(site_code == "BMSC5" & depth == 6.5, -125.2050000, longitude))%>%
 
 mutate(latitude = if_else(site_code == "BMSC6" & depth == 8, 48.95023346, latitude))%>%
  mutate(longitude = if_else(site_code == "BMSC6" & depth == 8, -125.1620000, longitude))%>%
 
 mutate(latitude = if_else(site_code == "BMSC8" & depth == 7.5, 48.95508194, latitude))%>%
- mutate(longitude = if_else(site_code == "BMSC8" & depth == 7.5, -125.1460000, longitude))
+ mutate(longitude = if_else(site_code == "BMSC8" & depth == 7.5, -125.1460000, longitude))%>%
+  
+mutate(latitude = if_else(site_code == "BMSC9", 48.83179, latitude))%>%
+  mutate(longitude = if_else(site_code == "BMSC9", -125.1490, longitude))
 ```
 
 
