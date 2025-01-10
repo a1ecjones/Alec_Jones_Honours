@@ -53,6 +53,23 @@ regions <- c("region1", "region2", "region3", "region4")
 env_mod_data[regions] <- lapply(env_mod_data[regions], factor)
 ```
 
+```{r Creating a dataset with averaged values for urchin/snail counts, and urch sn ratio}
+env_mod_data_avg <- env_mod_data%>%
+  group_by(site_code, site_name, latitude, longitude, sst,
+           openness, norm_openness, region1, region2, region3, region4, 
+           mean_app_fishing_hours, mean_rec_boat_counts_500m, mean_rec_boat_counts_1km, 
+           mean_rec_boat_counts_1.5km, mean_rec_boat_counts_750m, mean_rec_boat_counts_2km,
+           sst_scale, openness_scale, norm_openness_scale, mean_app_fishing_hours_scale,
+           mean_rec_boat_counts_500m_scale, mean_rec_boat_counts_1km_scale, 
+           mean_rec_boat_counts_1.5km_scale, mean_rec_boat_counts_750m_scale,
+           mean_rec_boat_counts_2km_scale)%>%
+  summarise(urchins_avg = mean(Urchins),
+            snails_avg = mean(Turban_Snails),
+            urch_sn_ratio_avg = mean(urch_sn_ratio),
+            depth_avg = mean(depth))
+```
+
+
 ###Testing the data to see if it is spatially correlated
 
 ####Moran's I with transects at same site separate
@@ -67,6 +84,8 @@ inv_sphere_dist <- 1 / sphere_dist
 diag(inv_sphere_dist) <- 0
   
 ape::Moran.I(env_mod_data$urch_sn_ratio, weight = inv_sphere_dist, scaled = TRUE)
+
+ape::Moran.I(total_mod_1.5km_data_with_resids$`total_mod_1.5km$residuals`, weight = inv_sphere_dist, scaled = TRUE)
 ```
 
 ####Moran's I with transects at same site averaged
@@ -848,7 +867,7 @@ gam.check(total_mod_1km)
 
 plot(total_mod_1km)
 summary(total_mod_1km)
-as_flextable(total_mod_1km)
+#as_flextable(total_mod_1km)
 ```
 
 ```{r DHARMa for model fit}
@@ -898,7 +917,8 @@ total_mod_1.5km <- gam(urch_sn_ratio ~ s(sst_scale) +
                    s(norm_openness_scale) +
                    dominant_score + 
                    s(mean_rec_boat_counts_1.5km_scale)+
-                   s(mean_app_fishing_hours_scale),
+                   s(mean_app_fishing_hours_scale)+
+                     s(depth),
                data = env_mod_data,
                family = gaussian(link = "identity"),
                method = 'REML',
@@ -909,15 +929,20 @@ gam.check(total_mod_1.5km)
 #shapiro.test(total_mod_1.5km$residuals)
 ##slightly not normal
 
-plot(total_mod_1.5km)
+plot(total_mod_1.5km, residuals = TRUE)
 summary(total_mod_1.5km)
-as_flextable(total_mod_1.5km)
+#as_flextable(total_mod_1.5km)
 ```
 
 ```{r DHARMa for model fit}
 total_mod_1.5km_resids <- simulateResiduals(total_mod_1.5km)
 plot(total_mod_1.5km_resids)
 ```
+
+```{r}
+total_mod_1.5km_data_with_resids <- cbind(env_mod_data, total_mod_1.5km$residuals)
+```
+
 
 ```{r Testing concurvity}
 concurvity(total_mod_1.5km, full = FALSE)
@@ -1401,3 +1426,56 @@ summary(total_mod_snail_counts)
 total_mod_snail_counts_resids <- simulateResiduals(total_mod_snail_counts)
 plot(total_mod_snail_counts_resids)
 ```
+
+##Re-doing analysis with averaged transects
+
+####gam, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled, TRUE, AVG
+
+```{r Total model with no spatial autocorrelation}
+total_mod_2km_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                    
+                   s(mean_rec_boat_counts_2km_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_2km_avg)
+#shapiro.test(total_mod_2km$residuals)
+##normal
+
+plot(total_mod_2km_avg)
+summary(total_mod_2km_avg)
+```
+
+Some outliers observed, retesting with outliers removed to see if 
+they have a large impact on the model
+
+```{r Rerunning the model without the outliers}
+total_mod_2km_avg_no_outliers <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                
+                   s(mean_rec_boat_counts_2km_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data_avg[-c(7, 19), ],
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_2km_avg_no_outliers)
+#shapiro.test(total_mod_2km$residuals)
+##normal
+
+plot(total_mod_2km_avg_no_outliers)
+summary(total_mod_2km_avg_no_outliers)
+```
+
+Trend remains largely the same without the outliers and openness is still 
+significant so can do analysis with them in so we are not cherry-picking the
+sites.
+
+

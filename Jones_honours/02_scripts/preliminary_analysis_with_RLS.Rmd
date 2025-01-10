@@ -3203,20 +3203,24 @@ site_locations_radius_750m <- st_buffer(x = site_locations_u_proj_m, dist = 750)
 site_locations_radius_2km <- st_buffer(x = site_locations_u_proj_m, dist = 2000)
 ```
 
+#####Making plots of the different radii in different years for the report figures
 
+######1.5 km
 
-```{r Plotting to see if radius is correct}
-ggplot()+
+```{r 1.5 km radius 2021}
+(rec_boats_1.5km_2021_plot <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
   geom_sf(data = site_locations_radius_1.5km, fill = "red", alpha = 0.3)+
       coord_sf(xlim = c(long_min, long_max),
            ylim = c(lat_min, lat_max))+
-    geom_point(data = urch_sn_ratio_mod_2024,
-             mapping = aes(x = longitude, y = latitude), 
-              shape = 1, size = 2, colour = "black") + 
-  geom_point(data = rec_boats_fishing2023, 
+      geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 2, colour = "black")+
+       coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  geom_point(data = rec_boats_fishing2021, 
              mapping = aes(x = Longitude, y = Latitude, fill = rec_boats_fishing))+
-  labs(title = "2024", x = " \nLongitude", y = "Latitude\n ") +
+  labs(title = "1.5km 2021", x = " \nLongitude", y = "Latitude\n ") +
   theme.figure() +
   scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
   scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
@@ -3225,8 +3229,213 @@ ggplot()+
     which_north = "true",
     style = north_arrow_fancy_orienteering
   ) +
-  annotation_scale(location = "br")
+  annotation_scale(location = "br"))
 ```
+
+```{r 1.5 km radius 2022}
+(rec_boats_1.5km_2022_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+  geom_sf(data = site_locations_radius_1.5km, fill = "red", alpha = 0.3)+
+      coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+      geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 2, colour = "black")+
+       coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  geom_point(data = rec_boats_fishing2022, 
+             mapping = aes(x = Longitude, y = Latitude, fill = rec_boats_fishing))+
+  labs(title = "1.5km 2022", x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r 1.5 km radius 2023}
+(rec_boats_1.5km_2023_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+  geom_sf(data = site_locations_radius_1.5km, fill = "red", alpha = 0.3)+
+      coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+      geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 2, colour = "black")+
+       coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  geom_point(data = rec_boats_fishing2023, 
+             mapping = aes(x = Longitude, y = Latitude, fill = rec_boats_fishing))+
+  labs(title = "1.5km 2023", x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+######1 km
+
+```{r 1 km radius 2021}
+(rec_boats_1km_2021_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+  geom_sf(data = site_locations_radius_1km, fill = "red", alpha = 0.3)+
+      coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+      geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 2, colour = "black")+
+       coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  geom_point(data = rec_boats_fishing2021, 
+             mapping = aes(x = Longitude, y = Latitude, fill = rec_boats_fishing))+
+  labs(title = "1km 2021", x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r 1 km radius 2022}
+(rec_boats_1km_2022_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+  geom_sf(data = site_locations_radius_1km, fill = "red", alpha = 0.3)+
+      coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+      geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 2, colour = "black")+
+       coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  geom_point(data = rec_boats_fishing2022, 
+             mapping = aes(x = Longitude, y = Latitude, fill = rec_boats_fishing))+
+  labs(title = "1km 2022", x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r 1 km radius 2023}
+(rec_boats_1km_2023_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+  geom_sf(data = site_locations_radius_1km, fill = "red", alpha = 0.3)+
+      coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+      geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 2, colour = "black")+
+       coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  geom_point(data = rec_boats_fishing2023, 
+             mapping = aes(x = Longitude, y = Latitude, fill = rec_boats_fishing))+
+  labs(title = "1km 2023", x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+######2 km
+
+```{r 2 km radius 2021}
+(rec_boats_2km_2021_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+  geom_sf(data = site_locations_radius_2km, fill = "red", alpha = 0.3)+
+      coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+      geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 2, colour = "black")+
+       coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  geom_point(data = rec_boats_fishing2021, 
+             mapping = aes(x = Longitude, y = Latitude, fill = rec_boats_fishing))+
+  labs(title = "2km 2021", x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r 2 km radius 2022}
+(rec_boats_2km_2022_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+  geom_sf(data = site_locations_radius_2km, fill = "red", alpha = 0.3)+
+      coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+      geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 2, colour = "black")+
+       coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  geom_point(data = rec_boats_fishing2022, 
+             mapping = aes(x = Longitude, y = Latitude, fill = rec_boats_fishing))+
+  labs(title = "2km 2022", x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
+```{r 2 km radius 2023}
+(rec_boats_2km_2023_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+  geom_sf(data = site_locations_radius_2km, fill = "red", alpha = 0.3)+
+      coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+      geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 2, colour = "black")+
+       coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  geom_point(data = rec_boats_fishing2023, 
+             mapping = aes(x = Longitude, y = Latitude, fill = rec_boats_fishing))+
+  labs(title = "2km 2023", x = " \nLongitude", y = "Latitude\n ") +
+  theme.figure() +
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))
+```
+
 
 ```{r Finding the overlapping points for each site}
 rec_boats_fishing_total_points <- st_as_sf(rec_boats_fishing_total, coords = c("Longitude", "Latitude"), crs = 4326)

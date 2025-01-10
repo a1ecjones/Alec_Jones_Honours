@@ -387,3 +387,6 @@ site_openness_map
 dev.off()
 ```
 
+
+
+###Rec boats with differing radius
