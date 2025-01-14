@@ -2762,7 +2762,8 @@ total_urch_size_dist <- total_urch_size_dist%>%
 max_biomass_df <- total_urch_size_dist%>%
   group_by(site_code, site_name, latitude.x, longitude.x,
            visibility, hour, depth)%>%
-  summarise(total_site_biomass = sum(biomass_size_classes))
+  summarise(total_site_biomass = sum(biomass_size_classes))%>%
+  mutate(total_site_biomass_per_m2 = total_site_biomass / 500)
 ```
 There are a couple rows with NA currently but these should be fixed once this is updated
 
@@ -2770,7 +2771,8 @@ There are a couple rows with NA currently but these should be fixed once this is
 inbetween_biomass_df <- total_urch_size_dist%>%
   group_by(site_code, site_name, latitude.x, longitude.x,
            visibility, hour, depth)%>%
-  summarise(total_inbetween_site_biomass = sum(inbetween_biomass_size_classes))
+  summarise(total_inbetween_site_biomass = sum(inbetween_biomass_size_classes))%>%
+  mutate(total_inbetween_site_biomass_per_m2 = total_inbetween_site_biomass / 500)
 ```
 
 
@@ -3203,6 +3205,155 @@ site_locations_radius_750m <- st_buffer(x = site_locations_u_proj_m, dist = 750)
 site_locations_radius_2km <- st_buffer(x = site_locations_u_proj_m, dist = 2000)
 ```
 
+
+```{r Finding the overlapping points for each site}
+rec_boats_fishing_total_points <- st_as_sf(rec_boats_fishing_total, coords = c("Longitude", "Latitude"), crs = 4326)
+rec_boats_fishing_total_points <- st_transform(rec_boats_fishing_total_points, crs = 3857)
+
+rec_fishing_boat_total_radius_500m <- st_intersection(site_locations_radius_500m, rec_boats_fishing_total_points)
+
+##rec_fishing_boat_total_radius_500m <- rec_fishing_boat_total_radius_500m%>%
+#  select(c(site_code, depth, site_name, survey_date, visibility, hour, Urchins, UniqueID, Filename.FlightID, 
+      #     Year, Month, Day, Date, rec_boats_fishing, rec_boats_running))
+
+##2x the first estimate for sensitivity
+rec_fishing_boat_total_radius_1km <- st_intersection(site_locations_radius_1km, rec_boats_fishing_total_points)
+
+#rec_fishing_boat_total_radius_1km <- rec_fishing_boat_total_radius_1km%>%
+ # select(c(site_code, depth, site_name, survey_date, visibility, hour, Urchins, UniqueID, Filename.FlightID, 
+    #       Year, Month, Day, Date, rec_boats_fishing, rec_boats_running))
+
+##3x the first estimate for sensitivity test
+rec_fishing_boat_total_radius_1.5km <- st_intersection(site_locations_radius_1.5km, rec_boats_fishing_total_points)
+
+#rec_fishing_boat_total_radius_1.5km <- rec_fishing_boat_total_radius_1.5km%>%
+ # select(c(site_code, depth, site_name, survey_date, visibility, hour, Urchins, UniqueID, Filename.FlightID, 
+  #         Year, Month, Day, Date, rec_boats_fishing, rec_boats_running))
+
+
+##1.5x the first estimate for sensitivity test
+rec_fishing_boat_total_radius_750m <- st_intersection(site_locations_radius_750m, rec_boats_fishing_total_points)
+
+#rec_fishing_boat_total_radius_750m <- rec_fishing_boat_total_radius_750m%>%
+ # select(c(site_code, depth, site_name, survey_date, visibility, hour, Urchins, UniqueID, Filename.FlightID, 
+  #         Year, Month, Day, Date, rec_boats_fishing, rec_boats_running))
+
+##4x the first estimate for sensitivity test
+rec_fishing_boat_total_radius_2km <- st_intersection(site_locations_radius_2km, rec_boats_fishing_total_points)
+
+#rec_fishing_boat_total_radius_2km <- rec_fishing_boat_total_radius_2km%>%
+ # select(c(site_code, depth, site_name, survey_date, visibility, hour, Urchins, UniqueID, Filename.FlightID, 
+  #         Year, Month, Day, Date, rec_boats_fishing, rec_boats_running))
+```
+
+```{r Making the dataframe with boat counts summed for each year at each site}
+rec_fishing_boat_total_radius_500m_summed <- rec_fishing_boat_total_radius_500m%>%
+  group_by(site_code, Year)%>%
+  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
+
+rec_fishing_boat_total_radius_1km_summed <- rec_fishing_boat_total_radius_1km%>%
+  group_by(site_code, Year)%>%
+  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
+
+rec_fishing_boat_total_radius_1.5km_summed <- rec_fishing_boat_total_radius_1.5km%>%
+  group_by(site_code, Year)%>%
+  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
+
+rec_fishing_boat_total_radius_750m_summed <- rec_fishing_boat_total_radius_750m%>%
+  group_by(site_code, Year)%>%
+  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
+
+rec_fishing_boat_total_radius_2km_summed <- rec_fishing_boat_total_radius_2km%>%
+  group_by(site_code, Year)%>%
+  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
+```
+
+```{r Making a total dataframe for each so that years with no boats have a 0 counts}
+all_sites_years_500m <- expand.grid(
+  site_code = unique(rec_fishing_boat_total_radius_500m$site_code),
+  Year = unique(rec_fishing_boat_total_radius_500m$Year))
+
+all_sites_years_1km <- expand.grid(
+  site_code = unique(rec_fishing_boat_total_radius_1km$site_code),
+  Year = unique(rec_fishing_boat_total_radius_1km$Year))
+
+all_sites_years_1.5km <- expand.grid(
+  site_code = unique(rec_fishing_boat_total_radius_1.5km$site_code),
+  Year = unique(rec_fishing_boat_total_radius_1.5km$Year))
+
+all_sites_years_750m <- expand.grid(
+  site_code = unique(rec_fishing_boat_total_radius_750m$site_code),
+  Year = unique(rec_fishing_boat_total_radius_750m$Year))
+
+all_sites_years_2km <- expand.grid(
+  site_code = unique(rec_fishing_boat_total_radius_2km$site_code),
+  Year = unique(rec_fishing_boat_total_radius_2km$Year))
+```
+
+```{r Merging the all years df with the rec boat count sums}
+rec_fishing_boat_total_radius_500m_complete <- all_sites_years_500m %>%
+  left_join(rec_fishing_boat_total_radius_500m_summed, by = c("site_code", "Year")) %>%
+  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
+
+rec_fishing_boat_total_radius_1km_complete <- all_sites_years_1km %>%
+  left_join(rec_fishing_boat_total_radius_1km_summed, by = c("site_code", "Year")) %>%
+  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
+
+rec_fishing_boat_total_radius_1.5km_complete <- all_sites_years_1.5km %>%
+  left_join(rec_fishing_boat_total_radius_1.5km_summed, by = c("site_code", "Year")) %>%
+  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
+
+rec_fishing_boat_total_radius_750m_complete <- all_sites_years_750m %>%
+  left_join(rec_fishing_boat_total_radius_750m_summed, by = c("site_code", "Year")) %>%
+  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
+
+rec_fishing_boat_total_radius_2km_complete <- all_sites_years_2km %>%
+  left_join(rec_fishing_boat_total_radius_2km_summed, by = c("site_code", "Year")) %>%
+  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
+```
+
+
+
+
+```{r Making the final dataframe with the average boat counts per year for each site}
+rec_fishing_boat_total_radius_500m_final <- rec_fishing_boat_total_radius_500m_complete%>%
+  group_by(site_code)%>%
+  summarise(mean_rec_boat_counts_500m = mean(yearly_rec_boats_fishing))
+
+rec_fishing_boat_total_radius_1km_final <- rec_fishing_boat_total_radius_1km_complete%>%
+  group_by(site_code)%>%
+  summarise(mean_rec_boat_counts_1km = mean(yearly_rec_boats_fishing))
+
+rec_fishing_boat_total_radius_1.5km_final <- rec_fishing_boat_total_radius_1.5km_complete%>%
+  group_by(site_code)%>%
+  summarise(mean_rec_boat_counts_1.5km = mean(yearly_rec_boats_fishing))
+
+rec_fishing_boat_total_radius_750m_final <- rec_fishing_boat_total_radius_750m_complete%>%
+  group_by(site_code)%>%
+  summarise(mean_rec_boat_counts_750m = mean(yearly_rec_boats_fishing))
+
+rec_fishing_boat_total_radius_2km_final <- rec_fishing_boat_total_radius_2km_complete%>%
+  group_by(site_code)%>%
+  summarise(mean_rec_boat_counts_2km = mean(yearly_rec_boats_fishing))
+```
+
+######Adding the averaged counts to the main modelling dataset
+```{r}
+urch_sn_ratio_fishing_mod_2024 <- urch_sn_ratio_fishing_mod_2024%>%
+  left_join(rec_fishing_boat_total_radius_500m_final, by = c("site_code"))%>%
+ left_join(rec_fishing_boat_total_radius_1km_final, by = c("site_code"))%>%
+ left_join(rec_fishing_boat_total_radius_1.5km_final, by = c("site_code"))%>%
+   left_join(rec_fishing_boat_total_radius_750m_final, by = c("site_code"))%>%
+   left_join(rec_fishing_boat_total_radius_2km_final, by = c("site_code"))%>%
+  replace(is.na(.), 0)
+  
+  
+ # select(c(site_code, site_name, latitude, longitude, survey_date, depth, visibility,
+  #         hour, Urchins, Turban_Snails, urch_sn_ratio, mean_app_fishing_hours,
+   #        mean_rec_boat_counts_500m, mean_rec_boat_counts_1km, mean_rec_boat_counts_1.5km))
+```
+
+
 #####Making plots of the different radii in different years for the report figures
 
 ######1.5 km
@@ -3437,153 +3588,72 @@ site_locations_radius_2km <- st_buffer(x = site_locations_u_proj_m, dist = 2000)
 ```
 
 
-```{r Finding the overlapping points for each site}
-rec_boats_fishing_total_points <- st_as_sf(rec_boats_fishing_total, coords = c("Longitude", "Latitude"), crs = 4326)
-rec_boats_fishing_total_points <- st_transform(rec_boats_fishing_total_points, crs = 3857)
+######Saving all of the rec boat plots
 
-rec_fishing_boat_total_radius_500m <- st_intersection(site_locations_radius_500m, rec_boats_fishing_total_points)
+```{r Saving the rec boat maps, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/report_figures/rec_boats/rec_boats_1.5km_2021_map.png"), width = 6.5, height = 4, 
+    units = "in", pointsize = 15, res = 600)
 
-##rec_fishing_boat_total_radius_500m <- rec_fishing_boat_total_radius_500m%>%
-#  select(c(site_code, depth, site_name, survey_date, visibility, hour, Urchins, UniqueID, Filename.FlightID, 
-      #     Year, Month, Day, Date, rec_boats_fishing, rec_boats_running))
+rec_boats_1.5km_2021_plot
 
-##2x the first estimate for sensitivity
-rec_fishing_boat_total_radius_1km <- st_intersection(site_locations_radius_1km, rec_boats_fishing_total_points)
+dev.off()
 
-#rec_fishing_boat_total_radius_1km <- rec_fishing_boat_total_radius_1km%>%
- # select(c(site_code, depth, site_name, survey_date, visibility, hour, Urchins, UniqueID, Filename.FlightID, 
-    #       Year, Month, Day, Date, rec_boats_fishing, rec_boats_running))
+png(filename = here("./04_plots/report_figures/rec_boats/rec_boats_1.5km_2022_map.png"), width = 6.5, height = 4, 
+    units = "in", pointsize = 15, res = 600)
 
-##3x the first estimate for sensitivity test
-rec_fishing_boat_total_radius_1.5km <- st_intersection(site_locations_radius_1.5km, rec_boats_fishing_total_points)
+rec_boats_1.5km_2022_plot
 
-#rec_fishing_boat_total_radius_1.5km <- rec_fishing_boat_total_radius_1.5km%>%
- # select(c(site_code, depth, site_name, survey_date, visibility, hour, Urchins, UniqueID, Filename.FlightID, 
-  #         Year, Month, Day, Date, rec_boats_fishing, rec_boats_running))
+dev.off()
 
+png(filename = here("./04_plots/report_figures/rec_boats/rec_boats_1.5km_2023_map.png"), width = 6.5, height = 4, 
+    units = "in", pointsize = 15, res = 600)
 
-##1.5x the first estimate for sensitivity test
-rec_fishing_boat_total_radius_750m <- st_intersection(site_locations_radius_750m, rec_boats_fishing_total_points)
+rec_boats_1.5km_2023_plot
 
-#rec_fishing_boat_total_radius_750m <- rec_fishing_boat_total_radius_750m%>%
- # select(c(site_code, depth, site_name, survey_date, visibility, hour, Urchins, UniqueID, Filename.FlightID, 
-  #         Year, Month, Day, Date, rec_boats_fishing, rec_boats_running))
+dev.off()
 
-##4x the first estimate for sensitivity test
-rec_fishing_boat_total_radius_2km <- st_intersection(site_locations_radius_2km, rec_boats_fishing_total_points)
+png(filename = here("./04_plots/report_figures/rec_boats/rec_boats_1km_2021_map.png"), width = 6.5, height = 4, 
+    units = "in", pointsize = 15, res = 600)
 
-#rec_fishing_boat_total_radius_2km <- rec_fishing_boat_total_radius_2km%>%
- # select(c(site_code, depth, site_name, survey_date, visibility, hour, Urchins, UniqueID, Filename.FlightID, 
-  #         Year, Month, Day, Date, rec_boats_fishing, rec_boats_running))
+rec_boats_1km_2021_plot
+
+dev.off()
+
+png(filename = here("./04_plots/report_figures/rec_boats/rec_boats_1km_2022_map.png"), width = 6.5, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+rec_boats_1km_2022_plot
+
+dev.off()
+
+png(filename = here("./04_plots/report_figures/rec_boats/rec_boats_1km_2023_map.png"), width = 6.5, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+rec_boats_1km_2023_plot
+
+dev.off()
+
+png(filename = here("./04_plots/report_figures/rec_boats/rec_boats_2km_2021_map.png"), width = 6.5, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+rec_boats_2km_2021_plot
+
+dev.off()
+
+png(filename = here("./04_plots/report_figures/rec_boats/rec_boats_2km_2022_map.png"), width = 6.5, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+rec_boats_2km_2022_plot
+
+dev.off()
+
+png(filename = here("./04_plots/report_figures/rec_boats/rec_boats_2km_2023_map.png"), width = 6.5, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+rec_boats_2km_2023_plot
+
+dev.off()
 ```
-
-```{r Making the dataframe with boat counts summed for each year at each site}
-rec_fishing_boat_total_radius_500m_summed <- rec_fishing_boat_total_radius_500m%>%
-  group_by(site_code, Year)%>%
-  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
-
-rec_fishing_boat_total_radius_1km_summed <- rec_fishing_boat_total_radius_1km%>%
-  group_by(site_code, Year)%>%
-  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
-
-rec_fishing_boat_total_radius_1.5km_summed <- rec_fishing_boat_total_radius_1.5km%>%
-  group_by(site_code, Year)%>%
-  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
-
-rec_fishing_boat_total_radius_750m_summed <- rec_fishing_boat_total_radius_750m%>%
-  group_by(site_code, Year)%>%
-  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
-
-rec_fishing_boat_total_radius_2km_summed <- rec_fishing_boat_total_radius_2km%>%
-  group_by(site_code, Year)%>%
-  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
-```
-
-```{r Making a total dataframe for each so that years with no boats have a 0 counts}
-all_sites_years_500m <- expand.grid(
-  site_code = unique(rec_fishing_boat_total_radius_500m$site_code),
-  Year = unique(rec_fishing_boat_total_radius_500m$Year))
-
-all_sites_years_1km <- expand.grid(
-  site_code = unique(rec_fishing_boat_total_radius_1km$site_code),
-  Year = unique(rec_fishing_boat_total_radius_1km$Year))
-
-all_sites_years_1.5km <- expand.grid(
-  site_code = unique(rec_fishing_boat_total_radius_1.5km$site_code),
-  Year = unique(rec_fishing_boat_total_radius_1.5km$Year))
-
-all_sites_years_750m <- expand.grid(
-  site_code = unique(rec_fishing_boat_total_radius_750m$site_code),
-  Year = unique(rec_fishing_boat_total_radius_750m$Year))
-
-all_sites_years_2km <- expand.grid(
-  site_code = unique(rec_fishing_boat_total_radius_2km$site_code),
-  Year = unique(rec_fishing_boat_total_radius_2km$Year))
-```
-
-```{r Merging the all years df with the rec boat count sums}
-rec_fishing_boat_total_radius_500m_complete <- all_sites_years_500m %>%
-  left_join(rec_fishing_boat_total_radius_500m_summed, by = c("site_code", "Year")) %>%
-  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
-
-rec_fishing_boat_total_radius_1km_complete <- all_sites_years_1km %>%
-  left_join(rec_fishing_boat_total_radius_1km_summed, by = c("site_code", "Year")) %>%
-  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
-
-rec_fishing_boat_total_radius_1.5km_complete <- all_sites_years_1.5km %>%
-  left_join(rec_fishing_boat_total_radius_1.5km_summed, by = c("site_code", "Year")) %>%
-  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
-
-rec_fishing_boat_total_radius_750m_complete <- all_sites_years_750m %>%
-  left_join(rec_fishing_boat_total_radius_750m_summed, by = c("site_code", "Year")) %>%
-  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
-
-rec_fishing_boat_total_radius_2km_complete <- all_sites_years_2km %>%
-  left_join(rec_fishing_boat_total_radius_2km_summed, by = c("site_code", "Year")) %>%
-  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
-```
-
-
-
-
-```{r Making the final dataframe with the average boat counts per year for each site}
-rec_fishing_boat_total_radius_500m_final <- rec_fishing_boat_total_radius_500m_complete%>%
-  group_by(site_code)%>%
-  summarise(mean_rec_boat_counts_500m = mean(yearly_rec_boats_fishing))
-
-rec_fishing_boat_total_radius_1km_final <- rec_fishing_boat_total_radius_1km_complete%>%
-  group_by(site_code)%>%
-  summarise(mean_rec_boat_counts_1km = mean(yearly_rec_boats_fishing))
-
-rec_fishing_boat_total_radius_1.5km_final <- rec_fishing_boat_total_radius_1.5km_complete%>%
-  group_by(site_code)%>%
-  summarise(mean_rec_boat_counts_1.5km = mean(yearly_rec_boats_fishing))
-
-rec_fishing_boat_total_radius_750m_final <- rec_fishing_boat_total_radius_750m_complete%>%
-  group_by(site_code)%>%
-  summarise(mean_rec_boat_counts_750m = mean(yearly_rec_boats_fishing))
-
-rec_fishing_boat_total_radius_2km_final <- rec_fishing_boat_total_radius_2km_complete%>%
-  group_by(site_code)%>%
-  summarise(mean_rec_boat_counts_2km = mean(yearly_rec_boats_fishing))
-```
-
-######Adding the averaged counts to the main modelling dataset
-```{r}
-urch_sn_ratio_fishing_mod_2024 <- urch_sn_ratio_fishing_mod_2024%>%
-  left_join(rec_fishing_boat_total_radius_500m_final, by = c("site_code"))%>%
- left_join(rec_fishing_boat_total_radius_1km_final, by = c("site_code"))%>%
- left_join(rec_fishing_boat_total_radius_1.5km_final, by = c("site_code"))%>%
-   left_join(rec_fishing_boat_total_radius_750m_final, by = c("site_code"))%>%
-   left_join(rec_fishing_boat_total_radius_2km_final, by = c("site_code"))%>%
-  replace(is.na(.), 0)
-  
-  
- # select(c(site_code, site_name, latitude, longitude, survey_date, depth, visibility,
-  #         hour, Urchins, Turban_Snails, urch_sn_ratio, mean_app_fishing_hours,
-   #        mean_rec_boat_counts_500m, mean_rec_boat_counts_1km, mean_rec_boat_counts_1.5km))
-```
-
 
 #####Adding based on the grid (old method)
 ```{r Combining the sites with the rec fishing data to get the # of boats for each site}
