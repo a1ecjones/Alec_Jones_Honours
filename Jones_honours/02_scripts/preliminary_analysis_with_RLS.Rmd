@@ -2619,18 +2619,20 @@ urch_size_data_clean <- urch_size_data%>%
          size_400 = `400`)%>%
   mutate_at(factor_cols2, factor)%>%
   filter(Code == "mfra")%>%
-  replace(is.na(.), 0)%>%
+  replace(is.na(.), 0)
   
   #convert site code and site name to characters to add in Eussen which isn't an existing factor level
   urch_size_data_clean$site_code <- as.character(urch_size_data_clean$site_code)
 urch_size_data_clean$site_name <- as.character(urch_size_data_clean$site_name)
 
-  #urch_size_data_clean[urch_size_data_clean$site_code == "BMSC16" & urch_size_data_clean$hour == hms::as_hms("11:39:00"),
-                 #      c("site_code", "site_name", "latitude", "longitude",
-                     #    "depth")] <- list("BMSC18", "Eussen Rock", 48.91162, -125.2670, 8.5)
+##Converting the one faber Islets transect that was actually done at Eussen Rock
+  urch_size_data_clean[urch_size_data_clean$site_code == "BMSC16" & urch_size_data_clean$hour == hms::as_hms("11:39:00"),
+                      c("site_code", "site_name", "latitude", "longitude",
+                        "depth")] <- list("BMSC18", "Eussen Rock", 48.91162, -125.2670, 8.5)
 
-# urch_size_data_clean[urch_size_data_clean$site_code == "BMSC25" & urch_size_data_clean$hour == hms::as_hms("09:48:00"),
-                   #   c("visibility", "hour", "depth")] <- list(3.0, hms::as.hms("14:50:00"), 5.5)
+  ##Converting the three quadrats done by Tom at Goby Town to matching the depth and time of the transect done with Jasmin
+ urch_size_data_clean[urch_size_data_clean$site_code == "BMSC25" & urch_size_data_clean$hour == hms::as_hms("09:48:00"),
+                      c("visibility", "hour", "depth")] <- list(3.0, hms::as.hms("14:50:00"), 5.5)
  
  #convert back to factors
    urch_size_data_clean$site_code <- as.factor(urch_size_data_clean$site_code)
@@ -2708,7 +2710,7 @@ ggplot(urch_count_size_data, aes(x = Turban_Snails, y = Urchins))+
 ```{r Summing the numbers of each size at each transect}
 total_urch_size_dist <- urch_size_data_long%>%
   group_by(site_code, site_name, latitude, 
-           longitude, survey_date, 
+           longitude, 
            visibility, hour, 
            depth,size_class)%>%
   summarise(total_count = sum(count))%>%
@@ -2718,8 +2720,6 @@ total_urch_size_dist <- urch_size_data_long%>%
 ```
 
 ```{r Adding a column with the total count from that site}
-###will need to adjust once data is cleaned up after valesca responds
-
 total_urch_size_dist <- total_urch_size_dist%>%
   left_join(urch_sn_ratio_RLS_2024,
         by = c("site_code", "site_name", "visibility", "hour", "depth"))%>%
@@ -2765,7 +2765,7 @@ max_biomass_df <- total_urch_size_dist%>%
   summarise(total_site_biomass = sum(biomass_size_classes))%>%
   mutate(total_site_biomass_per_m2 = total_site_biomass / 500)
 ```
-There are a couple rows with NA currently but these should be fixed once this is updated
+
 
 ```{r Making a data frame with the final inbetween biomass for each transect}
 inbetween_biomass_df <- total_urch_size_dist%>%
@@ -2776,14 +2776,22 @@ inbetween_biomass_df <- total_urch_size_dist%>%
 ```
 
 
-```{r}
+```{r Plotting a test plot with the biomass}
 test_size_df <- env_mod_data%>%
   left_join(max_biomass_df, by = c("site_code", "depth"))
 
-ggplot(test_size_df, aes(x = Urchins, y = total_site_biomass))+
-  geom_point()
+ggplot(test_size_df, aes(x = Turban_Snails, y = total_site_biomass_per_m2))+
+  geom_point()+
+  theme.figure()+
+  geom_smooth(method = "lm")
 ```
 
+```{r}
+ggplot(test_size_df[-c(10, 24, 25), ], aes(x = Turban_Snails, y = Urchins))+
+  geom_point()+
+  theme.figure()+
+  geom_smooth(method = "lm")
+```
 
 
 ##Making dataframes for use in modelling
