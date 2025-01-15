@@ -28,6 +28,7 @@ library(RColorBrewer)
 library(conflicted)
 library(lwgeom)
 library(ggpubr)
+library(vegan)
 
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
@@ -2791,6 +2792,160 @@ ggplot(test_size_df[-c(10, 24, 25), ], aes(x = Turban_Snails, y = Urchins))+
   geom_point()+
   theme.figure()+
   geom_smooth(method = "lm")
+```
+
+
+
+##Biodiversity analysis
+
+###Calculating biodiversity at each site
+
+```{r Making a column of protected or not protected to add to the biodiv df}
+protect_status <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 
+                    0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
+
+protect_status_park <- c(0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
+```
+
+
+```{r Making a column for each site with the diversity measurement}
+biodiv_df <- RLS_data_2024_clean%>%
+  group_by(site_code, site_name, latitude, longitude, depth)%>%
+  summarise(shannon_index = -sum((species_total / sum(species_total)) * log(species_total / sum(species_total))),
+            simpson_index = 1 - sum((species_total / sum(species_total))^2))
+ 
+  biodiv_df$protect_status <- protect_status
+  biodiv_df$protect_status <- as.factor(protect_status)
+levels(biodiv_df$protect_status) <- c("No Protection", "Protected")
+
+biodiv_df$protect_status_park <- protect_status_park
+biodiv_df$protect_status_park <- as.factor(protect_status_park)
+levels(biodiv_df$protect_status_park) <- c("No Protection", "Protected")
+```
+
+####Confirming the calculations are correct
+```{r}
+test_shannon <- RLS_data_2024_clean%>%
+  filter(site_code == "BMSC13")%>%
+  mutate(proportions = species_total / 1403)%>%
+  group_by(site_code)%>%
+summarise(shannon = -sum(proportions * log(proportions)),
+          simpson = 1 - sum(proportions^2))
+
+##total is 1403
+
+##Got the same shannon and simpson scores so looks good
+```
+
+
+###Testing if biodiversity is different between protection levels
+
+```{r Looking at the histograms of shannon between protection levels}
+ggplot(biodiv_df, aes(x = shannon_index))+
+  geom_histogram(binwidth = 0.3)+
+  facet_wrap(~protect_status, ncol = 1)
+
+ggplot(biodiv_df, aes(x = shannon_index))+
+  geom_histogram(binwidth = 0.3)+
+  facet_wrap(~protect_status_park, ncol = 1)
+```
+
+```{r Looking at the histograms of simpsons between protection levels}
+ggplot(biodiv_df, aes(x = simpson_index))+
+  geom_histogram(binwidth = 0.1)+
+  facet_wrap(~protect_status, ncol = 1)
+
+ggplot(biodiv_df, aes(x = simpson_index))+
+  geom_histogram(binwidth = 0.1)+
+  facet_wrap(~protect_status_park, ncol = 1)
+```
+
+```{r Making Subsets for testing normality}
+protected_sites <- subset(biodiv_df, protect_status == "Protected")
+non_protected_sites <- subset(biodiv_df, protect_status == "No Protection")
+
+shapiro.test(protected_sites$shannon_index)
+shapiro.test(non_protected_sites$shannon_index)
+#Both are normal
+
+shapiro.test(protected_sites$simpson_index)
+shapiro.test(non_protected_sites$simpson_index)
+
+#non-protected is not normal
+
+
+protected_sites_park <- subset(biodiv_df, protect_status_park == "Protected")
+non_protected_sites_park <- subset(biodiv_df, protect_status_park == "No Protection")
+
+shapiro.test(protected_sites_park$shannon_index)
+shapiro.test(non_protected_sites_park$shannon_index)
+
+#Both are normal
+
+shapiro.test(protected_sites_park$simpson_index)
+shapiro.test(non_protected_sites_park$simpson_index)
+
+#Non-protected are not normal
+
+```
+
+```{r Checking for equal variances}
+leveneTest(shannon_index ~ protect_status, biodiv_df)
+
+leveneTest(shannon_index ~ protect_status_park, biodiv_df)
+
+leveneTest(simpson_index ~ protect_status, biodiv_df)
+
+leveneTest(simpson_index ~ protect_status_park, biodiv_df)
+
+##All tests show equal variance
+```
+
+Assumptions of ANOVA met so we can compare with an ANOVA
+
+```{r Running an ANOVA of shannon between protection status}
+protection_biodiv_mod <- lm(shannon_index ~ protect_status, data = biodiv_df)
+
+anova(protection_biodiv_mod)
+```
+It appears that protection has no effect on the biodiversity of the sites
+
+```{r Running an Anova of shannon between proteciton status with all sites in park protected}
+protection_biodiv_park_mod <- lm(shannon_index ~ protect_status_park, data = biodiv_df)
+
+anova(protection_biodiv_park_mod)
+```
+
+```{r Running a Wilcoxon test on simpsons}
+wilcox.test(simpson_index ~ protect_status, data = biodiv_df, alternative = "two.sided")
+
+#running on the park protected sites grouping
+wilcox.test(simpson_index ~ protect_status_park, data = biodiv_df, alternative = "two.sided")
+```
+No significant differences observed
+
+```{r Plotting boxplots to visualize shannon}
+ggplot(biodiv_df, aes(y = shannon_index, x = protect_status))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+
+ggplot(biodiv_df, aes(y = shannon_index, x = protect_status_park))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+```
+
+```{r Plotting boxplots to visualize simpson}
+ggplot(biodiv_df, aes(y = simpson_index, x = protect_status))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+
+ggplot(biodiv_df, aes(y = simpson_index, x = protect_status_park))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
 ```
 
 
