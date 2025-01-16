@@ -3937,3 +3937,13 @@ urch_sn_ratio_mod_2024 <- urch_sn_ratio_mod_2024%>%
 write_csv(urch_sn_ratio_mod_2024,
           here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
 ```
+
+
+```{r Writing a csv that is final and not to be edited unless necessary}
+#This is like a backup incase the environment is deleted again and I accidentally
+#Edit the other one
+
+write_csv(urch_sn_ratio_mod_2024,
+          here("./03_clean_data/backup_urch_sn_ratio_mod_data.csv"))
+```
+
