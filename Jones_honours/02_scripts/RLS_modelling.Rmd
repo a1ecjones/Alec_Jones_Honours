@@ -805,7 +805,7 @@ plot(total_mod_re_region2_resids)
 ```{r Total model with no spatial autocorrelation}
 total_mod_2km <- gam(urch_sn_ratio ~ s(sst_scale) + 
                    s(norm_openness_scale) +
-                   dominant_score + 
+                  # dominant_score + 
                    s(mean_rec_boat_counts_2km_scale)+
                    s(mean_app_fishing_hours_scale),
                data = env_mod_data,
@@ -843,6 +843,14 @@ lw_2km <- nb2listw(nb_2km, style = "W", zero.policy = TRUE)
 
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_2km, lw_2km)
+
+
+###testing with inverse distance matrix to ensure that the Moran's I value is accurate
+dist_matrix_total_mod_2km <- as.matrix(dist(extracted_coords_for_auto_test_projected_2km))
+inverse_dist_matrix_total_mod_2km <- 1 / (dist_matrix_total_mod_2km + 0.001)
+diag(inverse_dist_matrix_total_mod_2km) <- 0
+lw_2km_inverse <- mat2listw(inverse_dist_matrix_total_mod_2km, style = "W")
+moran.test(residuals_total_mod_2km, lw_2km_inverse)
 ```
 
 
@@ -888,7 +896,7 @@ concurvity(total_mod_2km_no_extra, full = FALSE)
 ```{r Total model with no spatial autocorrelation}
 total_mod_1km <- gam(urch_sn_ratio ~ s(sst_scale) + 
                    s(norm_openness_scale) +
-                   dominant_score + 
+                  #dominant_score + 
                    s(mean_rec_boat_counts_1km_scale)+
                    s(mean_app_fishing_hours_scale),
                data = env_mod_data,
@@ -968,7 +976,7 @@ concurvity(total_mod_1km_no_extra, full = FALSE)
 ```{r Total model with no spatial autocorrelation}
 total_mod_1.5km <- gam(urch_sn_ratio ~ s(sst_scale) + 
                    s(norm_openness_scale) +
-                   dominant_score + 
+                  # dominant_score + 
                    s(mean_rec_boat_counts_1.5km_scale)+
                    s(mean_app_fishing_hours_scale),
                data = env_mod_data,
@@ -1032,8 +1040,8 @@ coords_for_auto_test_1.5km <- st_as_sf(env_mod_data, coords = c("longitude", "la
 coords_for_auto_test_projected_1.5km <- st_transform(coords_for_auto_test_1.5km, crs = 3857)
 extracted_coords_for_auto_test_projected_1.5km <- st_coordinates(coords_for_auto_test_projected_1.5km)
 
-nb_1.5km <- dnearneigh(extracted_coords_for_auto_test_projected_1km, d1 = 0, d2 = 10)
-lw_1.5km <- nb2listw(nb, style = "W", zero.policy = TRUE)
+nb_1.5km <- dnearneigh(extracted_coords_for_auto_test_projected_1.5km, d1 = 0, d2 = 10)
+lw_1.5km <- nb2listw(nb_1.5km, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
@@ -1082,7 +1090,7 @@ total_mod_re_region1_2km <- gam(urch_sn_ratio ~ s(sst_scale)+
                data = env_mod_data,
                family = gaussian(link = "identity"),
                method = 'REML',
-               select = FALSE)
+               select = TRUE)
 
 set.seed(13)
 gam.check(total_mod_re_region1_2km)
@@ -1125,7 +1133,7 @@ total_mod_re_region1_1.5km <- gam(urch_sn_ratio ~ s(sst_scale)+
                data = env_mod_data,
                family = gaussian(link = "identity"),
                method = 'REML',
-               select = FALSE)
+               select = TRUE)
 
 set.seed(13)
 gam.check(total_mod_re_region1_1.5km)
@@ -1163,7 +1171,7 @@ total_mod_re_region1_1km <- gam(urch_sn_ratio ~ s(sst_scale)+
                data = env_mod_data,
                family = gaussian(link = "identity"),
                method = 'REML',
-               select = FALSE)
+               select = TRUE)
 
 set.seed(13)
 gam.check(total_mod_re_region1_1km)
@@ -1190,6 +1198,48 @@ moran.test(residuals_total_mod_1km_region_1, lw_1km_region_1)
 ```
 
 
+
+####gamm, temp scaled, norm openness scaled, dom, rec boats 1.5km scaled, mean gfw scaled, corExp, TRUE
+
+```{r}
+total_mod_1.5km_corExp <- gamm(urch_sn_ratio ~ s(sst_scale) + 
+                                 s(norm_openness_scale) +
+                                 dominant_score+
+                                 s(mean_rec_boat_counts_1.5km_scale)+
+                                 s(mean_app_fishing_hours_scale), 
+                        data = env_mod_data_shifted,
+                       family = gaussian(link = "identity"),
+                       correlation = corExp(form = ~ longitude_proj + latitude_proj, nugget = FALSE), 
+                       method = 'REML',
+                       select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_1.5km_corExp$gam)
+#shapiro.test(total_mod_1km$residuals)
+##slightly not normal
+
+plot(total_mod_1.5km_corExp$gam)
+summary(total_mod_1.5km_corExp$lme)
+summary(total_mod_1.5km_corExp$gam)
+#as_flextable(total_mod_1km)
+```
+
+```{r Testing residuals for spatial correlation}
+#extract residuals from model
+residuals_total_mod_1.5km_corExp <- residuals(total_mod_1.5km_corExp$gam, "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_1.5km_corExp <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_1.5km_corExp <- st_transform(coords_for_auto_test_1.5km_corExp, crs = 3857)
+extracted_coords_for_auto_test_projected_1.5km_corExp <- st_coordinates(coords_for_auto_test_projected_1.5km_corExp)
+
+nb_1.5km_corExp <- dnearneigh(extracted_coords_for_auto_test_projected_1.5km_corExp, d1 = 0, d2 = 15)
+lw_1.5_corExp <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1.5km_corExp, lw_1.5_corExp)
+```
 
 ####Plots of EVs between regions
 
@@ -1700,7 +1750,6 @@ plot(total_mod_snail_counts_resids)
 ```{r Total model with no spatial autocorrelation}
 total_mod_2km_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
                    s(norm_openness_scale) +
-                    
                    s(mean_rec_boat_counts_2km_scale)+
                    s(mean_app_fishing_hours_scale),
                data = env_mod_data_avg,
@@ -1719,6 +1768,33 @@ summary(total_mod_2km_avg)
 
 Some outliers observed, retesting with outliers removed to see if 
 they have a large impact on the model
+
+```{r Testing residuals for spatial correlation}
+#extract residuals from model
+residuals_total_mod_2km_avg <- residuals(total_mod_2km_avg, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_2km_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_2km_avg <- st_transform(coords_for_auto_test_2km_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_2km_avg <- st_coordinates(coords_for_auto_test_projected_2km_avg)
+
+nb_2km_avg <- dnearneigh(extracted_coords_for_auto_test_projected_2km_avg, d1 = 0, d2 = 1000)
+lw_2km_avg <- nb2listw(nb_2km_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_2km_avg, lw_2km_avg)
+
+
+###testing with inverse distance matrix to ensure that the Moran's I value is accurate
+dist_matrix_total_mod_2km_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_2km_avg))
+inverse_dist_matrix_total_mod_2km_avg <- 1 / (dist_matrix_total_mod_2km_avg + 0.001)
+diag(inverse_dist_matrix_total_mod_2km_avg) <- 0
+lw_2km_inverse_avg <- mat2listw(inverse_dist_matrix_total_mod_2km_avg, style = "W")
+moran.test(residuals_total_mod_2km_avg, lw_2km_inverse_avg)
+```
+
+
 
 ```{r Rerunning the model without the outliers}
 total_mod_2km_avg_no_outliers <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
@@ -1744,4 +1820,41 @@ Trend remains largely the same without the outliers and openness is still
 significant so can do analysis with them in so we are not cherry-picking the
 sites.
 
+####gam, temp scaled, norm openness scaled, dom, rec boats 1.5km scaled, mean gfw scaled, TRUE, AVG
 
+```{r Total model with no spatial autocorrelation}
+total_mod_1.5km_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_1.5km_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_1.5km_avg)
+#shapiro.test(total_mod_2km$residuals)
+##normal
+
+plot(total_mod_1.5km_avg)
+summary(total_mod_1.5km_avg)
+```
+
+
+```{r Testing residuals for spatial correlation}
+#extract residuals from model
+residuals_total_mod_1.5km_avg <- residuals(total_mod_1.5km_avg, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_1.5km_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_1.5km_avg <- st_transform(coords_for_auto_test_1.5km_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_1.5km_avg <- st_coordinates(coords_for_auto_test_projected_1.5km_avg)
+
+nb_1.5km_avg <- dnearneigh(extracted_coords_for_auto_test_projected_1.5km_avg, d1 = 0, d2 = 1000)
+lw_1.5km_avg <- nb2listw(nb_1.5km_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1.5km_avg, lw_1.5km_avg)
+```

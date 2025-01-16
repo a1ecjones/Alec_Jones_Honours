@@ -2777,19 +2777,26 @@ inbetween_biomass_df <- total_urch_size_dist%>%
 test_size_df <- env_mod_data%>%
   left_join(max_biomass_df, by = c("site_code", "depth"))
 
-ggplot(test_size_df, aes(x = Urchins, y = total_site_biomass_per_m2))+
+ggplot(test_size_df, aes(x = Urchins, y = total_site_biomass_per_m2, colour = region1))+
+  geom_point(data = test_size_df, aes(colour = region1))+
+  theme.figure()
+  #geom_smooth(method = "lm")+
+#   stat_cor(method = "pearson", label.x = 200, label.y = 2)
+```
+```{r}
+ggplot(test_size_df, aes(x = total_site_biomass_per_m2, y = Turban_Snails, colour = region1))+
   geom_point()+
-  theme.figure()+
-  geom_smooth(method = "gam")+
-   stat_cor(method = "pearson", label.x = 200, label.y = 2)
-?geom_smooth()
+  theme.figure()
+    #geom_smooth(method = "lm")+
+   #stat_cor(method = "pearson", label.x = 200, label.y = 2)
 ```
 
 ```{r}
 ggplot(test_size_df[-c(10, 24, 25), ], aes(x = Turban_Snails, y = Urchins))+
   geom_point()+
   theme.figure()+
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm")+
+   stat_cor(method = "pearson", label.x = 200, label.y = 2)
 ```
 
 
