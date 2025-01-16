@@ -2336,7 +2336,35 @@ rec_boats_fishing2021 <- DFO_data_clean_2021%>%
 ```{r Combining the three years of data by row}
 rec_boats_fishing_total <- rbind(rec_boats_fishing2021, rec_boats_fishing2022, rec_boats_fishing2023)
 ```
+####Making a dataframe with counts of all human boats
+need to make all null = 0. then sum rec boats fishing, running, and commercial boats
+at each point and make a new column with just boats present
 
+```{r Making a dataframe of all boat counts}
+total_boats_2023 <- DFO_data_clean_2023%>%
+  mutate(total_boats = (rec_boats_fishing + rec_boats_running + comm_vessel_fishing))%>%
+  filter(total_boats != 0)%>%
+    select(c(UniqueID, `Filename/FlightID`, Year, Month, Day, Date, `Critical Period`, `Day Type`, `Creel Subarea`, GMA, PFMA, 
+           `Pin ID`, Longitude, Latitude, rec_boats_fishing, rec_boats_running, comm_vessel_fishing,
+           total_boats))
+
+total_boats_2022 <- DFO_data_clean_2022%>%
+  mutate(total_boats = (rec_boats_fishing + rec_boats_running + comm_vessel_fishing))%>%
+  filter(total_boats != 0)%>%
+    select(c(UniqueID, `Filename/FlightID`, Year, Month, Day, Date, `Critical Period`, `Day Type`, `Creel Subarea`, GMA, PFMA, 
+           `Pin ID`, Longitude, Latitude, rec_boats_fishing, rec_boats_running, comm_vessel_fishing,
+           total_boats))
+
+total_boats_2021 <- DFO_data_clean_2021%>%
+  mutate(total_boats = (rec_boats_fishing + rec_boats_running + comm_vessel_fishing))%>%
+  filter(total_boats != 0)%>%
+    select(c(UniqueID, `Filename/FlightID`, Year, Month, Day, Date, `Critical Period`, `Day Type`, `Creel Subarea`, GMA, PFMA, 
+           `Pin ID`, Longitude, Latitude, rec_boats_fishing, rec_boats_running, comm_vessel_fishing,
+           total_boats))
+
+#combining all three into one df
+total_boats_total <- rbind(total_boats_2021, total_boats_2022, total_boats_2023)
+```
 
 ###Making a preliminary plot
 
@@ -2506,62 +2534,30 @@ dev.off()
   facet_wrap(~ Year, nrow = 3)
 ```
 
-###Making the points into a raster file for comparison with the global fishing watch data
-```{r Making the points into shape data and summing based on the }
-rec_fishing_boat_points <- st_as_sf(rec_boats_fishing2023, coords = c("Longitude", "Latitude"), crs = 4326)
-
-rec_fishing_boat_points_gfw_combined <- st_join(gfw_data_clean_poly, rec_fishing_boat_points) %>%
-  group_by(cell_id) %>%        # Replace with an ID column in shapefile, if present
-  summarize(total_boats = sum(rec_boats_fishing, na.rm = TRUE))
-```
-
-###Using the grid method to counts rec boats
-```{r Trying the second method to make the shape file of rec fishing points}
-bbox <- st_bbox(gfw_data_clean_poly)
-
-grid <- st_make_grid(st_as_sfc(bbox), cellsize = 0.01, square = TRUE)  # 0.01 for 0.01° by 0.01° cells
-grid_sf <- st_sf(geometry = grid)
-
-# Join original shapefile with the new grid
-original_data_grid <- st_join(grid_sf, gfw_data_clean_poly, left = TRUE)
-
-# Join fishing boat data with the new grid
-fishing_data_grid <- st_join(grid_sf, rec_fishing_boat_points, left = TRUE)
-
-rec_data_aggregated_data <- fishing_data_grid %>%
-  group_by(geometry) %>%
-  summarize(total_boats = sum(rec_boats_fishing, na.rm = TRUE))
-
-rec_data_aggregated_data$total_boats[is.na(aggregated_data$total_boats)] <- 0
-
-rec_filtered_data <- rec_data_aggregated_data %>%
-  filter(total_boats > 0)
-```
-
-
-
-```{r Plotting the rec fishing boats as a grid}
-(rec_fishing_grid_2023 <- ggplot(rec_filtered_data) +
-  geom_sf(aes(fill = total_boats)) +
-  scale_fill_gradient(low = "blue", high = "red")+
-   geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+```{r Making a plot of the points, fig.height=10, fig.width=10}
+(total_boats_plot <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min, long_max),
-           ylim = c(lat_min, lat_max))+
-    geom_point(data = urch_sn_ratio_mod_2024, aes(x = longitude, y = latitude))+
+           ylim = c(lat_min, lat_max)) +
+    geom_point(data = total_boats_total,
+             mapping = aes(x = Longitude, y = Latitude, color = total_boats),
+             size = 1,) +
+    scale_colour_gradient(low = "blue", high = "red")+
+   geom_point(data = rec_boats_fishing2023,
+             mapping = aes(x = Longitude, y = Latitude, colour = total_boats), 
+              shape = 1, size = 1, colour = "black") +
+ # scale_colour_viridis_c() +
+  labs(x = " \nLongitude", y = "Latitude\n ", colour = "Total # of\nBoats Observed") +
   theme.figure() +
-  labs(fill = "# of Recreational \nBoats Fishing",
-       x = "Longitude",
-       y = "Latitude",
-       title = "2023"))
-```
-do a geometric mean
-```{r Saving the rec fishing boat plot, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/explanatory/rec_fishing_grid_2023.png"), width = 7.5, height = 5.5, 
-    units = "in", pointsize = 15, res = 600)
-
-rec_fishing_grid_2023
-
-dev.off()
+  scale_x_continuous(breaks = c(-125.4, -125.3, -125.2, -125.1, -125.0)) +
+  scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br"))+
+  facet_wrap(~ Year, nrow = 3)
 ```
 
 
@@ -2781,10 +2777,12 @@ inbetween_biomass_df <- total_urch_size_dist%>%
 test_size_df <- env_mod_data%>%
   left_join(max_biomass_df, by = c("site_code", "depth"))
 
-ggplot(test_size_df, aes(x = Turban_Snails, y = total_site_biomass_per_m2))+
+ggplot(test_size_df, aes(x = Urchins, y = total_site_biomass_per_m2))+
   geom_point()+
   theme.figure()+
-  geom_smooth(method = "lm")
+  geom_smooth(method = "gam")+
+   stat_cor(method = "pearson", label.x = 200, label.y = 2)
+?geom_smooth()
 ```
 
 ```{r}
@@ -2805,6 +2803,8 @@ protect_status <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
 
 protect_status_park <- c(0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
+
+kelp_forest <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 ```
 
 
@@ -2821,16 +2821,22 @@ levels(biodiv_df$protect_status) <- c("No Protection", "Protected")
 biodiv_df$protect_status_park <- protect_status_park
 biodiv_df$protect_status_park <- as.factor(protect_status_park)
 levels(biodiv_df$protect_status_park) <- c("No Protection", "Protected")
+
+biodiv_df$kelp_forest <- kelp_forest
+biodiv_df$kelp_forest <- as.factor(kelp_forest)
+levels(biodiv_df$kelp_forest) <- c("No Kelp", "Kelp Forest")
 ```
 
 ####Confirming the calculations are correct
 ```{r}
 test_shannon <- RLS_data_2024_clean%>%
   filter(site_code == "BMSC13")%>%
-  mutate(proportions = species_total / 1403)%>%
+  mutate(proportions = species_total / 1403,
+         int_shan = (proportions * log(proportions)))
   group_by(site_code)%>%
 summarise(shannon = -sum(proportions * log(proportions)),
-          simpson = 1 - sum(proportions^2))
+          simpson = 1 - sum(proportions^2),
+          shan_check = -sum(int_shan))
 
 ##total is 1403
 
@@ -2848,6 +2854,10 @@ ggplot(biodiv_df, aes(x = shannon_index))+
 ggplot(biodiv_df, aes(x = shannon_index))+
   geom_histogram(binwidth = 0.3)+
   facet_wrap(~protect_status_park, ncol = 1)
+
+ggplot(biodiv_df, aes(x = shannon_index))+
+  geom_histogram(binwidth = 0.3)+
+  facet_wrap(~kelp_forest, ncol = 1)
 ```
 
 ```{r Looking at the histograms of simpsons between protection levels}
@@ -2858,7 +2868,14 @@ ggplot(biodiv_df, aes(x = simpson_index))+
 ggplot(biodiv_df, aes(x = simpson_index))+
   geom_histogram(binwidth = 0.1)+
   facet_wrap(~protect_status_park, ncol = 1)
+
+ggplot(biodiv_df, aes(x = simpson_index))+
+  geom_histogram(binwidth = 0.1)+
+  facet_wrap(~kelp_forest, ncol = 1)
 ```
+
+
+
 
 ```{r Making Subsets for testing normality}
 protected_sites <- subset(biodiv_df, protect_status == "Protected")
@@ -2866,6 +2883,7 @@ non_protected_sites <- subset(biodiv_df, protect_status == "No Protection")
 
 shapiro.test(protected_sites$shannon_index)
 shapiro.test(non_protected_sites$shannon_index)
+
 #Both are normal
 
 shapiro.test(protected_sites$simpson_index)
@@ -2887,6 +2905,18 @@ shapiro.test(non_protected_sites_park$simpson_index)
 
 #Non-protected are not normal
 
+kelp_forest_sites <- subset(biodiv_df, kelp_forest == "Kelp Forest")
+non_kelp_sites <- subset(biodiv_df, kelp_forest == "No Kelp")
+
+shapiro.test(kelp_forest_sites$shannon_index)
+shapiro.test(non_kelp_sites$shannon_index)
+
+#Both are normal
+
+shapiro.test(kelp_forest_sites$simpson_index)
+shapiro.test(non_kelp_sites$simpson_index)
+
+# Both are normal
 ```
 
 ```{r Checking for equal variances}
@@ -2894,9 +2924,13 @@ leveneTest(shannon_index ~ protect_status, biodiv_df)
 
 leveneTest(shannon_index ~ protect_status_park, biodiv_df)
 
+leveneTest(shannon_index ~ kelp_forest, biodiv_df)
+
 leveneTest(simpson_index ~ protect_status, biodiv_df)
 
 leveneTest(simpson_index ~ protect_status_park, biodiv_df)
+
+leveneTest(simpson_index ~ kelp_forest, biodiv_df)
 
 ##All tests show equal variance
 ```
@@ -2924,6 +2958,15 @@ wilcox.test(simpson_index ~ protect_status_park, data = biodiv_df, alternative =
 ```
 No significant differences observed
 
+```{r Running ANOVAS for shannon and simpson between kelp forest and non kelp forest}
+kelp_forest_biodiv_shann_mod <- lm(shannon_index ~ kelp_forest, data = biodiv_df)
+anova(kelp_forest_biodiv_shann_mod)
+
+kelp_forest_biodiv_simp_mod <- lm(simpson_index ~ kelp_forest, data = biodiv_df)
+anova(kelp_forest_biodiv_simp_mod)
+```
+
+
 ```{r Plotting boxplots to visualize shannon}
 ggplot(biodiv_df, aes(y = shannon_index, x = protect_status))+
   geom_boxplot()+
@@ -2931,6 +2974,11 @@ ggplot(biodiv_df, aes(y = shannon_index, x = protect_status))+
   theme.figure()
 
 ggplot(biodiv_df, aes(y = shannon_index, x = protect_status_park))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+
+ggplot(biodiv_df, aes(y = shannon_index, x = kelp_forest))+
   geom_boxplot()+
   geom_jitter()+
   theme.figure()
@@ -2943,6 +2991,11 @@ ggplot(biodiv_df, aes(y = simpson_index, x = protect_status))+
   theme.figure()
 
 ggplot(biodiv_df, aes(y = simpson_index, x = protect_status_park))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+
+ggplot(biodiv_df, aes(y = simpson_index, x = kelp_forest))+
   geom_boxplot()+
   geom_jitter()+
   theme.figure()
@@ -3005,10 +3058,13 @@ urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, pq_data_final, by = c("s
 ```{r Summing the fetch vectors for each site then dividing by the largest openness value}
 openness <- fetch_df_2024_openness_long%>%
   group_by(site_code, latitude, longitude)%>%
-  summarise(openness = sum(fetch))%>%
-  mutate(norm_openness = openness / max_openness)
-
+  summarise(openness = sum(fetch))
+  
 max_openness <- max(openness$openness)
+
+openness <- openness%>%
+mutate(norm_openness = openness / max_openness)
+
 ```
 
 ```{r Adding the normalized openness values to the modelling data frame}
@@ -3233,6 +3289,8 @@ urch_sn_ratio_fishing_mod_2024 <- urch_sn_ratio_fishing_mod_2024%>%
   select(-c(app_fishing_hrs_21_22, app_fishing_hrs_22_23, app_fishing_hrs_23_24))
 ```
 
+#####Plotting the mean apparent fishing hours
+
 ```{r Plotting the mean apparent fishing hour data on the map}
 (app_fishing_hours_21_22_plot <- ggplot(gfw_data_clean_poly_21_22) +
   geom_sf(aes(fill = app_fish_hrs)) +
@@ -3345,7 +3403,7 @@ dev.off()
 
 #####Adding using a polygon around each site
 
-```{r Creating a circular radius around each site then seeing which fishing points fall within}
+```{r Creating a circular radius around each site}
 site_locations <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = 4326)
 site_locations_proj_m <- st_transform(site_locations, crs = 3857)
 site_locations_radius_500m <- st_buffer(x = site_locations_proj_m, dist = 500) #Can change the radius with dist to be based on effects of rec fishers
@@ -3357,6 +3415,7 @@ site_locations_radius_2km <- st_buffer(x = site_locations_proj_m, dist = 2000)
 
 
 ```{r redoing the method with only unique sites}
+##Doing it this way most recent time Jan. 15
 site_locations_u <- site_locations%>%
   distinct(site_code, geometry)
 
@@ -3369,10 +3428,36 @@ site_locations_radius_2km <- st_buffer(x = site_locations_u_proj_m, dist = 2000)
 ```
 
 
+```{r Running a test of total boat counts at 1.5km}
+total_boats_total_points <- st_as_sf(total_boats_total, coords = c("Longitude", "Latitude"), crs = 4326)
+total_boats_total_points <- st_transform(total_boats_total_points, crs = 3857)
+
+total_boats_total_radius_1.5km <- st_intersection(site_locations_radius_1.5km, total_boats_total_points)
+
+total_boats_total_radius_1.5km_summed <- total_boats_total_radius_1.5km%>%
+  group_by(site_code, Year)%>%
+  summarise(yearly_total_boats = sum(total_boats))
+
+total_boats_all_sites_years_1.5km <- expand.grid(
+  site_code = unique(total_boats_total_radius_1.5km$site_code),
+  Year = unique(rec_fishing_boat_total_radius_1.5km$Year))
+
+total_boats_total_radius_1.5km_complete <- total_boats_all_sites_years_1.5km %>%
+  left_join(total_boats_total_radius_1.5km_summed, by = c("site_code", "Year")) %>%
+  mutate(yearly_total_boats = replace_na(yearly_total_boats, 0))
+
+total_boats_total_radius_1.5km_final <- total_boats_total_radius_1.5km_complete%>%
+  group_by(site_code)%>%
+  summarise(mean_total_boat_counts_1.5km = mean(yearly_total_boats))
+```
+
+
 ```{r Finding the overlapping points for each site}
+#making a data frame with the coordinates of all the recreational fishing boats
 rec_boats_fishing_total_points <- st_as_sf(rec_boats_fishing_total, coords = c("Longitude", "Latitude"), crs = 4326)
 rec_boats_fishing_total_points <- st_transform(rec_boats_fishing_total_points, crs = 3857)
 
+#merging the rec boats coordinates with the circles around the sites
 rec_fishing_boat_total_radius_500m <- st_intersection(site_locations_radius_500m, rec_boats_fishing_total_points)
 
 ##rec_fishing_boat_total_radius_500m <- rec_fishing_boat_total_radius_500m%>%
@@ -3410,6 +3495,10 @@ rec_fishing_boat_total_radius_2km <- st_intersection(site_locations_radius_2km, 
 ```
 
 ```{r Making the dataframe with boat counts summed for each year at each site}
+#Here I took the data frames with the counts and points of boats within the
+#radii of the sites and I summed the number of boats counted around a site
+#within each year. For example, I added all of the boats around Eagle bay in
+#2021
 rec_fishing_boat_total_radius_500m_summed <- rec_fishing_boat_total_radius_500m%>%
   group_by(site_code, Year)%>%
   summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
@@ -3432,6 +3521,11 @@ rec_fishing_boat_total_radius_2km_summed <- rec_fishing_boat_total_radius_2km%>%
 ```
 
 ```{r Making a total dataframe for each so that years with no boats have a 0 counts}
+#For some sites that had boats counted in one particular year at a given radius
+#did not have counts in all years. This step made data frames with a list of all
+#of the sites that had at least some counts at the given radius in one of the 
+#years and then made a row for each of the three years for that site.
+
 all_sites_years_500m <- expand.grid(
   site_code = unique(rec_fishing_boat_total_radius_500m$site_code),
   Year = unique(rec_fishing_boat_total_radius_500m$Year))
@@ -3454,6 +3548,11 @@ all_sites_years_2km <- expand.grid(
 ```
 
 ```{r Merging the all years df with the rec boat count sums}
+#This step merged the summed boat counts at each site with the dataframe that
+# had all three years listed so that there was a row with 0 for the sites which
+#did not have any counts in a particular year. This was necessary for making the
+#average calculation accurate.
+
 rec_fishing_boat_total_radius_500m_complete <- all_sites_years_500m %>%
   left_join(rec_fishing_boat_total_radius_500m_summed, by = c("site_code", "Year")) %>%
   mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
@@ -3479,6 +3578,9 @@ rec_fishing_boat_total_radius_2km_complete <- all_sites_years_2km %>%
 
 
 ```{r Making the final dataframe with the average boat counts per year for each site}
+#This was the final step to average the recreational boat counts at each site 
+#across the three years of data
+
 rec_fishing_boat_total_radius_500m_final <- rec_fishing_boat_total_radius_500m_complete%>%
   group_by(site_code)%>%
   summarise(mean_rec_boat_counts_500m = mean(yearly_rec_boats_fishing))
@@ -3501,19 +3603,19 @@ rec_fishing_boat_total_radius_2km_final <- rec_fishing_boat_total_radius_2km_com
 ```
 
 ######Adding the averaged counts to the main modelling dataset
-```{r}
+```{r Adding the avg counts to the fishing modelling dataset}
+#This step added each of the data frames with the average rec boat counts
+# to the fishing modelling dataset. The resulting dataset has a column for avg 
+#rec boat counts for each radius distance
 urch_sn_ratio_fishing_mod_2024 <- urch_sn_ratio_fishing_mod_2024%>%
   left_join(rec_fishing_boat_total_radius_500m_final, by = c("site_code"))%>%
  left_join(rec_fishing_boat_total_radius_1km_final, by = c("site_code"))%>%
  left_join(rec_fishing_boat_total_radius_1.5km_final, by = c("site_code"))%>%
    left_join(rec_fishing_boat_total_radius_750m_final, by = c("site_code"))%>%
    left_join(rec_fishing_boat_total_radius_2km_final, by = c("site_code"))%>%
+  ###Adding in the test total boat counts
+  left_join(total_boats_total_radius_1.5km_final, by = c("site_code"))%>%
   replace(is.na(.), 0)
-  
-  
- # select(c(site_code, site_name, latitude, longitude, survey_date, depth, visibility,
-  #         hour, Urchins, Turban_Snails, urch_sn_ratio, mean_app_fishing_hours,
-   #        mean_rec_boat_counts_500m, mean_rec_boat_counts_1km, mean_rec_boat_counts_1.5km))
 ```
 
 
@@ -3816,34 +3918,6 @@ png(filename = here("./04_plots/report_figures/rec_boats/rec_boats_2km_2023_map.
 rec_boats_2km_2023_plot
 
 dev.off()
-```
-
-#####Adding based on the grid (old method)
-```{r Combining the sites with the rec fishing data to get the # of boats for each site}
-#not using this method anymore
-
-urch_sn_ratio_sf_rec <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = st_crs(rec_filtered_data))
-urch_sn_ratio_sf_rec <- st_transform(urch_sn_ratio_sf_rec, crs = st_crs(rec_filtered_data))
-
-combined_urch_sn_rec <- st_join(urch_sn_ratio_sf_rec, rec_filtered_data)
-combined_urch_sn_rec$total_boats <- combined_urch_sn_rec$total_boats%>%
-  replace(is.na(.), 0)
-```
-
-```{r Extracting the rec fishing boats from the combined df and adding it to the modelling data}
-urch_sn_ratio_fishing_mod_2024 <- cbind(urch_sn_ratio_fishing_mod_2024, combined_urch_sn_rec$total_boats)
-
-colnames(urch_sn_ratio_fishing_mod_2024)[13] <- "total_rec_boats"
-```
-
-```{r}
-ggplot(urch_sn_ratio_fishing_mod_2024, aes(x = app_fishing_hrs, y = urch_sn_ratio))+
-  geom_point()
-```
-
-```{r}
-ggplot(urch_sn_ratio_fishing_mod_2024, aes(x = log(total_rec_boats + 1), y = urch_sn_ratio))+
-  geom_point()
 ```
 
 

@@ -23,6 +23,7 @@ library(car)
 library(MuMIn)
 library(lme4)
 library(flextable)
+library(spdep)
 ```
 
 
@@ -49,6 +50,8 @@ env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
 env_mod_data$site_code <- as.factor(env_mod_data$site_code)
 env_mod_data$Urchins_scale <- scale(env_mod_data$Urchins)
 env_mod_data$Turban_Snails_scale <- scale(env_mod_data$Turban_Snails)
+#Testing out the total boat counts
+env_mod_data$total_boat_counts_1.5km_scale <- scale(env_mod_data$mean_total_boat_counts_1.5km)
 levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
 
 regions <- c("region1", "region2", "region3", "region4")
@@ -235,10 +238,17 @@ ggplot(env_mod_data, aes(x = sst, y = urch_sn_ratio, colour = region1))+
 ```
 
 ```{r ratio against substrate type}
-ggplot(env_mod_data, aes(x = mean_rec_boat_counts_2km, y = urch_sn_ratio, colour = region1))+
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1.5km, y = urch_sn_ratio, colour = region1))+
   geom_point()+
   theme.figure()
 ```
+
+```{r}
+ggplot(env_mod_data, aes(x = mean_total_boat_counts_1.5km, y = urch_sn_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
 
 ```{r}
 ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = urch_sn_ratio))+
@@ -818,6 +828,24 @@ total_mod_2km_resids <- simulateResiduals(total_mod_2km)
 plot(total_mod_2km_resids)
 ```
 
+```{r Testing residuals for spatial correlation}
+#extract residuals from model
+residuals_total_mod_2km <- residuals(total_mod_2km, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_2km <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_2km <- st_transform(coords_for_auto_test_2km, crs = 3857)
+extracted_coords_for_auto_test_projected_2km <- st_coordinates(coords_for_auto_test_projected_2km)
+
+nb_2km <- dnearneigh(extracted_coords_for_auto_test_projected_2km, d1 = 0, d2 = 10)
+lw_2km <- nb2listw(nb_2km, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_2km, lw_2km)
+```
+
+
 ```{r Testing concurvity}
 concurvity(total_mod_2km, full = FALSE)
 ```
@@ -887,6 +915,23 @@ plot(total_mod_1km_resids)
 concurvity(total_mod_1km, full = FALSE)
 ```
 
+```{r Testing residuals for spatial correlation}
+#extract residuals from model
+residuals_total_mod_1km <- residuals(total_mod_1km, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_1km <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_1km <- st_transform(coords_for_auto_test_1km, crs = 3857)
+extracted_coords_for_auto_test_projected_1km <- st_coordinates(coords_for_auto_test_projected_1km)
+
+nb_1km <- dnearneigh(extracted_coords_for_auto_test_projected_1km, d1 = 0, d2 = 10)
+lw_1km <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1km, lw_1km)
+```
+
 #####gam, subset of total 1km without stuff that has no impact
 
 ```{r}
@@ -941,6 +986,29 @@ summary(total_mod_1.5km)
 #as_flextable(total_mod_1.5km)
 ```
 
+
+```{r Total model with no spatial autocorrelation}
+total_mod_1.5km_total_boats <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   dominant_score + 
+                   s(total_boat_counts_1.5km_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+
+set.seed(13)
+gam.check(total_mod_1.5km_total_boats)
+shapiro.test(total_mod_1.5km_total_boats$residuals)
+##slightly not normal
+
+plot(total_mod_1.5km_total_boats, residuals = TRUE)
+summary(total_mod_1.5km_total_boats)
+#as_flextable(total_mod_1.5km)
+```
+
+
 ```{r DHARMa for model fit}
 total_mod_1.5km_resids <- simulateResiduals(total_mod_1.5km)
 plot(total_mod_1.5km_resids)
@@ -953,6 +1021,23 @@ total_mod_1.5km_data_with_resids <- cbind(env_mod_data, total_mod_1.5km$residual
 
 ```{r Testing concurvity}
 concurvity(total_mod_1.5km, full = FALSE)
+```
+
+```{r Testing residuals for spatial correlation}
+#extract residuals from model
+residuals_total_mod_1.5km <- residuals(total_mod_1.5km, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_1.5km <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_1.5km <- st_transform(coords_for_auto_test_1.5km, crs = 3857)
+extracted_coords_for_auto_test_projected_1.5km <- st_coordinates(coords_for_auto_test_projected_1.5km)
+
+nb_1.5km <- dnearneigh(extracted_coords_for_auto_test_projected_1km, d1 = 0, d2 = 10)
+lw_1.5km <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1.5km, lw_1.5km)
 ```
 
 #####gam, subset of total 1.5km without stuff that has no impact
@@ -1006,11 +1091,135 @@ plot(total_mod_re_region1_2km)
 summary(total_mod_re_region1_2km)
 ```
 
+```{r Testing residuals for spatial correlation}
+#extract residuals from model
+residuals_total_mod_2km_region_1 <- residuals(total_mod_re_region1_2km, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_2km_region_1 <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_2km_region_1 <- st_transform(coords_for_auto_test_2km_region_1, crs = 3857)
+extracted_coords_for_auto_test_projected_2km_region_1 <- st_coordinates(coords_for_auto_test_projected_2km_region_1)
+
+nb_2km_region_1 <- dnearneigh(extracted_coords_for_auto_test_projected_2km_region_1, d1 = 0, d2 = 10)
+lw_2km_region_1 <- nb2listw(nb_2km_region_1, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_2km_region_1, lw_2km_region_1)
+```
 
 ```{r DHARMa for model fit}
 total_mod_re_region1_2km_resids <- simulateResiduals(total_mod_re_region1_2km)
 plot(total_mod_re_region1_2km_resids)
 ```
+
+####gam, temp scaled, norm openness scaled, dom, rec boats 1.5km scaled, mean gfw scaled, re of region M1, TRUE
+
+```{r Total model with random effect of region 1}
+total_mod_re_region1_1.5km <- gam(urch_sn_ratio ~ s(sst_scale)+
+                   s(norm_openness_scale) +
+                     dominant_score+
+                   s(mean_rec_boat_counts_1.5km_scale)+
+                     s(mean_app_fishing_hours_scale)+
+                     s(region1, bs = "re"),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = FALSE)
+
+set.seed(13)
+gam.check(total_mod_re_region1_1.5km)
+
+plot(total_mod_re_region1_1.5km)
+summary(total_mod_re_region1_1.5km)
+```
+
+```{r Testing residuals for spatial correlation}
+#extract residuals from model
+residuals_total_mod_1.5km_region_1 <- residuals(total_mod_re_region1_1.5km, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_1.5km_region_1 <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_1.5km_region_1 <- st_transform(coords_for_auto_test_1.5km_region_1, crs = 3857)
+extracted_coords_for_auto_test_projected_1.5km_region_1 <- st_coordinates(coords_for_auto_test_projected_1.5km_region_1)
+
+nb_1.5km_region_1 <- dnearneigh(extracted_coords_for_auto_test_projected_1.5km_region_1, d1 = 0, d2 = 10)
+lw_1.5km_region_1 <- nb2listw(nb_1.5km_region_1, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1.5km_region_1, lw_1.5km_region_1)
+```
+
+####gam, temp scaled, norm openness scaled, dom, rec boats 1km scaled, mean gfw scaled, re of region M1, TRUE
+
+```{r Total model with random effect of region 1}
+total_mod_re_region1_1km <- gam(urch_sn_ratio ~ s(sst_scale)+
+                   s(norm_openness_scale) +
+                     dominant_score+
+                   s(mean_rec_boat_counts_1km_scale)+
+                     s(mean_app_fishing_hours_scale)+
+                     s(region1, bs = "re"),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = FALSE)
+
+set.seed(13)
+gam.check(total_mod_re_region1_1km)
+
+plot(total_mod_re_region1_1km)
+summary(total_mod_re_region1_1km)
+```
+
+```{r Testing residuals for spatial correlation}
+#extract residuals from model
+residuals_total_mod_1km_region_1 <- residuals(total_mod_re_region1_1km, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_1km_region_1 <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_1km_region_1 <- st_transform(coords_for_auto_test_1km_region_1, crs = 3857)
+extracted_coords_for_auto_test_projected_1km_region_1 <- st_coordinates(coords_for_auto_test_projected_1km_region_1)
+
+nb_1km_region_1 <- dnearneigh(extracted_coords_for_auto_test_projected_1km_region_1, d1 = 0, d2 = 10)
+lw_1km_region_1 <- nb2listw(nb_1km_region_1, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1km_region_1, lw_1km_region_1)
+```
+
+
+
+####Plots of EVs between regions
+
+```{r Boxplot of the mean rec fishing between regions}
+ggplot(env_mod_data, aes(x = region1, y = mean_rec_boat_counts_1km))+
+  geom_boxplot()+
+  theme.figure()
+
+ggplot(env_mod_data, aes(x = region1, y = mean_rec_boat_counts_1.5km))+
+  geom_boxplot()+
+  theme.figure()
+
+ggplot(env_mod_data, aes(x = region1, y = mean_rec_boat_counts_2km))+
+  geom_boxplot()+
+  theme.figure()
+```
+
+```{r Boxplot of mean apparent fishing hours between regions }
+ggplot(env_mod_data, aes(x = region1, y = mean_app_fishing_hours))+
+  geom_boxplot()+
+  theme.figure()
+```
+
+```{r Boxplot of normalized openness between regions }
+ggplot(env_mod_data, aes(x = region1, y = norm_openness))+
+  geom_boxplot()+
+  theme.figure()
+```
+
+
 ####gam, temp scaled, norm openness scaled, dom, rec boats 500m scaled, mean gfw scaled, re of region M1, TRUE
 
 ```{r Total model with random effect of region 1}
@@ -1404,6 +1613,17 @@ snail_counts_evs_figure
 dev.off()
 ```
 
+
+
+###Snail count histogram
+
+```{r Histogram of snail counts}
+ggplot(env_mod_data, aes(x = Turban_Snails))+
+  geom_histogram(binwidth = 75)+
+  theme.figure()
+```
+
+The snail counts show a Poisson or 
 
 ###gam, temp scaled, openness scaled, dom substrate
 

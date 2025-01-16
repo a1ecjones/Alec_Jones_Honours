@@ -559,3 +559,92 @@ arrange(AIC)%>%
   mutate(delta_AIC = AIC - AIC[1])
 ```
 
+
+###Making the points into a raster file for comparison with the global fishing watch data
+```{r Making the points into shape data and summing based on the }
+rec_fishing_boat_points <- st_as_sf(rec_boats_fishing2023, coords = c("Longitude", "Latitude"), crs = 4326)
+
+rec_fishing_boat_points_gfw_combined <- st_join(gfw_data_clean_poly, rec_fishing_boat_points) %>%
+  group_by(cell_id) %>%        # Replace with an ID column in shapefile, if present
+  summarize(total_boats = sum(rec_boats_fishing, na.rm = TRUE))
+```
+
+###Using the grid method to counts rec boats
+```{r Trying the second method to make the shape file of rec fishing points}
+bbox <- st_bbox(gfw_data_clean_poly)
+
+grid <- st_make_grid(st_as_sfc(bbox), cellsize = 0.01, square = TRUE)  # 0.01 for 0.01° by 0.01° cells
+grid_sf <- st_sf(geometry = grid)
+
+# Join original shapefile with the new grid
+original_data_grid <- st_join(grid_sf, gfw_data_clean_poly, left = TRUE)
+
+# Join fishing boat data with the new grid
+fishing_data_grid <- st_join(grid_sf, rec_fishing_boat_points, left = TRUE)
+
+rec_data_aggregated_data <- fishing_data_grid %>%
+  group_by(geometry) %>%
+  summarize(total_boats = sum(rec_boats_fishing, na.rm = TRUE))
+
+rec_data_aggregated_data$total_boats[is.na(aggregated_data$total_boats)] <- 0
+
+rec_filtered_data <- rec_data_aggregated_data %>%
+  filter(total_boats > 0)
+```
+
+
+
+```{r Plotting the rec fishing boats as a grid}
+(rec_fishing_grid_2023 <- ggplot(rec_filtered_data) +
+  geom_sf(aes(fill = total_boats)) +
+  scale_fill_gradient(low = "blue", high = "red")+
+   geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+    geom_point(data = urch_sn_ratio_mod_2024, aes(x = longitude, y = latitude))+
+  theme.figure() +
+  labs(fill = "# of Recreational \nBoats Fishing",
+       x = "Longitude",
+       y = "Latitude",
+       title = "2023"))
+```
+
+```{r Saving the rec fishing boat plot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/explanatory/rec_fishing_grid_2023.png"), width = 7.5, height = 5.5, 
+    units = "in", pointsize = 15, res = 600)
+
+rec_fishing_grid_2023
+
+dev.off()
+```
+
+
+
+#####Adding based on the grid (old method)
+```{r Combining the sites with the rec fishing data to get the # of boats for each site}
+#not using this method anymore
+
+urch_sn_ratio_sf_rec <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = st_crs(rec_filtered_data))
+urch_sn_ratio_sf_rec <- st_transform(urch_sn_ratio_sf_rec, crs = st_crs(rec_filtered_data))
+
+combined_urch_sn_rec <- st_join(urch_sn_ratio_sf_rec, rec_filtered_data)
+combined_urch_sn_rec$total_boats <- combined_urch_sn_rec$total_boats%>%
+  replace(is.na(.), 0)
+```
+
+```{r Extracting the rec fishing boats from the combined df and adding it to the modelling data}
+urch_sn_ratio_fishing_mod_2024 <- cbind(urch_sn_ratio_fishing_mod_2024, combined_urch_sn_rec$total_boats)
+
+colnames(urch_sn_ratio_fishing_mod_2024)[13] <- "total_rec_boats"
+```
+
+```{r}
+ggplot(urch_sn_ratio_fishing_mod_2024, aes(x = app_fishing_hrs, y = urch_sn_ratio))+
+  geom_point()
+```
+
+```{r}
+ggplot(urch_sn_ratio_fishing_mod_2024, aes(x = log(total_rec_boats + 1), y = urch_sn_ratio))+
+  geom_point()
+```
+
