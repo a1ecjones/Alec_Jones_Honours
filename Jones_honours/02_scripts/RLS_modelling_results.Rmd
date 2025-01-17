@@ -1,0 +1,485 @@
+---
+title: "RLS_modelling_results"
+author: "Alec"
+date: "2025-01-17"
+output: 
+  html_document:
+   toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+library(mgcv)
+library(DHARMa)
+library(mgcViz)
+library(ggeffects)
+library(gratia)
+library(geoR)
+library(geosphere)
+library(gstat)
+library(sf)
+library(car)
+library(MuMIn)
+library(lme4)
+library(flextable)
+library(spdep)
+```
+
+# Modelling of red sea urchins, red turban snails, and their ratio in Barkley Sound
+
+## Loading in the data and other setup
+
+For using the data I have downloaded clean data from my preliminary explorations
+that contains all of the exlanantory and response variables that I would like to
+use. I have also made a separate dataset where I have averaged the values for 
+urchin, snail counts etc. for transects occurring at the same sites. I have also 
+made a theme for all subsequent figures
+
+```{r Loading in the data, echo=FALSE}
+env_mod_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
+```
+
+```{r Scaling the explanatory variables and converting substrate type to factor, include=FALSE}
+env_mod_data$sst_scale <- scale(env_mod_data$sst)
+env_mod_data$openness_scale <- scale(env_mod_data$openness)
+env_mod_data$norm_openness_scale <- scale(env_mod_data$norm_openness)
+env_mod_data$mean_app_fishing_hours_scale <- scale(env_mod_data$mean_app_fishing_hours)
+env_mod_data$mean_rec_boat_counts_500m_scale <- scale(env_mod_data$mean_rec_boat_counts_500m)
+env_mod_data$mean_rec_boat_counts_1km_scale <- scale(env_mod_data$mean_rec_boat_counts_1km)
+env_mod_data$mean_rec_boat_counts_1.5km_scale <- scale(env_mod_data$mean_rec_boat_counts_1.5km)
+env_mod_data$mean_rec_boat_counts_750m_scale <- scale(env_mod_data$mean_rec_boat_counts_750m)
+env_mod_data$mean_rec_boat_counts_2km_scale <- scale(env_mod_data$mean_rec_boat_counts_2km)
+env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
+env_mod_data$site_code <- as.factor(env_mod_data$site_code)
+env_mod_data$Urchins_scale <- scale(env_mod_data$Urchins)
+env_mod_data$Turban_Snails_scale <- scale(env_mod_data$Turban_Snails)
+#Testing out the total boat counts
+env_mod_data$total_boat_counts_1.5km_scale <- scale(env_mod_data$mean_total_boat_counts_1.5km)
+levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
+
+regions <- c("region1", "region2", "region3", "region4")
+env_mod_data[regions] <- lapply(env_mod_data[regions], factor)
+```
+
+
+```{r Creating a dataset with averaged values for urchin/snail counts, and urch sn ratio, include=FALSE}
+env_mod_data_avg <- env_mod_data%>%
+  group_by(site_code, site_name, latitude, longitude, sst,
+           openness, norm_openness, region1, region2, region3, region4, 
+           mean_app_fishing_hours, mean_rec_boat_counts_500m, mean_rec_boat_counts_1km, 
+           mean_rec_boat_counts_1.5km, mean_rec_boat_counts_750m, mean_rec_boat_counts_2km,
+           sst_scale, openness_scale, norm_openness_scale, mean_app_fishing_hours_scale,
+           mean_rec_boat_counts_500m_scale, mean_rec_boat_counts_1km_scale, 
+           mean_rec_boat_counts_1.5km_scale, mean_rec_boat_counts_750m_scale,
+           mean_rec_boat_counts_2km_scale)%>%
+  summarise(urchins_avg = mean(Urchins),
+            snails_avg = mean(Turban_Snails),
+            urch_sn_ratio_avg = mean(urch_sn_ratio),
+            depth_avg = mean(depth))
+```
+
+
+```{r Making theme for all subsequent figures, echo=FALSE}
+theme.figure <- function (){
+  theme_bw(base_size = 12) +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    #axis.line = element_line(colour = "black"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12, face = "plain"),
+    legend.text = element_text(size = 10, face = "plain"),
+    legend.title = element_text(size = 14, face = "bold")) 
+}
+
+```
+
+## Modelling the log urchin to snail ratio
+
+### Plotting the EVs against urchin to snail ratio
+
+```{r ratio against substrate score, echo=FALSE}
+ggplot(env_mod_data, aes(x = dominant_score, y = urch_sn_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against openness,echo=FALSE}
+ggplot(env_mod_data, aes(x = norm_openness, y = urch_sn_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against sst, echo=FALSE}
+ggplot(env_mod_data, aes(x = sst, y = urch_sn_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against mean rec boat counts 1.5km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1.5km, y = urch_sn_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against mean rec boat counts 1km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1km, y = urch_sn_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against mean rec boat counts 2km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_2km, y = urch_sn_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against mean apparent fishing hours, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = urch_sn_ratio))+
+  geom_point()+
+  theme.figure()
+```
+
+### Building GAMs to test the effects on the Urchin to snail ratio
+
+#### Model with 1 km recreational boats
+
+```{r Total 1km model with no spatial autocorrelation term}
+total_mod_1km <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_1km_scale),
+                 #  s(mean_app_fishing_hours_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 1km model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1km)
+
+plot(total_mod_1km)
+summary(total_mod_1km)
+```
+
+##### Testing the residuals for autocorrelation
+
+```{r Testing 1km residuals for spatial correlation, echo=FALSE}
+#extract residuals from model
+residuals_total_mod_1km <- residuals(total_mod_1km, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1km, lw)
+```
+
+It appears that the residuals are autocorrelated. Will need to address this.
+
+##### Testing the model for concurvity
+
+```{r Testing 1km concurvity, echo=FALSE}
+concurvity(total_mod_1km, full = FALSE)
+```
+
+Some of the variables appear to have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots. May need to get
+rid of the mean apparent fishing hours however. Since the concurvity was very
+high.
+
+
+
+#### Model with 1.5 km recreational boats
+
+```{r Total 1.5km model with no spatial autocorrelation term}
+total_mod_1.5km <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_1.5km_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 1.5 km model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1.5km)
+
+plot(total_mod_1.5km, residuals = TRUE)
+summary(total_mod_1.5km)
+```
+
+##### Testing the residuals for autocorrelation
+
+```{r Testing 1.5km residuals for spatial correlation, echo=FALSE}
+#extract residuals from model
+residuals_total_mod_1.5km <- residuals(total_mod_1.5km, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1.5km, lw)
+```
+
+It appears that the residuals are autocorrelated. Will need to address this.
+
+##### Testing the model for concurvity
+
+```{r Testing 1.5km concurvity, echo=FALSE}
+concurvity(total_mod_1.5km, full = FALSE)
+```
+
+Some of the variables appear to have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots. May need to get
+rid of the mean apparent fishing hours however. Since the concurvity was very
+high.
+
+#### Model with 2 km recreational boats
+
+```{r Total 2km model with no spatial autocorrelation}
+total_mod_2km <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_2km_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 2 km model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_2km)
+
+
+plot(total_mod_2km)
+summary(total_mod_2km)
+```
+
+##### Testing the residuals for autocorrelation
+
+```{r Testing 2km residuals for spatial correlation, echo=FALSE}
+#extract residuals from model
+residuals_total_mod_2km <- residuals(total_mod_2km, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10) 
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_2km, lw)
+```
+
+It appears that the residuals are autocorrelated. Will need to address this.
+
+##### Testing the model for concurvity
+
+```{r Testing 2km concurvity, echo=FALSE}
+concurvity(total_mod_2km, full = FALSE)
+```
+
+Some of the variables appear to have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots. May need to get
+rid of the mean apparent fishing hours however. Since the concurvity was very
+high.
+
+### Building GAMs with averaged points to test the effects on the urchin to snail ratio
+
+The idea of averaging the transects at the same sites is to account for the 
+spatial autocorrelation.
+
+#### Model with 1km recreational boats and avg transects
+
+```{r Total 1km avg model with no spatial autocorrelation}
+total_mod_1km_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_1km_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 1km avg model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1km_avg)
+
+plot(total_mod_1km_avg)
+summary(total_mod_1km_avg)
+```
+
+##### Testing the residuals for autocorrelation
+
+```{r Testing 1km avg residuals for spatial correlation, echo=FALSE}
+#extract residuals from model
+residuals_total_mod_1km_avg <- residuals(total_mod_1km_avg, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1km_avg, lw_avg)
+```
+
+No evidence of autocorrelation of the residuals.
+
+##### Testing the model for concurvity
+
+```{r Testing 1km avg concurvity, echo=FALSE}
+concurvity(total_mod_1km_avg, full = FALSE)
+```
+
+Some of the variables appear to have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots. May need to get
+rid of the mean apparent fishing hours however. Since the concurvity was very
+high.
+
+#### Model with 1.5km recreational boats and avg transects
+
+```{r Total 1.5km avg model with no spatial autocorrelation}
+total_mod_1.5km_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_1.5km_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 1.5 km avg model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1.5km_avg)
+#shapiro.test(total_mod_2km$residuals)
+##normal
+
+plot(total_mod_1.5km_avg)
+summary(total_mod_1.5km_avg)
+```
+
+##### Testing the residuals for autocorrelation
+
+```{r Testing 1.5km avg residuals for spatial correlation, echo=FALSE}
+#extract residuals from model
+residuals_total_mod_1.5km_avg <- residuals(total_mod_1.5km_avg, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1.5km_avg, lw_avg)
+```
+
+No evidence of autocorrelation of the residuals.
+
+##### Testing the model for concurvity
+
+```{r Testing 1.5km avg concurvity, echo=FALSE}
+concurvity(total_mod_1.5km_avg, full = FALSE)
+```
+
+Some of the variables appear to have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots. May need to get
+rid of the mean apparent fishing hours however. Since the concurvity was very
+high.
+
+#### Model with 2km recreational boats and avg transects
+
+```{r Total 2km avg model with no spatial autocorrelation}
+total_mod_2km_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_2km_scale)+
+                   s(mean_app_fishing_hours_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 2 km avg model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_2km_avg)
+
+plot(total_mod_2km_avg)
+summary(total_mod_2km_avg)
+```
+
+##### Testing the residuals for autocorrelation
+
+```{r Testing 2km avg residuals for spatial correlation, echo=FALSE}
+#extract residuals from model
+residuals_total_mod_2km_avg <- residuals(total_mod_2km_avg, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_2km_avg, lw_avg)
+```
+
+No evidence of autocorrelation of the residuals.
+
+##### Testing the model for concurvity
+
+```{r Testing 2km avg concurvity, echo=FALSE}
+concurvity(total_mod_2km_avg, full = FALSE)
+```
+
+Some of the variables appear to have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots. May need to get
+rid of the mean apparent fishing hours however. Since the concurvity was very
+high.
