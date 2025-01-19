@@ -6,7 +6,7 @@ output:
   html_document:
    toc: true
 ---
-
+   <script src="hideOutput.js"></script> 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -158,6 +158,7 @@ total_mod_1km <- gam(urch_sn_ratio ~ s(sst_scale) +
                select = TRUE)
 ```
 
+<div class="fold o"> 
 ```{r 1km model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1km)
@@ -165,9 +166,9 @@ gam.check(total_mod_1km)
 plot(total_mod_1km)
 summary(total_mod_1km)
 ```
-
+</div>
 ##### Testing the residuals for autocorrelation
-
+<div class="fold o"> 
 ```{r Testing 1km residuals for spatial correlation, echo=FALSE}
 #extract residuals from model
 residuals_total_mod_1km <- residuals(total_mod_1km, type = "pearson")
@@ -186,16 +187,15 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_1km, lw)
 ```
-
+</div>
 It appears that the residuals are autocorrelated. Will need to address this.
 
 ##### Testing the model for concurvity
-
- 
+<div class="fold o"> 
 ```{r Testing 1km concurvity, echo=FALSE}
 concurvity(total_mod_1km, full = FALSE)
 ```
-
+</div>
 Some of the variables appear to have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. May need to get
 rid of the mean apparent fishing hours however. Since the concurvity was very
@@ -216,6 +216,7 @@ total_mod_1.5km <- gam(urch_sn_ratio ~ s(sst_scale) +
                select = TRUE)
 ```
 
+<div class="fold o"> 
 ```{r 1.5 km model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1.5km)
@@ -223,9 +224,9 @@ gam.check(total_mod_1.5km)
 plot(total_mod_1.5km, residuals = TRUE)
 summary(total_mod_1.5km)
 ```
-
+</div>
 ##### Testing the residuals for autocorrelation
-
+<div class="fold o"> 
 ```{r Testing 1.5km residuals for spatial correlation, echo=FALSE}
 #extract residuals from model
 residuals_total_mod_1.5km <- residuals(total_mod_1.5km, type = "pearson")
@@ -244,15 +245,15 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_1.5km, lw)
 ```
-
+</div>
 It appears that the residuals are autocorrelated. Will need to address this.
 
 ##### Testing the model for concurvity
-
+<div class="fold o"> 
 ```{r Testing 1.5km concurvity, echo=FALSE}
 concurvity(total_mod_1.5km, full = FALSE)
 ```
-
+</div>
 Some of the variables appear to have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. May need to get
 rid of the mean apparent fishing hours however. Since the concurvity was very
@@ -271,6 +272,7 @@ total_mod_2km <- gam(urch_sn_ratio ~ s(sst_scale) +
                select = TRUE)
 ```
 
+<div class="fold o"> 
 ```{r 2 km model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_2km)
@@ -279,9 +281,9 @@ gam.check(total_mod_2km)
 plot(total_mod_2km)
 summary(total_mod_2km)
 ```
-
+</div>
 ##### Testing the residuals for autocorrelation
-
+<div class="fold o">
 ```{r Testing 2km residuals for spatial correlation, echo=FALSE}
 #extract residuals from model
 residuals_total_mod_2km <- residuals(total_mod_2km, type = "pearson")
@@ -300,15 +302,15 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_2km, lw)
 ```
-
+</div>
 It appears that the residuals are autocorrelated. Will need to address this.
 
 ##### Testing the model for concurvity
-
+<div class="fold o"> 
 ```{r Testing 2km concurvity, echo=FALSE}
 concurvity(total_mod_2km, full = FALSE)
 ```
-
+</div>
 Some of the variables appear to have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. May need to get
 rid of the mean apparent fishing hours however. Since the concurvity was very
@@ -332,6 +334,7 @@ total_mod_1km_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
+<div class="fold o"> 
 ```{r 1km avg model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1km_avg)
@@ -339,9 +342,10 @@ gam.check(total_mod_1km_avg)
 plot(total_mod_1km_avg)
 summary(total_mod_1km_avg)
 ```
+</div>
 
 ##### Testing the residuals for autocorrelation
-
+<div class="fold o"> 
 ```{r Testing 1km avg residuals for spatial correlation, echo=FALSE}
 #extract residuals from model
 residuals_total_mod_1km_avg <- residuals(total_mod_1km_avg, type = "pearson")
@@ -360,14 +364,15 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_1km_avg, lw_avg)
 ```
-
+</div>  
 No evidence of autocorrelation of the residuals.
 
 ##### Testing the model for concurvity
-
+<div class="fold o"> 
 ```{r Testing 1km avg concurvity, echo=FALSE}
 concurvity(total_mod_1km_avg, full = FALSE)
 ```
+</div>  
 
 Some of the variables appear to have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. May need to get
@@ -387,6 +392,7 @@ total_mod_1.5km_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
+<div class="fold o"> 
 ```{r 1.5 km avg model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1.5km_avg)
@@ -396,9 +402,10 @@ gam.check(total_mod_1.5km_avg)
 plot(total_mod_1.5km_avg)
 summary(total_mod_1.5km_avg)
 ```
+</div>
 
 ##### Testing the residuals for autocorrelation
-
+<div class="fold o"> 
 ```{r Testing 1.5km avg residuals for spatial correlation, echo=FALSE}
 #extract residuals from model
 residuals_total_mod_1.5km_avg <- residuals(total_mod_1.5km_avg, type = "pearson")
@@ -417,15 +424,15 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_1.5km_avg, lw_avg)
 ```
-
+</div>
 No evidence of autocorrelation of the residuals.
 
 ##### Testing the model for concurvity
-
+<div class="fold o"> 
 ```{r Testing 1.5km avg concurvity, echo=FALSE}
 concurvity(total_mod_1.5km_avg, full = FALSE)
 ```
-
+</div>
 Some of the variables appear to have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. May need to get
 rid of the mean apparent fishing hours however. Since the concurvity was very
@@ -444,6 +451,7 @@ total_mod_2km_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
+<div class="fold o"> 
 ```{r 2 km avg model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_2km_avg)
@@ -451,9 +459,10 @@ gam.check(total_mod_2km_avg)
 plot(total_mod_2km_avg)
 summary(total_mod_2km_avg)
 ```
+</div>
 
 ##### Testing the residuals for autocorrelation
-
+<div class="fold o"> 
 ```{r Testing 2km avg residuals for spatial correlation, echo=FALSE}
 #extract residuals from model
 residuals_total_mod_2km_avg <- residuals(total_mod_2km_avg, type = "pearson")
@@ -472,15 +481,15 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_2km_avg, lw_avg)
 ```
-
+</div>
 No evidence of autocorrelation of the residuals.
 
 ##### Testing the model for concurvity
-
+<div class="fold o"> 
 ```{r Testing 2km avg concurvity, echo=FALSE}
 concurvity(total_mod_2km_avg, full = FALSE)
 ```
-
+</div>
 Some of the variables appear to have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. May need to get
 rid of the mean apparent fishing hours however. Since the concurvity was very
@@ -504,6 +513,7 @@ total_mod_1km_no_app_hours <- gam(urch_sn_ratio ~ s(sst_scale) +
                select = TRUE)
 ```
 
+<div class="fold o"> 
 ```{r 1km no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1km_no_app_hours)
@@ -511,9 +521,10 @@ gam.check(total_mod_1km_no_app_hours)
 plot(total_mod_1km_no_app_hours)
 summary(total_mod_1km_no_app_hours)
 ```
+</div>
 
 ##### Testing the residuals for autocorrelation
-
+<div class="fold o"> 
 ```{r Testing 1km no app hours residuals for spatial correlation, echo=FALSE}
 #extract residuals from model
 residuals_total_mod_1km_no_app_hours <- residuals(total_mod_1km_no_app_hours, type = "pearson")
@@ -532,16 +543,15 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_1km_no_app_hours, lw)
 ```
-
+</div>
 It appears that the residuals are autocorrelated. Will need to address this.
 
 ##### Testing the model for concurvity
-
- 
+<div class="fold o"> 
 ```{r Testing 1km no app hours concurvity, echo=FALSE}
 concurvity(total_mod_1km_no_app_hours, full = FALSE)
 ```
-
+</div>
 
 Some of the variables appear to still have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. 
@@ -560,6 +570,7 @@ total_mod_1.5km_no_app_hours <- gam(urch_sn_ratio ~ s(sst_scale) +
                select = TRUE)
 ```
 
+<div class="fold o"> 
 ```{r 1.5 km no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1.5km_no_app_hours)
@@ -567,9 +578,10 @@ gam.check(total_mod_1.5km_no_app_hours)
 plot(total_mod_1.5km_no_app_hours, residuals = TRUE)
 summary(total_mod_1.5km_no_app_hours)
 ```
+</div>
 
 ##### Testing the residuals for autocorrelation
-
+<div class="fold o"> 
 ```{r Testing 1.5km no app hours residuals for spatial correlation, echo=FALSE}
 #extract residuals from model
 residuals_total_mod_1.5km_no_app_hours <- residuals(total_mod_1.5km_no_app_hours, type = "pearson")
@@ -588,15 +600,15 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_1.5km_no_app_hours, lw)
 ```
-
+</div>
 It appears that the residuals are autocorrelated. Will need to address this.
 
 ##### Testing the model for concurvity
-
+<div class="fold o"> 
 ```{r Testing 1.5km no app hours concurvity, echo=FALSE}
 concurvity(total_mod_1.5km_no_app_hours, full = FALSE)
 ```
-
+</div>
 Some of the variables appear to still have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots.
 
@@ -612,6 +624,7 @@ total_mod_2km_no_app_hours <- gam(urch_sn_ratio ~ s(sst_scale) +
                select = TRUE)
 ```
 
+<div class="fold o"> 
 ```{r 2 km no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_2km_no_app_hours)
@@ -620,9 +633,10 @@ gam.check(total_mod_2km_no_app_hours)
 plot(total_mod_2km_no_app_hours)
 summary(total_mod_2km_no_app_hours)
 ```
+</div>
 
 ##### Testing the residuals for autocorrelation
-
+<div class="fold o"> 
 ```{r Testing 2km no app hours residuals for spatial correlation, echo=FALSE}
 #extract residuals from model
 residuals_total_mod_2km_no_app_hours <- residuals(total_mod_2km_no_app_hours, type = "pearson")
@@ -641,15 +655,15 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_2km_no_app_hours, lw)
 ```
-
+</div>
 It appears that the residuals are autocorrelated. Will need to address this.
 
 ##### Testing the model for concurvity
-
+<div class="fold o"> 
 ```{r Testing 2km no app hours concurvity, echo=FALSE}
 concurvity(total_mod_2km_no_app_hours, full = FALSE)
 ```
-
+</div>
 Some of the variables appear to still have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. 
 
@@ -672,6 +686,7 @@ total_mod_1km_avg_no_app_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
+<div class="fold o"> 
 ```{r 1km avg no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1km_avg_no_app_hours)
@@ -679,9 +694,9 @@ gam.check(total_mod_1km_avg_no_app_hours)
 plot(total_mod_1km_avg_no_app_hours)
 summary(total_mod_1km_avg_no_app_hours)
 ```
-
+</div>
 ##### Testing the residuals for autocorrelation
-
+<div class="fold o"> 
 ```{r Testing 1km avg no app hours residuals for spatial correlation, echo=FALSE}
 #extract residuals from model
 residuals_total_mod_1km_avg_no_app_hours <- residuals(total_mod_1km_avg_no_app_hours, type = "pearson")
@@ -700,15 +715,15 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_1km_avg_no_app_hours, lw_avg)
 ```
-
+</div>
 No evidence of autocorrelation of the residuals.
 
 ##### Testing the model for concurvity
-
+<div class="fold o"> 
 ```{r Testing 1km avg no app hours concurvity, echo=FALSE}
 concurvity(total_mod_1km_avg_no_app_hours, full = FALSE)
 ```
-
+</div>
 Some of the variables appear to still have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. 
 
@@ -724,6 +739,7 @@ total_mod_1.5km_avg_no_app_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
+<div class="fold o"> 
 ```{r 1.5 km avg no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1.5km_avg_no_app_hours)
@@ -731,9 +747,9 @@ gam.check(total_mod_1.5km_avg_no_app_hours)
 plot(total_mod_1.5km_avg_no_app_hours)
 summary(total_mod_1.5km_avg_no_app_hours)
 ```
-
+</div>
 ##### Testing the residuals for autocorrelation
-
+<div class="fold o"> 
 ```{r Testing 1.5km avg no app hours residuals for spatial correlation, echo=FALSE}
 #extract residuals from model
 residuals_total_mod_1.5km_avg_no_app_hours <- residuals(total_mod_1.5km_avg_no_app_hours, type = "pearson")
@@ -752,15 +768,15 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_1.5km_avg_no_app_hours, lw_avg)
 ```
-
+</div>
 No evidence of autocorrelation of the residuals.
 
 ##### Testing the model for concurvity
-
+<div class="fold o"> 
 ```{r Testing 1.5km avg no app hours concurvity, echo=FALSE}
 concurvity(total_mod_1.5km_avg_no_app_hours, full = FALSE)
 ```
-
+</div>
 Some of the variables appear to still have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots.
 
@@ -776,6 +792,7 @@ total_mod_2km_avg_no_app_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
+<div class="fold o"> 
 ```{r 2 km avg no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_2km_avg_no_app_hours)
@@ -783,9 +800,9 @@ gam.check(total_mod_2km_avg_no_app_hours)
 plot(total_mod_2km_avg_no_app_hours)
 summary(total_mod_2km_avg_no_app_hours)
 ```
-
+</div>
 ##### Testing the residuals for autocorrelation
-
+<div class="fold o"> 
 ```{r Testing 2km no app hours avg residuals for spatial correlation, echo=FALSE}
 #extract residuals from model
 residuals_total_mod_2km_avg_no_app_hours <- residuals(total_mod_2km_avg_no_app_hours, type = "pearson")
@@ -804,14 +821,14 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_2km_avg_no_app_hours, lw_avg)
 ```
-
+</div>
 No evidence of autocorrelation of the residuals.
 
 ##### Testing the model for concurvity
-
+<div class="fold o"> 
 ```{r Testing 2km avg no app hours concurvity, echo=FALSE}
 concurvity(total_mod_2km_avg_no_app_hours, full = FALSE)
 ```
-
+</div>
 Some of the variables appear to still have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots.
