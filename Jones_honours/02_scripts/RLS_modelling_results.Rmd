@@ -1,7 +1,7 @@
 ---
-title: "RLS_modelling_results"
+title: "RLS modelling results"
 author: "Alec"
-date: "2025-01-17"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   html_document:
    toc: true
@@ -143,7 +143,7 @@ ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = urch_sn_ratio))+
   theme.figure()
 ```
 
-### Building GAMs to test the effects on the Urchin to snail ratio
+### Building GAMs to test the effects on the Urchin to snail ratio {.tabset}
 
 #### Model with 1 km recreational boats
 
@@ -158,7 +158,7 @@ total_mod_1km <- gam(urch_sn_ratio ~ s(sst_scale) +
                select = TRUE)
 ```
 
-<div class="fold o"> 
+
 ```{r 1km model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1km)
@@ -166,10 +166,10 @@ gam.check(total_mod_1km)
 plot(total_mod_1km)
 summary(total_mod_1km)
 ```
-</div>
+
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing 1km residuals for spatial correlation, echo=FALSE}
+```{r Testing 1km residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
 residuals_total_mod_1km <- residuals(total_mod_1km, type = "pearson")
 
@@ -216,7 +216,6 @@ total_mod_1.5km <- gam(urch_sn_ratio ~ s(sst_scale) +
                select = TRUE)
 ```
 
-<div class="fold o"> 
 ```{r 1.5 km model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1.5km)
@@ -224,10 +223,10 @@ gam.check(total_mod_1.5km)
 plot(total_mod_1.5km, residuals = TRUE)
 summary(total_mod_1.5km)
 ```
-</div>
+
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing 1.5km residuals for spatial correlation, echo=FALSE}
+```{r Testing 1.5km residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
 residuals_total_mod_1.5km <- residuals(total_mod_1.5km, type = "pearson")
 
@@ -272,7 +271,6 @@ total_mod_2km <- gam(urch_sn_ratio ~ s(sst_scale) +
                select = TRUE)
 ```
 
-<div class="fold o"> 
 ```{r 2 km model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_2km)
@@ -281,10 +279,10 @@ gam.check(total_mod_2km)
 plot(total_mod_2km)
 summary(total_mod_2km)
 ```
-</div>
+
 ##### Testing the residuals for autocorrelation
 <div class="fold o">
-```{r Testing 2km residuals for spatial correlation, echo=FALSE}
+```{r Testing 2km residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
 residuals_total_mod_2km <- residuals(total_mod_2km, type = "pearson")
 
@@ -316,7 +314,7 @@ but confidence intervals seem stable for the model plots. May need to get
 rid of the mean apparent fishing hours however. Since the concurvity was very
 high.
 
-### Building GAMs with averaged points to test the effects on the urchin to snail ratio
+### Building GAMs with averaged points to test the effects on the urchin to snail ratio {.tabset}
 
 The idea of averaging the transects at the same sites is to account for the 
 spatial autocorrelation.
@@ -334,7 +332,6 @@ total_mod_1km_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
-<div class="fold o"> 
 ```{r 1km avg model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1km_avg)
@@ -342,11 +339,11 @@ gam.check(total_mod_1km_avg)
 plot(total_mod_1km_avg)
 summary(total_mod_1km_avg)
 ```
-</div>
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing 1km avg residuals for spatial correlation, echo=FALSE}
+```{r Testing 1km avg residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
 residuals_total_mod_1km_avg <- residuals(total_mod_1km_avg, type = "pearson")
 
@@ -392,7 +389,7 @@ total_mod_1.5km_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
-<div class="fold o"> 
+
 ```{r 1.5 km avg model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1.5km_avg)
@@ -402,11 +399,10 @@ gam.check(total_mod_1.5km_avg)
 plot(total_mod_1.5km_avg)
 summary(total_mod_1.5km_avg)
 ```
-</div>
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing 1.5km avg residuals for spatial correlation, echo=FALSE}
+```{r Testing 1.5km avg residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
 residuals_total_mod_1.5km_avg <- residuals(total_mod_1.5km_avg, type = "pearson")
 
@@ -451,7 +447,6 @@ total_mod_2km_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
-<div class="fold o"> 
 ```{r 2 km avg model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_2km_avg)
@@ -459,11 +454,11 @@ gam.check(total_mod_2km_avg)
 plot(total_mod_2km_avg)
 summary(total_mod_2km_avg)
 ```
-</div>
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing 2km avg residuals for spatial correlation, echo=FALSE}
+```{r Testing 2km avg residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
 residuals_total_mod_2km_avg <- residuals(total_mod_2km_avg, type = "pearson")
 
@@ -496,7 +491,7 @@ rid of the mean apparent fishing hours however. Since the concurvity was very
 high.
 
 
-### Building GAMs to test the effects on the Urchin to snail ratio (without mean apparent fishing hours)
+### Building GAMs to test the effects on the Urchin to snail ratio (without mean apparent fishing hours) {.tabset}
 
 Redoing the GAMs without the mean apparent fishing hours because the concurvity 
 is very high.
@@ -513,7 +508,6 @@ total_mod_1km_no_app_hours <- gam(urch_sn_ratio ~ s(sst_scale) +
                select = TRUE)
 ```
 
-<div class="fold o"> 
 ```{r 1km no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1km_no_app_hours)
@@ -521,11 +515,11 @@ gam.check(total_mod_1km_no_app_hours)
 plot(total_mod_1km_no_app_hours)
 summary(total_mod_1km_no_app_hours)
 ```
-</div>
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing 1km no app hours residuals for spatial correlation, echo=FALSE}
+```{r Testing 1km no app hours residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
 residuals_total_mod_1km_no_app_hours <- residuals(total_mod_1km_no_app_hours, type = "pearson")
 
@@ -570,7 +564,6 @@ total_mod_1.5km_no_app_hours <- gam(urch_sn_ratio ~ s(sst_scale) +
                select = TRUE)
 ```
 
-<div class="fold o"> 
 ```{r 1.5 km no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1.5km_no_app_hours)
@@ -578,11 +571,11 @@ gam.check(total_mod_1.5km_no_app_hours)
 plot(total_mod_1.5km_no_app_hours, residuals = TRUE)
 summary(total_mod_1.5km_no_app_hours)
 ```
-</div>
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing 1.5km no app hours residuals for spatial correlation, echo=FALSE}
+```{r Testing 1.5km no app hours residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
 residuals_total_mod_1.5km_no_app_hours <- residuals(total_mod_1.5km_no_app_hours, type = "pearson")
 
@@ -624,7 +617,6 @@ total_mod_2km_no_app_hours <- gam(urch_sn_ratio ~ s(sst_scale) +
                select = TRUE)
 ```
 
-<div class="fold o"> 
 ```{r 2 km no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_2km_no_app_hours)
@@ -633,11 +625,11 @@ gam.check(total_mod_2km_no_app_hours)
 plot(total_mod_2km_no_app_hours)
 summary(total_mod_2km_no_app_hours)
 ```
-</div>
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing 2km no app hours residuals for spatial correlation, echo=FALSE}
+```{r Testing 2km no app hours residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
 residuals_total_mod_2km_no_app_hours <- residuals(total_mod_2km_no_app_hours, type = "pearson")
 
@@ -669,7 +661,7 @@ but confidence intervals seem stable for the model plots.
 
 
 
-### Building GAMs with averaged points to test the effects on the urchin to snail ratio (without mean apparent fishing hours)
+### Building GAMs with averaged points to test the effects on the urchin to snail ratio (without mean apparent fishing hours) {.tabset}
 
 The idea of averaging the transects at the same sites is to account for the 
 spatial autocorrelation.
@@ -686,7 +678,6 @@ total_mod_1km_avg_no_app_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
-<div class="fold o"> 
 ```{r 1km avg no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1km_avg_no_app_hours)
@@ -694,10 +685,10 @@ gam.check(total_mod_1km_avg_no_app_hours)
 plot(total_mod_1km_avg_no_app_hours)
 summary(total_mod_1km_avg_no_app_hours)
 ```
-</div>
+
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing 1km avg no app hours residuals for spatial correlation, echo=FALSE}
+```{r Testing 1km avg no app hours residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
 residuals_total_mod_1km_avg_no_app_hours <- residuals(total_mod_1km_avg_no_app_hours, type = "pearson")
 
@@ -739,7 +730,7 @@ total_mod_1.5km_avg_no_app_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
-<div class="fold o"> 
+
 ```{r 1.5 km avg no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1.5km_avg_no_app_hours)
@@ -747,10 +738,10 @@ gam.check(total_mod_1.5km_avg_no_app_hours)
 plot(total_mod_1.5km_avg_no_app_hours)
 summary(total_mod_1.5km_avg_no_app_hours)
 ```
-</div>
+
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing 1.5km avg no app hours residuals for spatial correlation, echo=FALSE}
+```{r Testing 1.5km avg no app hours residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
 residuals_total_mod_1.5km_avg_no_app_hours <- residuals(total_mod_1.5km_avg_no_app_hours, type = "pearson")
 
@@ -792,7 +783,6 @@ total_mod_2km_avg_no_app_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
-<div class="fold o"> 
 ```{r 2 km avg no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_2km_avg_no_app_hours)
@@ -800,10 +790,10 @@ gam.check(total_mod_2km_avg_no_app_hours)
 plot(total_mod_2km_avg_no_app_hours)
 summary(total_mod_2km_avg_no_app_hours)
 ```
-</div>
+
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing 2km no app hours avg residuals for spatial correlation, echo=FALSE}
+```{r Testing 2km no app hours avg residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
 residuals_total_mod_2km_avg_no_app_hours <- residuals(total_mod_2km_avg_no_app_hours, type = "pearson")
 
