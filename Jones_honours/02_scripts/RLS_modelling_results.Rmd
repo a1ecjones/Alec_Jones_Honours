@@ -7,6 +7,7 @@ output:
    toc: true
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -28,7 +29,7 @@ library(flextable)
 library(spdep)
 ```
 
-# Modelling of red sea urchins, red turban snails, and their ratio in Barkley Sound
+# Modelling of red sea urchins, red turban snails, and their ratio in Barkley Sound {.tabset}
 
 ## Loading in the data and other setup
 
@@ -96,7 +97,7 @@ theme.figure <- function (){
 
 ```
 
-## Modelling the log urchin to snail ratio
+## Modelling the log urchin to snail ratio {.tabset}
 
 ### Plotting the EVs against urchin to snail ratio
 
@@ -149,8 +150,8 @@ ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = urch_sn_ratio))+
 ```{r Total 1km model with no spatial autocorrelation term}
 total_mod_1km <- gam(urch_sn_ratio ~ s(sst_scale) + 
                    s(norm_openness_scale) +
-                   s(mean_rec_boat_counts_1km_scale),
-                 #  s(mean_app_fishing_hours_scale),
+                   s(mean_rec_boat_counts_1km_scale)+
+                   s(mean_app_fishing_hours_scale),
                data = env_mod_data,
                family = gaussian(link = "identity"),
                method = 'REML',
@@ -190,6 +191,7 @@ It appears that the residuals are autocorrelated. Will need to address this.
 
 ##### Testing the model for concurvity
 
+ 
 ```{r Testing 1km concurvity, echo=FALSE}
 concurvity(total_mod_1km, full = FALSE)
 ```
@@ -483,3 +485,333 @@ Some of the variables appear to have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. May need to get
 rid of the mean apparent fishing hours however. Since the concurvity was very
 high.
+
+
+### Building GAMs to test the effects on the Urchin to snail ratio (without mean apparent fishing hours)
+
+Redoing the GAMs without the mean apparent fishing hours because the concurvity 
+is very high.
+
+#### Model with 1 km recreational boats (no mean app hours)
+
+```{r Total 1km model no app hours with no spatial autocorrelation term}
+total_mod_1km_no_app_hours <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_1km_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 1km no app hours model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1km_no_app_hours)
+
+plot(total_mod_1km_no_app_hours)
+summary(total_mod_1km_no_app_hours)
+```
+
+##### Testing the residuals for autocorrelation
+
+```{r Testing 1km no app hours residuals for spatial correlation, echo=FALSE}
+#extract residuals from model
+residuals_total_mod_1km_no_app_hours <- residuals(total_mod_1km_no_app_hours, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1km_no_app_hours, lw)
+```
+
+It appears that the residuals are autocorrelated. Will need to address this.
+
+##### Testing the model for concurvity
+
+ 
+```{r Testing 1km no app hours concurvity, echo=FALSE}
+concurvity(total_mod_1km_no_app_hours, full = FALSE)
+```
+
+
+Some of the variables appear to still have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots. 
+
+
+
+#### Model with 1.5 km recreational boats (no mean app hours)
+
+```{r Total 1.5km model no app hours with no spatial autocorrelation term}
+total_mod_1.5km_no_app_hours <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_1.5km_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 1.5 km no app hours model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1.5km_no_app_hours)
+
+plot(total_mod_1.5km_no_app_hours, residuals = TRUE)
+summary(total_mod_1.5km_no_app_hours)
+```
+
+##### Testing the residuals for autocorrelation
+
+```{r Testing 1.5km no app hours residuals for spatial correlation, echo=FALSE}
+#extract residuals from model
+residuals_total_mod_1.5km_no_app_hours <- residuals(total_mod_1.5km_no_app_hours, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1.5km_no_app_hours, lw)
+```
+
+It appears that the residuals are autocorrelated. Will need to address this.
+
+##### Testing the model for concurvity
+
+```{r Testing 1.5km no app hours concurvity, echo=FALSE}
+concurvity(total_mod_1.5km_no_app_hours, full = FALSE)
+```
+
+Some of the variables appear to still have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots.
+
+#### Model with 2 km recreational boats (no mean app hours)
+
+```{r Total 2km no app hours model with no spatial autocorrelation}
+total_mod_2km_no_app_hours <- gam(urch_sn_ratio ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_2km_scale),
+               data = env_mod_data,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 2 km no app hours model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_2km_no_app_hours)
+
+
+plot(total_mod_2km_no_app_hours)
+summary(total_mod_2km_no_app_hours)
+```
+
+##### Testing the residuals for autocorrelation
+
+```{r Testing 2km no app hours residuals for spatial correlation, echo=FALSE}
+#extract residuals from model
+residuals_total_mod_2km_no_app_hours <- residuals(total_mod_2km_no_app_hours, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10) 
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_2km_no_app_hours, lw)
+```
+
+It appears that the residuals are autocorrelated. Will need to address this.
+
+##### Testing the model for concurvity
+
+```{r Testing 2km no app hours concurvity, echo=FALSE}
+concurvity(total_mod_2km_no_app_hours, full = FALSE)
+```
+
+Some of the variables appear to still have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots. 
+
+
+
+### Building GAMs with averaged points to test the effects on the urchin to snail ratio (without mean apparent fishing hours)
+
+The idea of averaging the transects at the same sites is to account for the 
+spatial autocorrelation.
+
+#### Model with 1km recreational boats and avg transects (no app hours)
+
+```{r Total 1km avg no app hours model with no spatial autocorrelation}
+total_mod_1km_avg_no_app_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_1km_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 1km avg no app hours model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1km_avg_no_app_hours)
+
+plot(total_mod_1km_avg_no_app_hours)
+summary(total_mod_1km_avg_no_app_hours)
+```
+
+##### Testing the residuals for autocorrelation
+
+```{r Testing 1km avg no app hours residuals for spatial correlation, echo=FALSE}
+#extract residuals from model
+residuals_total_mod_1km_avg_no_app_hours <- residuals(total_mod_1km_avg_no_app_hours, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1km_avg_no_app_hours, lw_avg)
+```
+
+No evidence of autocorrelation of the residuals.
+
+##### Testing the model for concurvity
+
+```{r Testing 1km avg no app hours concurvity, echo=FALSE}
+concurvity(total_mod_1km_avg_no_app_hours, full = FALSE)
+```
+
+Some of the variables appear to still have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots. 
+
+#### Model with 1.5km recreational boats and avg transects (no app hours)
+
+```{r Total 1.5km avg no app hours model with no spatial autocorrelation}
+total_mod_1.5km_avg_no_app_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_1.5km_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 1.5 km avg no app hours model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1.5km_avg_no_app_hours)
+
+plot(total_mod_1.5km_avg_no_app_hours)
+summary(total_mod_1.5km_avg_no_app_hours)
+```
+
+##### Testing the residuals for autocorrelation
+
+```{r Testing 1.5km avg no app hours residuals for spatial correlation, echo=FALSE}
+#extract residuals from model
+residuals_total_mod_1.5km_avg_no_app_hours <- residuals(total_mod_1.5km_avg_no_app_hours, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1.5km_avg_no_app_hours, lw_avg)
+```
+
+No evidence of autocorrelation of the residuals.
+
+##### Testing the model for concurvity
+
+```{r Testing 1.5km avg no app hours concurvity, echo=FALSE}
+concurvity(total_mod_1.5km_avg_no_app_hours, full = FALSE)
+```
+
+Some of the variables appear to still have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots.
+
+#### Model with 2km recreational boats and avg transects (no mean app hours)
+
+```{r Total 2km avg no app hours model with no spatial autocorrelation}
+total_mod_2km_avg_no_app_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_rec_boat_counts_2km_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 2 km avg no app hours model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_2km_avg_no_app_hours)
+
+plot(total_mod_2km_avg_no_app_hours)
+summary(total_mod_2km_avg_no_app_hours)
+```
+
+##### Testing the residuals for autocorrelation
+
+```{r Testing 2km no app hours avg residuals for spatial correlation, echo=FALSE}
+#extract residuals from model
+residuals_total_mod_2km_avg_no_app_hours <- residuals(total_mod_2km_avg_no_app_hours, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_2km_avg_no_app_hours, lw_avg)
+```
+
+No evidence of autocorrelation of the residuals.
+
+##### Testing the model for concurvity
+
+```{r Testing 2km avg no app hours concurvity, echo=FALSE}
+concurvity(total_mod_2km_avg_no_app_hours, full = FALSE)
+```
+
+Some of the variables appear to still have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots.
