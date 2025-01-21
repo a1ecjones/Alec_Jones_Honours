@@ -3251,6 +3251,9 @@ Combining the gfw polygons with the RLS site points. Makes a column with app fis
 for each site in that year.
 
 ```{r Combining the sites with the gfw data to get the app fishing hours for each site}
+#this chunk produces three data frames that have the urch sn ratio df with a column
+# that has the apparent fishing hours for each site in that respective year
+
 urch_sn_ratio_sf <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = 4326)
 
 combined_urch_sn_GFW_21_22 <- st_join(urch_sn_ratio_sf, gfw_data_clean_poly_21_22)
@@ -3269,6 +3272,10 @@ combined_urch_sn_GFW_23_24$app_fish_hrs <- combined_urch_sn_GFW_23_24$app_fish_h
 Add the app fishing hours from each year for each site into the urch sn fishing data frame
 
 ```{r Extracting the apparent fishing hours from the combined df and adding it to the modelling data}
+#this chunk adds a column for the apparent fishing hours at each site to the overall
+#modelling data frame and changes the names of the columns to those specified in 
+#quotes
+
 urch_sn_ratio_fishing_mod_2024 <- cbind(urch_sn_ratio_fishing_mod_2024, combined_urch_sn_GFW_21_22$app_fish_hrs)
 
 colnames(urch_sn_ratio_fishing_mod_2024)[12] <- "app_fishing_hrs_21_22"
@@ -3288,6 +3295,10 @@ Replace the three years of apparent fishing hours at each site with a column for
 the mean apparent fishing hours across the three years.
 
 ```{r Combining the three columns into one average apparent fishing hours per year}
+#this chunk uses the three columns with apparent fishing hours to make a new column
+# that is the average of the three. Then it removes the three columns that just 
+#have a years apparent fishing hours.
+
 urch_sn_ratio_fishing_mod_2024$mean_app_fishing_hours <- rowMeans(urch_sn_ratio_fishing_mod_2024[, c("app_fishing_hrs_21_22",
                                                                                                      "app_fishing_hrs_22_23",
                                                                                                      "app_fishing_hrs_23_24")])

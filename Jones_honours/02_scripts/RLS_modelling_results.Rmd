@@ -162,6 +162,7 @@ total_mod_1km <- gam(urch_sn_ratio ~ s(sst_scale) +
 ```{r 1km model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1km)
+coef(total_mod_1km)
 
 plot(total_mod_1km)
 summary(total_mod_1km)
