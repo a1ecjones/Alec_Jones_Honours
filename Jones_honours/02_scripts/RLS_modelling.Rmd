@@ -1113,6 +1113,12 @@ plot(total_mod_1.5km_no_extra_resids)
 concurvity(total_mod_1.5km_no_extra, full = FALSE)
 ```
 
+
+###Total mod with no dom
+
+
+###total mod with all variables and region 1 or corExp
+
 ####gam, temp scaled, norm openness scaled, dom, rec boats 2km scaled, mean gfw scaled, re of region M1, TRUE
 
 ```{r Total model with random effect of region 1}
@@ -1276,7 +1282,7 @@ lw_1.5_corExp <- nb2listw(nb, style = "W", zero.policy = TRUE)
 moran.test(residuals_total_mod_1.5km_corExp, lw_1.5_corExp)
 ```
 
-####Plots of EVs between regions
+###Plots of EVs between regions
 
 ```{r Boxplot of the mean rec fishing between regions}
 ggplot(env_mod_data, aes(x = region1, y = mean_rec_boat_counts_1km))+
@@ -1637,8 +1643,8 @@ plot(total_mod_urchin_counts_resids)
 ###Plotting the EVs against the snail counts
 
 ```{r snails against substrate}
-(snails_dom_substrate_plot <- ggplot(env_mod_data, aes(x = dominant_score, y = Turban_Snails, colour = region1))+
-  geom_point()+
+(snails_dom_substrate_plot <- ggplot(env_mod_data, aes(x = dominant_score, y = Turban_Snails))+
+  geom_boxplot()+
   labs(x = "Dominant substrate type", y = "Turban Snail counts",
        colour = "Region")+
   theme.figure())
@@ -1652,7 +1658,7 @@ plot(total_mod_urchin_counts_resids)
   theme.figure())
 ```
 ```{r snails against openness}
-ggplot(env_mod_data, aes(x = norm_openness, y = urch_sn_ratio, colour = region1))+
+ggplot(env_mod_data, aes(x = norm_openness, y = Turban_Snails, colour = region1))+
   geom_point()+
    labs(x = "Normalized openness", y = "urch sn ratio",
        colour = "Region")+
@@ -1775,7 +1781,9 @@ total_mod_snail_counts <- gam(Turban_Snails ~ s(sst_scale)+
                              select = TRUE)
 set.seed(10)
 gam.check(total_mod_snail_counts, rep = 500)
-plot(total_mod_snail_counts)
+plot(total_mod_snail_counts, pages = 2, rug = TRUE,
+     residuals = TRUE, pch = 1, shade = TRUE,
+     shift = coef(total_mod_snail_counts)[1])
 summary(total_mod_snail_counts)
 #shapiro.test(total_mod_snail_counts$residuals)
 ```
