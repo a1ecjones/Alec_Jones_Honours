@@ -710,7 +710,7 @@ It appears that the residuals are autocorrelated. Will need to address this.
 ##### Testing the model for concurvity
 <div class="fold o"> 
 ```{r Testing 2km no app hours concurvity, echo=FALSE}
-concurvity(total_mod_2km_no_app_hours, full = FALSE)
+concurvity(total_mod_2km_no_app_hours, full = TRUE)
 ```
 </div>
 Some of the variables appear to still have high concurvity scores in the worst case,

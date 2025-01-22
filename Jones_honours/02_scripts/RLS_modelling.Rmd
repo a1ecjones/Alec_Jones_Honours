@@ -1663,7 +1663,7 @@ plot(total_mod_urchin_counts_resids)
 ```{r snails against openness}
 ggplot(env_mod_data, aes(x = norm_openness, y = Turban_Snails, colour = region1))+
   geom_point()+
-   labs(x = "Normalized openness", y = "urch sn ratio",
+   labs(x = "Normalized openness", y = "Turban snails",
        colour = "Region")+
   theme.figure()
 ```
@@ -1733,6 +1733,24 @@ ggplot(env_mod_data, aes(x = Turban_Snails))+
 
 The snail counts show a Poisson or 
 
+```{r}
+mean(env_mod_data$Turban_Snails)
+var(env_mod_data$Turban_Snails)
+
+# Table of observed frequencies
+obs_freq <- table(env_mod_data$Turban_Snails)
+# Expected frequencies based on Poisson distribution
+lambda <- mean(env_mod_data$Turban_Snails)
+exp_freq <- dpois(as.numeric(names(obs_freq)), lambda) * length(env_mod_data$Turban_Snails)
+
+# Chi-squared test
+chisq_test <- chisq.test(obs_freq, p = exp_freq, rescale.p = TRUE)
+print(chisq_test)
+
+The snail counts are likely not poisson distributed
+```
+
+
 ###gam, temp scaled, openness scaled, dom substrate
 
 ```{r Modelling the snail counts with a simple environmental model}
@@ -1774,21 +1792,22 @@ summary(total_mod_snail_counts)
 ```{r Modelling the snail counts with a total model}
 total_mod_snail_counts <- gam(Turban_Snails ~ s(sst_scale)+
                                s(norm_openness_scale)+
-                             # dominant_score+
                               s(mean_rec_boat_counts_1.5km_scale)+
                               s(mean_app_fishing_hours_scale)+
                                s(Urchins_scale, k = 5),
                              data = env_mod_data,
-                             family = poisson(link = "log"),
+                             family = negbin(link = "log"),
                              method = "REML",
                              select = TRUE)
 set.seed(10)
 gam.check(total_mod_snail_counts, rep = 500)
-plot(total_mod_snail_counts, pages = 2, rug = TRUE,
-     residuals = TRUE, pch = 1, shade = TRUE,
-     shift = coef(total_mod_snail_counts)[1])
+plot(total_mod_snail_counts, pages = 2, rug = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
 summary(total_mod_snail_counts)
 #shapiro.test(total_mod_snail_counts$residuals)
+
+
 ```
 
 ```{r}
