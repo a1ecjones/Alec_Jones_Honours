@@ -2251,9 +2251,10 @@ DFO_data_clean_2023 <- DFO_data_raw_2023%>%
                   "whale_watching", "orcas", "whales"), ~ ifelse(. == "<Null>", 0, .)),
          across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
                   "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
-                  "whale_watching", "orcas", "whales"), as.numeric))
+                  "whale_watching", "orcas", "whales"), as.numeric))%>%
   ##This code will remove the dates of the flights that had fog
-  #filter(!Date %in% c("2023-04-01", "2023-04-02"))
+  filter(!Date %in% c("2023-06-23", "2023-07-16", "2023-07-31", "2023-08-06", "2023-08-28",
+                      "2023-08-29", "2023-09-09", "2023-09-15"))
   
 ```
 
@@ -2288,9 +2289,9 @@ DFO_data_clean_2022 <- DFO_data_raw_2022%>%
                   "whale_watching", "orcas", "whales"), ~ ifelse(. == "<Null>", 0, .)),
          across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
                   "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
-                  "whale_watching", "orcas", "whales"), as.numeric))
+                  "whale_watching", "orcas", "whales"), as.numeric))%>%
    ##This code will remove the dates of the flights that had fog
-  #filter(!Date %in% c("2023-04-01", "2023-04-02"))
+  filter(!Date %in% c("2022-06-18", "2022-07-31", "2022-08-24", "2022-06-04"))
 ```
 
 ```{r Making a dataframe of only points where rec boats were fishing}
@@ -2324,9 +2325,9 @@ DFO_data_clean_2021 <- DFO_data_raw_2021%>%
                   "whale_watching", "orcas", "whales"), ~ ifelse(. == "<Null>", 0, .)),
          across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
                   "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
-                  "whale_watching", "orcas", "whales"), as.numeric))
+                  "whale_watching", "orcas", "whales"), as.numeric))%>%
    ##This code will remove the dates of the flights that had fog
-  #filter(!Date %in% c("2023-04-01", "2023-04-02"))
+  filter(!Date %in% c("2021-07-31", "2021-07-19", "2021-07-20", "2021-07-24"))
 ```
 
 ```{r Making a dataframe of only points where rec boats were fishing}
@@ -4013,7 +4014,7 @@ write_csv(urch_sn_ratio_mod_2024,
 
 
 ```{r Writing a csv that is final and not to be edited unless necessary}
-#This is like a backup incase the environment is deleted again and I accidentally
+#This is like a backup in case the environment is deleted again and I accidentally
 #Edit the other one
 
 write_csv(urch_sn_ratio_mod_2024,

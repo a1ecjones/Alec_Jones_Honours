@@ -29,6 +29,11 @@ library(flextable)
 library(spdep)
 ```
 
+<!--Jan. 22. I have updated the data with the flights with fog ommitted from the data.
+If this results in large problems the original data is available in the backup csv.
+Except for the total boats columns but if these are needed then i can just reload the 
+DFO data and not exclude the flights with fog.-->
+
 # Modelling of red sea urchins, red turban snails, and their ratio in Barkley Sound {.tabset}
 
 ## Loading in the data and other setup
@@ -227,7 +232,7 @@ total_mod_1.5km <- gam(urch_sn_ratio ~ s(sst_scale) +
 
 ```{r 1.5 km model output, echo=FALSE}
 set.seed(13)
-gam.check(total_mod_1.5km)
+gam.check(total_mod_1.5km, rep = 500)
 
 plot(total_mod_1.5km, residuals = TRUE)
 summary(total_mod_1.5km)
@@ -282,7 +287,7 @@ total_mod_2km <- gam(urch_sn_ratio ~ s(sst_scale) +
 
 ```{r 2 km model output, echo=FALSE}
 set.seed(13)
-gam.check(total_mod_2km)
+gam.check(total_mod_2km, rep = 500)
 
 
 plot(total_mod_2km)

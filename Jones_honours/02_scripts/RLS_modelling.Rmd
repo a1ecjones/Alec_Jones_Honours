@@ -26,7 +26,10 @@ library(flextable)
 library(spdep)
 ```
 
-
+Jan. 22. I have updated the data with the flights with fog ommitted from the data.
+If this results in large problems the original data is available in the backup csv.
+Except for the total boats columns but if these are needed then i can just reload the 
+DFO data and not exclude the flights with fog.
 
 
 #Modelling the environmental variables
