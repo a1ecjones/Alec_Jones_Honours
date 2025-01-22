@@ -2252,6 +2252,8 @@ DFO_data_clean_2023 <- DFO_data_raw_2023%>%
          across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
                   "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
                   "whale_watching", "orcas", "whales"), as.numeric))
+  ##This code will remove the dates of the flights that had fog
+  #filter(!Date %in% c("2023-04-01", "2023-04-02"))
   
 ```
 
@@ -2287,7 +2289,8 @@ DFO_data_clean_2022 <- DFO_data_raw_2022%>%
          across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
                   "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
                   "whale_watching", "orcas", "whales"), as.numeric))
-  
+   ##This code will remove the dates of the flights that had fog
+  #filter(!Date %in% c("2023-04-01", "2023-04-02"))
 ```
 
 ```{r Making a dataframe of only points where rec boats were fishing}
@@ -2322,7 +2325,8 @@ DFO_data_clean_2021 <- DFO_data_raw_2021%>%
          across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
                   "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
                   "whale_watching", "orcas", "whales"), as.numeric))
-  
+   ##This code will remove the dates of the flights that had fog
+  #filter(!Date %in% c("2023-04-01", "2023-04-02"))
 ```
 
 ```{r Making a dataframe of only points where rec boats were fishing}
