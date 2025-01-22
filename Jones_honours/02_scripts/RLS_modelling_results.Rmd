@@ -156,6 +156,47 @@ ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = urch_sn_ratio))+
   theme.figure()
 ```
 
+
+### Plotting the EVs against each other to look into concurvity
+
+```{r SST vs openness, echo=FALSE}
+ggplot(env_mod_data, aes(x = sst, y = norm_openness, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r SST vs mean rec fishing 1 km, echo=FALSE}
+ggplot(env_mod_data, aes(x = sst, y = mean_rec_boat_counts_1km, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r SST vs mean apparent fishing hours, echo=FALSE}
+ggplot(env_mod_data, aes(x = sst, y = mean_app_fishing_hours, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r Openness vs mean rec boats 1km, echo=FALSE}
+ggplot(env_mod_data, aes(x = norm_openness, y = mean_rec_boat_counts_1km, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r Openness vs mean apparent fishing hours, echo=FALSE}
+ggplot(env_mod_data, aes(x = norm_openness, y = mean_app_fishing_hours, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r Mean app hours vs mean rec boats 1km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_app_fishing_hours, y = mean_rec_boat_counts_1km, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+
+
 ### Building GAMs to test the effects on the Urchin to snail ratio {.tabset}
 
 #### Model with 1 km recreational boats
@@ -207,6 +248,8 @@ It appears that the residuals are autocorrelated. Will need to address this.
 ##### Testing the model for concurvity
 <div class="fold o"> 
 ```{r Testing 1km concurvity, echo=FALSE}
+concurvity(total_mod_1km, full = TRUE)
+?concurvity
 concurvity(total_mod_1km, full = FALSE)
 ```
 </div>
