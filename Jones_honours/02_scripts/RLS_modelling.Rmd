@@ -1747,7 +1747,7 @@ exp_freq <- dpois(as.numeric(names(obs_freq)), lambda) * length(env_mod_data$Tur
 chisq_test <- chisq.test(obs_freq, p = exp_freq, rescale.p = TRUE)
 print(chisq_test)
 
-The snail counts are likely not poisson distributed
+#The snail counts are likely not poisson distributed
 ```
 
 
@@ -1790,37 +1790,118 @@ summary(total_mod_snail_counts)
 ```
 
 ```{r Modelling the snail counts with a total model}
-total_mod_snail_counts <- gam(Turban_Snails ~ s(sst_scale)+
-                               s(norm_openness_scale)+
-                              s(mean_rec_boat_counts_1.5km_scale)+
-                              s(mean_app_fishing_hours_scale)+
+total_mod_snail_counts_poisson <- gam(Turban_Snails ~ s(sst_scale, k = 5)+
+                               s(norm_openness_scale, k = 5)+
+                              s(mean_rec_boat_counts_1.5km_scale, k = 5)+
+                              s(mean_app_fishing_hours_scale, k = 5) +
                                s(Urchins_scale, k = 5),
                              data = env_mod_data,
-                             family = negbin(link = "log"),
-                             method = "REML",
+                             family = poisson(link = "log"),
+                             method = "ML",
                              select = TRUE)
 set.seed(10)
-gam.check(total_mod_snail_counts, rep = 500)
-plot(total_mod_snail_counts, pages = 2, rug = TRUE)
+gam.check(total_mod_snail_counts_poisson, rep = 500)
+plot(total_mod_snail_counts_poisson, rug = TRUE)
      #residuals = TRUE, pch = 1, shade = TRUE,
      #shift = coef(total_mod_snail_counts)[1])
-summary(total_mod_snail_counts)
+summary(total_mod_snail_counts_poisson)
 #shapiro.test(total_mod_snail_counts$residuals)
 
 
+#Poisson does not seem to match the distribution well
+```
+
+```{r Checking the Poisson model for overdispersion}
+total_mod_snail_counts_poisson_resids <- simulateResiduals(total_mod_snail_counts_poisson)
+testDispersion(total_mod_snail_counts_poisson_resids)
+```
+It appears that there is high overdispersion in the data so Poisson may not be best.
+When including the urchins with lower k overdispersion goes away.
+Making all variables k = 5 maintains high overdispersion.
+
+```{r Modelling the snail counts with a total model}
+total_mod_snail_counts_quasipoisson <- gam(Turban_Snails ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                              s(mean_rec_boat_counts_1.5km_scale)+
+                                 s(mean_app_fishing_hours_scale) +
+                               s(Urchins_scale),
+                             data = env_mod_data,
+                             family = quasipoisson(link = "log"),
+                             method = "ML",
+                             select = TRUE)
+set.seed(10)
+gam.check(total_mod_snail_counts_quasipoisson, rep = 500)
+plot(total_mod_snail_counts_quasipoisson, rug = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
+summary(total_mod_snail_counts_quasipoisson)
+#shapiro.test(total_mod_snail_counts$residuals)
+
+
+#Poisson does not seem to match the distribution well
+```
+
+```{r Checking the Quasipoisson model for overdispersion}
+total_mod_snail_counts_quasipoisson_resids <- simulateResiduals(total_mod_snail_counts_quasipoisson)
+testDispersion(total_mod_snail_counts_quasipoisson_resids)
+```
+
+```{r Modelling the snail counts with a total model}
+total_mod_snail_counts_nb <- gam(Turban_Snails ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                              s(mean_rec_boat_counts_1.5km_scale)+
+                                s(mean_app_fishing_hours_scale)+
+                               s(Urchins_scale),
+                             data = env_mod_data,
+                             family = nb(),
+                             method = "ML",
+                             select = TRUE)
+set.seed(10)
+gam.check(total_mod_snail_counts_nb, rep = 500)
+plot(total_mod_snail_counts_nb, rug = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
+summary(total_mod_snail_counts_nb)
+shapiro.test(total_mod_snail_counts_nb$residuals)
+
+#Using nb seems improved from the poisson and quasi-poisson in terms of the residuals but still 
+#has some problematic stuff going on
+```
+
+```{r Testing  residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_snail_counts_nb <- residuals(total_mod_snail_counts_nb, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_snail_counts_nb, lw)
+```
+There is some significant spatial autocorrelation
+
+```{r Testing 1km no app hours concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_nb, full = TRUE)
 ```
 
 ```{r}
-hist(env_mod_data$Turban_Snails)
-hist(env_mod_data$Urchins)
-shapiro.test(env_mod_data$Urchins)
+AIC(total_mod_snail_counts_nb, 
+    total_mod_snail_counts_poisson,
+    total_mod_snail_counts_quasipoisson
+    )%>%
+arrange(AIC)%>%
+  mutate(delta_AIC = AIC - AIC[1])
 ```
 
-
-```{r DHARMa for model fit}
-total_mod_snail_counts_resids <- simulateResiduals(total_mod_snail_counts)
-plot(total_mod_snail_counts_resids)
-```
 
 ##Re-doing analysis with averaged transects
 

@@ -417,6 +417,13 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_1km_avg, lw_avg)
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_1km_avg, lw_inverse_avg)
 ```
 </div>  
 No evidence of autocorrelation of the residuals.
@@ -476,6 +483,13 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 ##Testing the residuals with Moran's I test and weight matrix
 moran.test(residuals_total_mod_1.5km_avg, lw_avg)
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_1.5km_avg, lw_inverse_avg)
 ```
 </div>
 No evidence of autocorrelation of the residuals.
@@ -880,7 +894,7 @@ concurvity(total_mod_2km_avg_no_app_hours, full = FALSE)
 Some of the variables appear to still have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots.
 
-### Building GAMs on urch sn ratio with total boats observed instead of rec boats fishing {.tabset}
+### Building GAMs on urch sn ratio with TOTAL boats observed instead of rec boats fishing {.tabset}
 
 #### Model with 1 km total boats
 
@@ -1058,6 +1072,297 @@ It appears that the residuals are autocorrelated. Will need to address this.
 concurvity(total_mod_2km_total_boats, full = FALSE)
 ```
 </div>
+Some of the variables appear to have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots. May need to get
+rid of the mean apparent fishing hours however. Since the concurvity was very
+high.
+
+
+
+## Modelling the snail counts{.tabset}
+
+### Building GAMs on the snail counts with TOTAL boats
+
+#### Model with 1 km total boats
+
+```{r Modelling the snail counts 1km total with a total model}
+total_mod_snail_counts_1km_nb <- gam(Turban_Snails ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                              s(mean_total_boat_counts_1km_scale)+
+                                s(mean_app_fishing_hours_scale)+
+                               s(Urchins_scale),
+                             data = env_mod_data,
+                             family = nb(),
+                             method = "REML",
+                             select = TRUE)
+```
+
+<div class="fold o"> 
+```{r Snail 1km total boats model output, echo=FALSE}
+set.seed(10)
+gam.check(total_mod_snail_counts_1km_nb, rep = 500)
+plot(total_mod_snail_counts_1km_nb, rug = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
+summary(total_mod_snail_counts_1km_nb)
+shapiro.test(total_mod_snail_counts_1km_nb$residuals)
+
+#Using nb seems improved from the poisson and quasi-poisson in terms of the residuals but still 
+#has some problematic stuff going on
+```
+</div>
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing snail mod 1km total residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_snail_counts_1km_nb <- residuals(total_mod_snail_counts_1km_nb, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_snail_counts_1km_nb, lw)
+```
+Some autocorrelation present.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing 1km total boats concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_1km_nb, full = FALSE)
+concurvity(total_mod_snail_counts_1km_nb, full = TRUE)
+```
+</div>
+
+Some high concurvity so might need to eliminate certain variables.
+
+#### Model with 1.5 km total boats
+
+```{r Modelling the snail counts 1.5km total with a total model}
+total_mod_snail_counts_1.5km_nb <- gam(Turban_Snails ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                              s(mean_total_boat_counts_1.5km_scale)+
+                                s(mean_app_fishing_hours_scale)+
+                               s(Urchins_scale),
+                             data = env_mod_data,
+                             family = nb(),
+                             method = "REML",
+                             select = TRUE)
+
+```
+
+<div class="fold o"> 
+```{r Snail 1.5km total boats model output, echo=FALSE}
+set.seed(10)
+gam.check(total_mod_snail_counts_1.5km_nb, rep = 500)
+plot(total_mod_snail_counts_1.5km_nb, rug = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
+summary(total_mod_snail_counts_1.5km_nb)
+shapiro.test(total_mod_snail_counts_1.5km_nb$residuals)
+
+#Using nb seems improved from the poisson and quasi-poisson in terms of the residuals but still 
+#has some problematic stuff going on
+```
+</div>
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing snail mod 1.5km total residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_snail_counts_1.5km_nb <- residuals(total_mod_snail_counts_1.5km_nb, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_snail_counts_1.5km_nb, lw)
+```
+Some autocorrelation present.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing 1.5km total boats concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_1.5km_nb, full = FALSE)
+concurvity(total_mod_snail_counts_1.5km_nb, full = TRUE)
+```
+</div>
+
+#### Model with 2 km total boats
+
+```{r Modelling the snail counts 2km total with a total model}
+total_mod_snail_counts_2km_nb <- gam(Turban_Snails ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                              s(mean_total_boat_counts_2km_scale)+
+                                s(mean_app_fishing_hours_scale)+
+                               s(Urchins_scale),
+                             data = env_mod_data,
+                             family = nb(),
+                             method = "REML",
+                             select = TRUE)
+```
+
+<div class="fold o"> 
+```{r Snail 2km total boats model output, echo=FALSE}
+set.seed(10)
+gam.check(total_mod_snail_counts_2km_nb, rep = 500)
+plot(total_mod_snail_counts_2km_nb, rug = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
+summary(total_mod_snail_counts_2km_nb)
+shapiro.test(total_mod_snail_counts_2km_nb$residuals)
+
+#Using nb seems improved from the poisson and quasi-poisson in terms of the residuals but still 
+#has some problematic stuff going on
+```
+</div>
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing snail mod 2km total residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_snail_counts_2km_nb <- residuals(total_mod_snail_counts_2km_nb, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_snail_counts_2km_nb, lw)
+```
+Some autocorrelation present.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing 2km rec boats concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_2km_nb, full = FALSE)
+concurvity(total_mod_snail_counts_2km_nb, full = TRUE)
+```
+</div>
+
+
+### Building GAMs on the snail counts with TOTAL boats and averaged points
+
+The idea of averaging the transects at the same sites is to account for the 
+spatial autocorrelation.
+
+#### Looking at the distribution of avg snail counts
+
+```{r Histogram of avg snail counts}
+ggplot(env_mod_data_avg, aes(x = snails_avg))+
+  geom_histogram(binwidth = 75)+
+  theme.figure()
+```
+The average snails show a similar distribution to the full snail counts
+
+#### Snail model with 1km total boats and avg transects
+
+```{r Modelling the snail counts 1km total with a total model}
+total_mod_snail_counts_1km_avg_nb <- gam(snails_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_1km_scale)+
+                   s(mean_app_fishing_hours_scale)+
+                     s(urchins_avg_scale),
+               data = env_mod_data_avg,
+               family = nb(),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r snail 1km avg model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_snail_counts_1km_avg_nb)
+
+plot(total_mod_snail_counts_1km_avg_nb)
+summary(total_mod_snail_counts_1km_avg_nb)
+```
+
+Residuals looking "ok" but will need to confirm with Dom/Amanda
+
+```{r Modelling the snail counts 1km total quasi with a total model}
+total_mod_snail_counts_1km_avg_quasipoisson <- gam(snails_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_1km_scale)+
+                   s(mean_app_fishing_hours_scale)+
+                     s(urchins_avg_scale),
+               data = env_mod_data_avg,
+               family = quasipoisson(link = "log"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r snail 1km avg quasi model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_snail_counts_1km_avg_poisson)
+
+plot(total_mod_snail_counts_1km_avg_poisson)
+summary(total_mod_snail_counts_1km_avg_poisson)
+```
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing snail 1km avg residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_snail_counts_1km_avg_nb <- residuals(total_mod_snail_counts_1km_avg_nb, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 500)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_snail_counts_1km_avg_nb, lw_avg)
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_snail_counts_1km_avg_nb, lw_inverse_avg)
+```
+</div>  
+No evidence of autocorrelation of the residuals. Using inverse distance moran's
+I leads to a p value and it is not significant.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing 1km avg concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_1km_avg_nb, full = FALSE)
+concurvity(total_mod_snail_counts_1km_avg_nb, full = TRUE)
+```
+</div>  
+
 Some of the variables appear to have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. May need to get
 rid of the mean apparent fishing hours however. Since the concurvity was very
