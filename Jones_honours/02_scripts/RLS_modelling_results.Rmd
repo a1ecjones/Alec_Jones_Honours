@@ -166,7 +166,7 @@ ggplot(env_mod_data, aes(x = sst, y = norm_openness, colour = region1))+
 ```
 
 ```{r SST vs mean rec fishing 1 km, echo=FALSE}
-ggplot(env_mod_data, aes(x = sst, y = mean_rec_boat_counts_1km, colour = region1))+
+ggplot(env_mod_data, aes(x = sst, y = mean_total_boat_counts_1km, colour = region1))+
   geom_point()+
   theme.figure()
 ```
@@ -255,8 +255,7 @@ It appears that the residuals are autocorrelated. Will need to address this.
 ##### Testing the model for concurvity
 <div class="fold o"> 
 ```{r Testing 1km concurvity, echo=FALSE}
-concurvity(total_mod_1km, full = TRUE)
-?concurvity
+#concurvity(total_mod_1km, full = TRUE)
 concurvity(total_mod_1km, full = FALSE)
 ```
 </div>
@@ -1153,7 +1152,7 @@ total_mod_1km_total_boats_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                data = env_mod_data_avg,
                family = gaussian(link = "identity"),
                method = 'REML',
-               select = TRUE)
+               select = FALSE)
 ```
 
 
@@ -1161,7 +1160,7 @@ total_mod_1km_total_boats_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
 set.seed(13)
 gam.check(total_mod_1km_total_boats_avg)
 coef(total_mod_1km_total_boats_avg)
-#shapiro.test(total_mod_1km_total_boats$residuals)
+#shapiro.test(total_mod_1km_total_boats_avg$residuals)
 
 plot(total_mod_1km_total_boats_avg)
 summary(total_mod_1km_total_boats_avg)
@@ -1200,9 +1199,9 @@ No spatial autocorrelation.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing 1km total boats concurvity, echo=FALSE}
+```{r Testing 1km total boats avg concurvity, echo=FALSE}
 concurvity(total_mod_1km_total_boats_avg, full = FALSE)
-concurvity(total_mod_1km_total_boats_avg, full = TRUE)
+#concurvity(total_mod_1km_total_boats_avg, full = TRUE)
 ```
 </div>
 Some of the variables appear to have high concurvity scores in the worst case,
@@ -1224,7 +1223,7 @@ total_mod_1.5km_total_boats_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
 ```
 
 
-```{r 1km total boats avg model output, echo=FALSE}
+```{r 1.5km total boats avg model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1.5km_total_boats_avg)
 coef(total_mod_1.5km_total_boats_avg)
@@ -1267,9 +1266,9 @@ No spatial autocorrelation.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing 1km total boats concurvity, echo=FALSE}
+```{r Testing 1.5km total boats avg concurvity, echo=FALSE}
 concurvity(total_mod_1.5km_total_boats_avg, full = FALSE)
-concurvity(total_mod_1.5km_total_boats_avg, full = TRUE)
+#concurvity(total_mod_1.5km_total_boats_avg, full = TRUE)
 ```
 </div>
 Some of the variables appear to have high concurvity scores in the worst case,
@@ -1296,7 +1295,7 @@ total_mod_2km_total_boats_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
 set.seed(13)
 gam.check(total_mod_2km_total_boats_avg)
 coef(total_mod_2km_total_boats_avg)
-#shapiro.test(total_mod_2km_total_boats$residuals)
+#shapiro.test(total_mod_2km_total_boats_avg$residuals)
 
 plot(total_mod_2km_total_boats_avg)
 summary(total_mod_2km_total_boats_avg)
@@ -1336,9 +1335,9 @@ No spatial autocorrelation.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing 2km total boats concurvity, echo=FALSE}
+```{r Testing 2km total boats avg concurvity, echo=FALSE}
 concurvity(total_mod_2km_total_boats_avg, full = FALSE)
-concurvity(total_mod_2km_total_boats_avg, full = TRUE)
+#concurvity(total_mod_2km_total_boats_avg, full = TRUE)
 ```
 </div>
 Some of the variables appear to have high concurvity scores in the worst case,
@@ -1347,7 +1346,209 @@ rid of the mean apparent fishing hours however. Since the concurvity was very
 high.
 
 
+
+### Building GAMs on the urch sn ratio with TOTAL boats, avg transects, and no app hours {.tabset}
+
+#### Model with 1 km total boats avg and no app hours
+
+```{r Total 1km avg no app hours total boats model}
+total_mod_1km_total_boats_avg_no_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_1km_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = FALSE)
+```
+
+
+```{r 1km total boats avg no app hours model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1km_total_boats_avg_no_hours)
+coef(total_mod_1km_total_boats_avg_no_hours)
+#shapiro.test(total_mod_1km_total_boats_avg_no_hours$residuals)
+
+plot(total_mod_1km_total_boats_avg_no_hours)
+summary(total_mod_1km_total_boats_avg_no_hours)
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing 1km total boats avg no app hours residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_1km_total_boats_avg_no_hours <- residuals(total_mod_1km_total_boats_avg_no_hours, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1km_total_boats_avg_no_hours, lw_avg)
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_1km_total_boats_avg_no_hours, lw_inverse_avg)
+```
+</div>
+No spatial autocorrelation.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing 1km total boats avg no app hours concurvity, echo=FALSE}
+concurvity(total_mod_1km_total_boats_avg_no_hours, full = FALSE)
+#concurvity(total_mod_1km_total_boats_avg_no_hours, full = TRUE)
+```
+</div>
+Still high concurvity but it is improved slightly and the other ones are not as
+high as the mean apparent fishing hours were.
+
+
+#### Model with 1.5 km total boats avg and no app hours
+
+```{r Total 1.5km avg no app hours total boats model}
+total_mod_1.5km_total_boats_avg_no_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_1.5km_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = FALSE)
+```
+
+
+```{r 1.5km total boats avg no app hours model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1.5km_total_boats_avg_no_hours, rep = 500)
+coef(total_mod_1.5km_total_boats_avg_no_hours)
+#shapiro.test(total_mod_1.5km_total_boats_avg_no_hours$residuals)
+
+plot(total_mod_1.5km_total_boats_avg_no_hours)
+summary(total_mod_1.5km_total_boats_avg_no_hours)
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing 1.5km total boats avg no app hours residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_1.5km_total_boats_avg_no_hours <- residuals(total_mod_1.5km_total_boats_avg_no_hours, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1.5km_total_boats_avg_no_hours, lw_avg)
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_1.5km_total_boats_avg_no_hours, lw_inverse_avg)
+```
+</div>
+No spatial autocorrelation.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing 1.5km total boats avg no app hours concurvity, echo=FALSE}
+concurvity(total_mod_1.5km_total_boats_avg_no_hours, full = FALSE)
+#concurvity(total_mod_1.5km_total_boats_avg_no_hours, full = TRUE)
+```
+</div>
+Still high concurvity but it is improved slightly and the other ones are not as
+high as the mean apparent fishing hours were.
+
+
+#### Model with 2 km total boats avg
+
+```{r Total 2km avg no app hours total boats model}
+total_mod_2km_total_boats_avg_no_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_2km_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = FALSE)
+```
+
+
+```{r 2km total boats avg no app hours model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_2km_total_boats_avg_no_hours, rep = 500)
+coef(total_mod_2km_total_boats_avg_no_hours)
+#shapiro.test(total_mod_2km_total_boats_avg_no_hours$residuals)
+
+plot(total_mod_2km_total_boats_avg_no_hours)
+summary(total_mod_2km_total_boats_avg_no_hours)
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing 2km total boats avg no app hours residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_2km_total_boats_avg_no_hours <- residuals(total_mod_2km_total_boats_avg_no_hours, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_2km_total_boats_avg_no_hours, lw_avg)
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_2km_total_boats_avg_no_hours, lw_inverse_avg)
+```
+</div>
+No spatial autocorrelation.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing 2km total boats avg no app hours concurvity, echo=FALSE}
+concurvity(total_mod_2km_total_boats_avg_no_hours, full = FALSE)
+#concurvity(total_mod_2km_total_boats_avg_no_hours, full = TRUE)
+```
+</div>
+Still high concurvity but it is improved slightly and the other ones are not as
+high as the mean apparent fishing hours were.
+
 ### Building GAMs on the urch sn ratio with TOTAL boats and RE of transect/site
+
+This method appears to present some issues. All of the other variables become
+insignificant and site code is significant. Additionally, the deviance explained
+rises to ~90-95 % which seems like the model is simply fitting for every
+individual point.
 
 #### Model with 1 km total boats and RE of transect
 
@@ -1364,7 +1565,7 @@ total_mod_1km_total_boats_transect <- gam(urch_sn_ratio ~ s(sst_scale) +
 ```
 
 
-```{r 1km total boats model output, echo=FALSE}
+```{r 1km total boats model transect output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1km_total_boats_transect)
 coef(total_mod_1km_total_boats_transect)
@@ -1377,9 +1578,9 @@ summary(total_mod_1km_total_boats_transect)
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing 1km total boats residuals for spatial correlation, echo=FALSE, warning=FALSE}
+```{r Testing 1km total boats transect residuals for spatial correlation, echo=FALSE, warning=FALSE}
 #extract residuals from model
-residuals_total_mod_1km_total_boats <- residuals(total_mod_1km_total_boats, type = "pearson")
+residuals_total_mod_1km_total_boats_transect <- residuals(total_mod_1km_total_boats_transect, type = "pearson")
 
 #creating the spatial weights matrix
 coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
@@ -1393,28 +1594,30 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1km_total_boats, lw)
+moran.test(residuals_total_mod_1km_total_boats_transect, lw)
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_1km_total_boats, lw_inverse)
+moran.test(residuals_total_mod_1km_total_boats_transect, lw_inverse)
 ```
 </div>
-It appears that the residuals are autocorrelated. Will need to address this.
+No autocorrelation.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing 1km total boats concurvity, echo=FALSE}
-concurvity(total_mod_1km_total_boats, full = FALSE)
+```{r Testing 1km total boats transect concurvity, echo=FALSE}
+concurvity(total_mod_1km_total_boats_transect, full = FALSE)
 ```
 </div>
 Some of the variables appear to have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. May need to get
 rid of the mean apparent fishing hours however. Since the concurvity was very
 high.
+
+
 
 ## Modelling the snail counts{.tabset}
 
@@ -1423,13 +1626,13 @@ high.
 #### Model with 1 km total boats
 
 ```{r Modelling the snail counts 1km total with a total model}
-total_mod_snail_counts_1km_nb <- gam(Turban_Snails ~ s(sst_scale)+
+total_mod_snail_counts_1km_nb <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
                                s(norm_openness_scale)+
                               s(mean_total_boat_counts_1km_scale)+
                                 s(mean_app_fishing_hours_scale)+
                                s(Urchins_scale),
                              data = env_mod_data,
-                             family = nb(),
+                             family = gaussian(),
                              method = "REML",
                              select = TRUE)
 ```
@@ -1474,9 +1677,9 @@ Some autocorrelation present.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing 1km total boats concurvity, echo=FALSE}
+```{r Testing snail 1km total boats concurvity, echo=FALSE}
 concurvity(total_mod_snail_counts_1km_nb, full = FALSE)
-concurvity(total_mod_snail_counts_1km_nb, full = TRUE)
+#concurvity(total_mod_snail_counts_1km_nb, full = TRUE)
 ```
 </div>
 
@@ -1537,22 +1740,22 @@ Some autocorrelation present.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing 1.5km total boats concurvity, echo=FALSE}
+```{r Testing snail 1.5km total boats nb concurvity, echo=FALSE}
 concurvity(total_mod_snail_counts_1.5km_nb, full = FALSE)
-concurvity(total_mod_snail_counts_1.5km_nb, full = TRUE)
+#concurvity(total_mod_snail_counts_1.5km_nb, full = TRUE)
 ```
 </div>
 
 #### Model with 2 km total boats
 
 ```{r Modelling the snail counts 2km total with a total model}
-total_mod_snail_counts_2km_nb <- gam(Turban_Snails ~ s(sst_scale)+
+total_mod_snail_counts_2km_nb <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
                                s(norm_openness_scale)+
                               s(mean_total_boat_counts_2km_scale)+
                                 s(mean_app_fishing_hours_scale)+
                                s(Urchins_scale),
                              data = env_mod_data,
-                             family = nb(),
+                             family = gaussian(),
                              method = "REML",
                              select = TRUE)
 ```
@@ -1599,7 +1802,7 @@ Some autocorrelation present.
 <div class="fold o"> 
 ```{r Testing 2km rec boats concurvity, echo=FALSE}
 concurvity(total_mod_snail_counts_2km_nb, full = FALSE)
-concurvity(total_mod_snail_counts_2km_nb, full = TRUE)
+#concurvity(total_mod_snail_counts_2km_nb, full = TRUE)
 ```
 </div>
 
@@ -1622,7 +1825,7 @@ use the gamma because there are some zeros. Will try with Tweedie.
 
 #### Snail model with 1km total boats and avg transects
 
-```{r Modelling the snail counts 1km total with a total model}
+```{r Modelling the snail counts 1km total avg nb with a total model}
 total_mod_snail_counts_1km_avg_nb <- gam(snails_avg ~ s(sst_scale) + 
                    s(norm_openness_scale) +
                    s(mean_total_boat_counts_1km_scale)+
@@ -1658,10 +1861,10 @@ total_mod_snail_counts_1km_avg_quasipoisson <- gam(snails_avg ~ s(sst_scale) +
 
 ```{r snail 1km avg quasi model output, echo=FALSE}
 set.seed(13)
-gam.check(total_mod_snail_counts_1km_avg_poisson)
+gam.check(total_mod_snail_counts_1km_avg_quasipoisson)
 
-plot(total_mod_snail_counts_1km_avg_poisson)
-summary(total_mod_snail_counts_1km_avg_poisson)
+plot(total_mod_snail_counts_1km_avg_quasipoisson)
+summary(total_mod_snail_counts_1km_avg_quasipoisson)
 ```
 
 ```{r Modelling the snail counts 1km total tweedie with a total model}
@@ -1676,7 +1879,7 @@ total_mod_snail_counts_1km_avg_tweedie <- gam(snails_avg ~ s(sst_scale) +
                select = TRUE)
 ```
 
-```{r snail 1km avg quasi model output, echo=FALSE}
+```{r snail 1km avg tweedie model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_snail_counts_1km_avg_tweedie)
 
@@ -1720,9 +1923,9 @@ I leads to a p value and it is not significant.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing 1km avg concurvity, echo=FALSE}
+```{r Testing snail 1km avg nb concurvity, echo=FALSE}
 concurvity(total_mod_snail_counts_1km_avg_nb, full = FALSE)
-concurvity(total_mod_snail_counts_1km_avg_nb, full = TRUE)
+#concurvity(total_mod_snail_counts_1km_avg_nb, full = TRUE)
 ```
 </div>  
 
