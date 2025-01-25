@@ -648,3 +648,26 @@ ggplot(urch_sn_ratio_fishing_mod_2024, aes(x = log(total_rec_boats + 1), y = urc
   geom_point()
 ```
 
+```{r Modelling the snail counts 1km total tweedie with a total model}
+total_mod_snail_counts_1km_avg_tweedie <- gam(snails_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_1km_scale)+
+                   s(mean_app_fishing_hours_scale)+
+                     s(urchins_avg_scale),
+               data = env_mod_data_avg,
+               family = tw(link = "log", a = 1.05, b = 1.6),
+               method = 'ML',
+               select = TRUE)
+```
+
+
+```{r snail 1km avg tweedie model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_snail_counts_1km_avg_tweedie)
+
+plot(total_mod_snail_counts_1km_avg_tweedie)
+summary(total_mod_snail_counts_1km_avg_tweedie)
+```
+
+Tweedie seems somewhat ok but will definitely need to be confirmed. How I set 
+the p for the tweedie distribtuion has a large impact on the model residuals.

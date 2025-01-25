@@ -2764,6 +2764,9 @@ total_urch_size_dist <- total_urch_size_dist%>%
 ```
 
 ```{r Making a data frame with the final biomass for each transect}
+#This is actually the minimum biomass for each transect according to the size
+#classifications that Valesca gave me.
+
 max_biomass_df <- total_urch_size_dist%>%
   group_by(site_code, site_name, latitude.x, longitude.x,
            visibility, hour, depth)%>%
