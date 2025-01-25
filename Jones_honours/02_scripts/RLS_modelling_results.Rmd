@@ -1637,7 +1637,7 @@ total_mod_snail_counts_1km_nb <- gam(Turban_Snails ~ s(sst_scale)+
                              select = TRUE)
 ```
 
-<div class="fold o"> 
+
 ```{r Snail 1km total boats model output, echo=FALSE}
 set.seed(10)
 gam.check(total_mod_snail_counts_1km_nb, rep = 500)
@@ -1650,7 +1650,7 @@ shapiro.test(total_mod_snail_counts_1km_nb$residuals)
 #Using nb seems improved from the poisson and quasi-poisson in terms of the residuals but still 
 #has some problematic stuff going on
 ```
-</div>
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
@@ -1677,7 +1677,7 @@ Some autocorrelation present.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing snail 1km total boats concurvity, echo=FALSE}
+```{r Testing snail 1km total boats nb concurvity, echo=FALSE}
 concurvity(total_mod_snail_counts_1km_nb, full = FALSE)
 #concurvity(total_mod_snail_counts_1km_nb, full = TRUE)
 ```
@@ -1700,7 +1700,6 @@ total_mod_snail_counts_1.5km_nb <- gam(Turban_Snails ~ s(sst_scale)+
 
 ```
 
-<div class="fold o"> 
 ```{r Snail 1.5km total boats model output, echo=FALSE}
 set.seed(10)
 gam.check(total_mod_snail_counts_1.5km_nb, rep = 500)
@@ -1713,7 +1712,7 @@ shapiro.test(total_mod_snail_counts_1.5km_nb$residuals)
 #Using nb seems improved from the poisson and quasi-poisson in terms of the residuals but still 
 #has some problematic stuff going on
 ```
-</div>
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
@@ -1760,7 +1759,6 @@ total_mod_snail_counts_2km_nb <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
                              select = TRUE)
 ```
 
-<div class="fold o"> 
 ```{r Snail 2km total boats model output, echo=FALSE}
 set.seed(10)
 gam.check(total_mod_snail_counts_2km_nb, rep = 500)
@@ -1773,7 +1771,7 @@ shapiro.test(total_mod_snail_counts_2km_nb$residuals)
 #Using nb seems improved from the poisson and quasi-poisson in terms of the residuals but still 
 #has some problematic stuff going on
 ```
-</div>
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
@@ -1825,7 +1823,7 @@ total_mod_snail_counts_1km_log <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
                              select = TRUE)
 ```
 
-<div class="fold o"> 
+
 ```{r Snail 1km log total boats model output, echo=FALSE}
 set.seed(10)
 gam.check(total_mod_snail_counts_1km_log, rep = 500)
@@ -1835,7 +1833,7 @@ plot(total_mod_snail_counts_1km_log, rug = TRUE)
 summary(total_mod_snail_counts_1km_log)
 shapiro.test(total_mod_snail_counts_1km_log$residuals)
 ```
-</div>
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
@@ -1869,7 +1867,7 @@ Some autocorrelation present. Only significant with the inverse distance method.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing snail 1km total boats concurvity, echo=FALSE}
+```{r Testing snail 1km total log boats concurvity, echo=FALSE}
 concurvity(total_mod_snail_counts_1km_log, full = FALSE)
 #concurvity(total_mod_snail_counts_1km_log, full = TRUE)
 ```
@@ -1891,7 +1889,7 @@ total_mod_snail_counts_1.5km_log <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
                              select = TRUE)
 ```
 
-<div class="fold o"> 
+
 ```{r Snail 1.5km log total boats model output, echo=FALSE}
 set.seed(10)
 gam.check(total_mod_snail_counts_1.5km_log, rep = 500)
@@ -1901,7 +1899,7 @@ plot(total_mod_snail_counts_1.5km_log, rug = TRUE)
 summary(total_mod_snail_counts_1.5km_log)
 shapiro.test(total_mod_snail_counts_1.5km_log$residuals)
 ```
-</div>
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
@@ -1935,7 +1933,7 @@ Some autocorrelation present. Only significant with the inverse distance method.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing snail 1km total boats concurvity, echo=FALSE}
+```{r Testing snail 1.5km total boats log concurvity, echo=FALSE}
 concurvity(total_mod_snail_counts_1.5km_log, full = FALSE)
 #concurvity(total_mod_snail_counts_1.5km_log, full = TRUE)
 ```
@@ -2070,7 +2068,7 @@ Some autocorrelation present. Only significant with the inverse distance method.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing snail 1km total boats concurvity, echo=FALSE}
+```{r Testing snail 1km total log no app hours boats concurvity, echo=FALSE}
 concurvity(total_mod_snail_counts_1km_log_no_app_hours, full = FALSE)
 #concurvity(total_mod_snail_counts_1km_log_no_app_hours, full = TRUE)
 ```
@@ -2135,7 +2133,7 @@ Some autocorrelation present. Only significant with the inverse distance method.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing snail 1km total boats concurvity, echo=FALSE}
+```{r Testing snail 1.5km total log no app hours boats concurvity, echo=FALSE}
 concurvity(total_mod_snail_counts_1.5km_log_no_app_hours, full = FALSE)
 #concurvity(total_mod_snail_counts_1.5km_log_no_app_hours, full = TRUE)
 ```
@@ -2156,7 +2154,7 @@ total_mod_snail_counts_2km_log_no_app_hours <- gam(log(Turban_Snails + 1) ~ s(ss
                              select = TRUE)
 ```
 
-<div class="fold o"> 
+
 ```{r Snail 2km log total no app hours boats model output, echo=FALSE}
 set.seed(10)
 gam.check(total_mod_snail_counts_2km_log_no_app_hours, rep = 500)
@@ -2166,7 +2164,7 @@ plot(total_mod_snail_counts_2km_log_no_app_hours, rug = TRUE)
 summary(total_mod_snail_counts_2km_log_no_app_hours)
 shapiro.test(total_mod_snail_counts_2km_log_no_app_hours$residuals)
 ```
-</div>
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
@@ -2200,7 +2198,7 @@ No autocorrelation.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing snail 1km total boats concurvity, echo=FALSE}
+```{r Testing snail 2km total log no app hours boats concurvity, echo=FALSE}
 concurvity(total_mod_snail_counts_2km_log_no_app_hours, full = FALSE)
 #concurvity(total_mod_snail_counts_2km_log_no_app_hours, full = TRUE)
 ```
@@ -2280,7 +2278,7 @@ No evidence of autocorrelation of the residuals.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing snail 1km avg nb concurvity, echo=FALSE}
+```{r Testing snail 1km avg log concurvity, echo=FALSE}
 concurvity(total_mod_snail_counts_1km_avg_log, full = FALSE)
 #concurvity(total_mod_snail_counts_1km_avg_log, full = TRUE)
 ```
@@ -2346,7 +2344,7 @@ No evidence of autocorrelation of the residuals.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing snail 1km avg nb concurvity, echo=FALSE}
+```{r Testing snail 1.5km avg log concurvity, echo=FALSE}
 concurvity(total_mod_snail_counts_1.5km_avg_log, full = FALSE)
 #concurvity(total_mod_snail_counts_1.5km_avg_log, full = TRUE)
 ```
