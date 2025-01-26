@@ -1168,7 +1168,7 @@ site_coords_2024 <- site_data_2024%>%
 ```
 
 
-###Setup for using the waver package
+### Setup for using the waver package
 
 
 ```{r Converting site coordinates into spatial points file type 2024}
@@ -1177,14 +1177,14 @@ site_sp_2024 <- st_as_sf(site_coords_2024, coords = c("longitude", "latitude"), 
 bearings_openness <- seq(7.5, 360, by = 7.5)
 ```
 
-###Calculating fetch for all of the sites in 2024
+### Calculating fetch for all of the sites in 2024
 ```{r Calculating the fetch for the sites 2024}
 sf::sf_use_s2(FALSE)
 
 fetch_df_2024_openness <- fetch_len_multi(site_sp_2024, bearings = bearings_openness, dmax = 650000, shoreline = VI_base_layer_hi_res_sf, projected = FALSE)
 ```
 
-###Turning the raw fetch data into a dataframe with column labels
+### Turning the raw fetch data into a dataframe with column labels
 
 ```{r Turning the raw openness fetch data into a dataframe with column labels}
 site_code <- c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC13", "BMSC14", "BMSC15", "BMSC16",

@@ -27,6 +27,7 @@ library(MuMIn)
 library(lme4)
 library(flextable)
 library(spdep)
+library(ggpubr)
 ```
 
 <!--Jan. 22. I have updated the data with the flights with fog ommitted from the data.
@@ -73,10 +74,41 @@ regions <- c("region1", "region2", "region3", "region4")
 env_mod_data[regions] <- lapply(env_mod_data[regions], factor)
 ```
 
+```{r Creating a factor variable of protection status for the modelling data, include=FALSE}
+#In this chunk I am making three objects with the various protection statuses
+#of the different sites. protect_status has all sites protected from fishing
+#to some degree (RCA, ecological reserve, finfish closure area) and 
+#protect_status_park includes the sites within the Broken Group Park that are
+#not within the RCA.
+protect_status <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 
+                    0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
+
+protect_status_park <- c(0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
+
+#kelp_forest <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+
+  env_mod_data$protect_status <- as.factor(protect_status)
+levels(env_mod_data$protect_status) <- c("No Protection", "Protected")
+
+env_mod_data$protect_status_park <- as.factor(protect_status_park)
+levels(env_mod_data$protect_status_park) <- c("No Protection", "Protected")
+
+
+#Reordering so easier to see which sites are protected in the DF
+env_mod_data <- env_mod_data[, c(seq(1, 11, by = 1), 44, 45, seq(12, 43, by = 1))]
+
+
+#Will need to confirm which areas were kelp forests based on the photos or
+#talking with Jasmin but likely will just be hosie and raymond
+
+#env_mod_data$kelp_forest <- as.factor(kelp_forest)
+#levels(env_mod_data$kelp_forest) <- c("No Kelp", "Kelp Forest")
+```
 
 ```{r Creating a dataset with averaged values for urchin/snail counts, and urch sn ratio, include=FALSE}
 env_mod_data_avg <- env_mod_data%>%
-  group_by(site_code, site_name, latitude, longitude, sst,
+  group_by(site_code, site_name, latitude, longitude, protect_status, protect_status_park, sst,
            openness, norm_openness, region1, region2, region3, region4, 
            mean_app_fishing_hours, mean_rec_boat_counts_500m, mean_rec_boat_counts_1km, 
            mean_rec_boat_counts_1.5km, mean_rec_boat_counts_750m, mean_rec_boat_counts_2km,
@@ -97,7 +129,7 @@ env_mod_data_avg$turban_snails_avg_scale <- scale(env_mod_data_avg$snails_avg)
 
 
 ### Urchin Biomass data
-```{r Loading in the urchin biomass data set, echo==FALSE}
+```{r Loading in the urchin biomass data set, echo=FALSE}
 urch_biomass_mod_data <- read_csv(here("./03_clean_data/urchin_biomass_data_updated_jan_25.csv"))
 ```
 
@@ -124,6 +156,13 @@ urch_biomass_mod_data$mean_total_boat_counts_2km_scale <- scale(urch_biomass_mod
 #Urchin Biomass
 urch_biomass_mod_data$total_site_biomass_scale <- scale(urch_biomass_mod_data$total_site_biomass)
 urch_biomass_mod_data$total_site_biomass_per_m2_scale <- scale(urch_biomass_mod_data$total_site_biomass_per_m2)
+
+#Protection Status
+  urch_biomass_mod_data$protect_status <- as.factor(protect_status)
+levels(urch_biomass_mod_data$protect_status) <- c("No Protection", "Protected")
+
+urch_biomass_mod_data$protect_status_park <- as.factor(protect_status_park)
+levels(urch_biomass_mod_data$protect_status_park) <- c("No Protection", "Protected")
 
 levels(urch_biomass_mod_data$dominant_score) <- list(loose = "3", solid = "4")
 
@@ -276,14 +315,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1km, lw)
+moran.test(residuals_total_mod_1km, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_1km, lw_inverse)
+moran.test(residuals_total_mod_1km, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 It appears that the residuals are autocorrelated. Will need to address this.
@@ -341,14 +382,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1.5km, lw)
+moran.test(residuals_total_mod_1.5km, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_1.5km, lw_inverse)
+moran.test(residuals_total_mod_1.5km, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 It appears that the residuals are autocorrelated. Will need to address this.
@@ -404,14 +447,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_2km, lw)
+moran.test(residuals_total_mod_2km, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_2km, lw_inverse)
+moran.test(residuals_total_mod_2km, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 It appears that the residuals are autocorrelated. Will need to address this.
@@ -472,14 +517,16 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1km_avg, lw_avg)
+moran.test(residuals_total_mod_1km_avg, lw_avg,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
 inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
 diag(inverse_dist_matrix_avg) <- 0
 lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
-moran.test(residuals_total_mod_1km_avg, lw_inverse_avg)
+moran.test(residuals_total_mod_1km_avg, lw_inverse_avg,
+           alternative = "two.sided")
 ```
 </div>  
 No evidence of autocorrelation of the residuals.
@@ -538,14 +585,16 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1.5km_avg, lw_avg)
+moran.test(residuals_total_mod_1.5km_avg, lw_avg,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
 inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
 diag(inverse_dist_matrix_avg) <- 0
 lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
-moran.test(residuals_total_mod_1.5km_avg, lw_inverse_avg)
+moran.test(residuals_total_mod_1.5km_avg, lw_inverse_avg,
+           alternative = "two.sided")
 ```
 </div>
 No evidence of autocorrelation of the residuals.
@@ -601,14 +650,16 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_2km_avg, lw_avg)
+moran.test(residuals_total_mod_2km_avg, lw_avg,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
 inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
 diag(inverse_dist_matrix_avg) <- 0
 lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
-moran.test(residuals_total_mod_2km_avg, lw_inverse_avg)
+moran.test(residuals_total_mod_2km_avg, lw_inverse_avg,
+           alternative = "two.sided")
 ```
 </div>
 No evidence of autocorrelation of the residuals.
@@ -669,7 +720,8 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1km_no_app_hours, lw)
+moran.test(residuals_total_mod_1km_no_app_hours, lw,
+           alternative = "two.sided")
 ```
 </div>
 It appears that the residuals are autocorrelated. Will need to address this.
@@ -725,7 +777,8 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1.5km_no_app_hours, lw)
+moran.test(residuals_total_mod_1.5km_no_app_hours, lw,
+           alternative = "two.sided")
 ```
 </div>
 It appears that the residuals are autocorrelated. Will need to address this.
@@ -779,7 +832,8 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_2km_no_app_hours, lw)
+moran.test(residuals_total_mod_2km_no_app_hours, lw,
+           alternative = "two.sided")
 ```
 </div>
 It appears that the residuals are autocorrelated. Will need to address this.
@@ -838,7 +892,8 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1km_avg_no_app_hours, lw_avg)
+moran.test(residuals_total_mod_1km_avg_no_app_hours, lw_avg,
+           alternative = "two.sided")
 ```
 </div>
 No evidence of autocorrelation of the residuals.
@@ -891,7 +946,8 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1.5km_avg_no_app_hours, lw_avg)
+moran.test(residuals_total_mod_1.5km_avg_no_app_hours, lw_avg,
+           alternative = "two.sided")
 ```
 </div>
 No evidence of autocorrelation of the residuals.
@@ -943,7 +999,8 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_2km_avg_no_app_hours, lw_avg)
+moran.test(residuals_total_mod_2km_avg_no_app_hours, lw_avg,
+           alternative = "two.sided")
 ```
 </div>
 No evidence of autocorrelation of the residuals.
@@ -1003,14 +1060,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1km_total_boats, lw)
+moran.test(residuals_total_mod_1km_total_boats, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_1km_total_boats, lw_inverse)
+moran.test(residuals_total_mod_1km_total_boats, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 It appears that the residuals are autocorrelated. Will need to address this.
@@ -1071,14 +1130,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1.5km_total_boats, lw)
+moran.test(residuals_total_mod_1.5km_total_boats, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_1.5km_total_boats, lw_inverse)
+moran.test(residuals_total_mod_1.5km_total_boats, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 It appears that the residuals are autocorrelated. Will need to address this.
@@ -1138,14 +1199,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_2km_total_boats, lw)
+moran.test(residuals_total_mod_2km_total_boats, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_2km_total_boats, lw_inverse)
+moran.test(residuals_total_mod_2km_total_boats, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 It appears that the residuals are autocorrelated. Will need to address this.
@@ -1179,9 +1242,9 @@ total_mod_1km_total_boats_no_app_hours <- gam(urch_sn_ratio ~ s(sst_scale) +
 
 ```{r 1km total boats no app hours model output, echo=FALSE}
 set.seed(13)
-gam.check(total_mod_1km_total_boats_no_app_hours)
+gam.check(total_mod_1km_total_boats_no_app_hours, rep = 500)
 coef(total_mod_1km_total_boats_no_app_hours)
-#shapiro.test(total_mod_1km_total_boats_no_app_hours$residuals)
+shapiro.test(total_mod_1km_total_boats_no_app_hours$residuals)
 
 plot(total_mod_1km_total_boats_no_app_hours)
 summary(total_mod_1km_total_boats_no_app_hours)
@@ -1207,14 +1270,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1km_total_boats_no_app_hours, lw)
+moran.test(residuals_total_mod_1km_total_boats_no_app_hours, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_1km_total_boats_no_app_hours, lw_inverse)
+moran.test(residuals_total_mod_1km_total_boats_no_app_hours, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 It appears that the residuals are autocorrelated. Will need to address this.
@@ -1271,14 +1336,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1.5km_total_boats_no_app_hours, lw)
+moran.test(residuals_total_mod_1.5km_total_boats_no_app_hours, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_1.5km_total_boats_no_app_hours, lw_inverse)
+moran.test(residuals_total_mod_1.5km_total_boats_no_app_hours, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 It appears that the residuals are autocorrelated. Will need to address this.
@@ -1309,8 +1376,8 @@ total_mod_2km_total_boats_no_app_hours <- gam(urch_sn_ratio ~ s(sst_scale) +
 ```{r 2km total boats no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_2km_total_boats_no_app_hours)
-coef(total_mod_2km_total_boats_no_app_hours)
-#shapiro.test(total_mod_2km_total_boats_no_app_hours$residuals)
+#coef(total_mod_2km_total_boats_no_app_hours)
+shapiro.test(total_mod_2km_total_boats_no_app_hours$residuals)
 
 plot(total_mod_2km_total_boats_no_app_hours)
 summary(total_mod_2km_total_boats_no_app_hours)
@@ -1335,14 +1402,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_2km_total_boats_no_app_hours, lw)
+moran.test(residuals_total_mod_2km_total_boats_no_app_hours, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_2km_total_boats_no_app_hours, lw_inverse)
+moran.test(residuals_total_mod_2km_total_boats_no_app_hours, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 It appears that the residuals are autocorrelated. Will need to address this.
@@ -1382,15 +1451,14 @@ total_mod_1km_total_boats_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                data = env_mod_data_avg,
                family = gaussian(link = "identity"),
                method = 'REML',
-               select = FALSE)
+               select = TRUE)
 ```
-
 
 ```{r 1km total boats avg model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_1km_total_boats_avg)
-coef(total_mod_1km_total_boats_avg)
-#shapiro.test(total_mod_1km_total_boats_avg$residuals)
+#coef(total_mod_1km_total_boats_avg)
+shapiro.test(total_mod_1km_total_boats_avg$residuals)
 
 plot(total_mod_1km_total_boats_avg)
 summary(total_mod_1km_total_boats_avg)
@@ -1415,14 +1483,16 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1km_total_boats_avg, lw_avg)
+moran.test(residuals_total_mod_1km_total_boats_avg, lw_avg,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
 inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
 diag(inverse_dist_matrix_avg) <- 0
 lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
-moran.test(residuals_total_mod_1km_total_boats_avg, lw_inverse_avg)
+moran.test(residuals_total_mod_1km_total_boats_avg, lw_inverse_avg,
+           alternative = "two.sided")
 ```
 </div>
 No spatial autocorrelation.
@@ -1482,14 +1552,16 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1.5km_total_boats_avg, lw_avg)
+moran.test(residuals_total_mod_1.5km_total_boats_avg, lw_avg,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
 inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
 diag(inverse_dist_matrix_avg) <- 0
 lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
-moran.test(residuals_total_mod_1.5km_total_boats_avg, lw_inverse_avg)
+moran.test(residuals_total_mod_1.5km_total_boats_avg, lw_inverse_avg,
+           alternative = "two.sided")
 ```
 </div>
 No spatial autocorrelation.
@@ -1524,8 +1596,8 @@ total_mod_2km_total_boats_avg <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
 ```{r 2km total boats avg model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_2km_total_boats_avg)
-coef(total_mod_2km_total_boats_avg)
-#shapiro.test(total_mod_2km_total_boats_avg$residuals)
+#coef(total_mod_2km_total_boats_avg)
+shapiro.test(total_mod_2km_total_boats_avg$residuals)
 
 plot(total_mod_2km_total_boats_avg)
 summary(total_mod_2km_total_boats_avg)
@@ -1551,14 +1623,16 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_2km_total_boats_avg, lw_avg)
+moran.test(residuals_total_mod_2km_total_boats_avg, lw_avg,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
 inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
 diag(inverse_dist_matrix_avg) <- 0
 lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
-moran.test(residuals_total_mod_2km_total_boats_avg, lw_inverse_avg)
+moran.test(residuals_total_mod_2km_total_boats_avg, lw_inverse_avg,
+           alternative = "two.sided")
 ```
 </div>
 No spatial autocorrelation.
@@ -1577,7 +1651,7 @@ high.
 
 
 
-### Building GAMs on the urch sn ratio with TOTAL boats, avg transects, and no app hours {.tabset}
+### CURRENT TOP Building GAMs on the urch sn ratio with TOTAL boats, avg transects, and no app hours {.tabset}
 
 #### Model with 1 km total boats avg and no app hours
 
@@ -1588,15 +1662,14 @@ total_mod_1km_total_boats_avg_no_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                data = env_mod_data_avg,
                family = gaussian(link = "identity"),
                method = 'REML',
-               select = FALSE)
+               select = TRUE)
 ```
-
 
 ```{r 1km total boats avg no app hours model output, echo=FALSE}
 set.seed(13)
-gam.check(total_mod_1km_total_boats_avg_no_hours)
-coef(total_mod_1km_total_boats_avg_no_hours)
-#shapiro.test(total_mod_1km_total_boats_avg_no_hours$residuals)
+gam.check(total_mod_1km_total_boats_avg_no_hours, rep = 500)
+#coef(total_mod_1km_total_boats_avg_no_hours)
+shapiro.test(total_mod_1km_total_boats_avg_no_hours$residuals)
 
 plot(total_mod_1km_total_boats_avg_no_hours)
 summary(total_mod_1km_total_boats_avg_no_hours)
@@ -1621,14 +1694,16 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1km_total_boats_avg_no_hours, lw_avg)
+moran.test(residuals_total_mod_1km_total_boats_avg_no_hours, lw_avg,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
 inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
 diag(inverse_dist_matrix_avg) <- 0
 lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
-moran.test(residuals_total_mod_1km_total_boats_avg_no_hours, lw_inverse_avg)
+moran.test(residuals_total_mod_1km_total_boats_avg_no_hours, lw_inverse_avg,
+           alternative = "two.sided")
 ```
 </div>
 No spatial autocorrelation.
@@ -1653,7 +1728,7 @@ total_mod_1.5km_total_boats_avg_no_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale)
                data = env_mod_data_avg,
                family = gaussian(link = "identity"),
                method = 'REML',
-               select = FALSE)
+               select = TRUE)
 ```
 
 
@@ -1686,14 +1761,16 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1.5km_total_boats_avg_no_hours, lw_avg)
+moran.test(residuals_total_mod_1.5km_total_boats_avg_no_hours, lw_avg,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
 inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
 diag(inverse_dist_matrix_avg) <- 0
 lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
-moran.test(residuals_total_mod_1.5km_total_boats_avg_no_hours, lw_inverse_avg)
+moran.test(residuals_total_mod_1.5km_total_boats_avg_no_hours, lw_inverse_avg,
+           alternative = "two.sided")
 ```
 </div>
 No spatial autocorrelation.
@@ -1718,15 +1795,15 @@ total_mod_2km_total_boats_avg_no_hours <- gam(urch_sn_ratio_avg ~ s(sst_scale) +
                data = env_mod_data_avg,
                family = gaussian(link = "identity"),
                method = 'REML',
-               select = FALSE)
+               select = TRUE)
 ```
 
 
 ```{r 2km total boats avg no app hours model output, echo=FALSE}
 set.seed(13)
 gam.check(total_mod_2km_total_boats_avg_no_hours, rep = 500)
-coef(total_mod_2km_total_boats_avg_no_hours)
-#shapiro.test(total_mod_2km_total_boats_avg_no_hours$residuals)
+#coef(total_mod_2km_total_boats_avg_no_hours)
+shapiro.test(total_mod_2km_total_boats_avg_no_hours$residuals)
 
 plot(total_mod_2km_total_boats_avg_no_hours)
 summary(total_mod_2km_total_boats_avg_no_hours)
@@ -1751,14 +1828,16 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_2km_total_boats_avg_no_hours, lw_avg)
+moran.test(residuals_total_mod_2km_total_boats_avg_no_hours, lw_avg,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
 inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
 diag(inverse_dist_matrix_avg) <- 0
 lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
-moran.test(residuals_total_mod_2km_total_boats_avg_no_hours, lw_inverse_avg)
+moran.test(residuals_total_mod_2km_total_boats_avg_no_hours, lw_inverse_avg,
+           alternative = "two.sided")
 ```
 </div>
 No spatial autocorrelation.
@@ -1768,6 +1847,84 @@ No spatial autocorrelation.
 ```{r Testing 2km total boats avg no app hours concurvity, echo=FALSE}
 concurvity(total_mod_2km_total_boats_avg_no_hours, full = FALSE)
 #concurvity(total_mod_2km_total_boats_avg_no_hours, full = TRUE)
+```
+</div>
+Still high concurvity but it is improved slightly and the other ones are not as
+high as the mean apparent fishing hours were.
+
+
+### Building GAMs on the urch sn ratio with TOTAL boats, avg transects, no app hours, and protect status{.tabset}
+
+#### Making exploratory plots with protection status
+
+```{r Plot of protect status vs mean total boats, echo=FALSE}
+ggplot(env_mod_data_avg, aes(x = protect_status, y = mean_total_boat_counts_1km))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+```
+
+
+#### Model with 1 km total boats avg, no app hours and protect status
+
+```{r Total 1km avg no app hours total boats model}
+total_mod_1km_total_boats_avg_no_hours_protect <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_1km_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 1km total boats avg no app hours protect model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1km_total_boats_avg_no_hours_protect, rep = 500)
+#coef(total_mod_1km_total_boats_avg_no_hours_protect)
+shapiro.test(total_mod_1km_total_boats_avg_no_hours_protect$residuals)
+
+plot(total_mod_1km_total_boats_avg_no_hours_protect)
+summary(total_mod_1km_total_boats_avg_no_hours_protect)
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing 1km total boats avg no app hours protect residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_1km_total_boats_avg_no_hours_protect <- residuals(total_mod_1km_total_boats_avg_no_hours_protect, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1km_total_boats_avg_no_hours_protect, lw_avg,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_1km_total_boats_avg_no_hours_protect, lw_inverse_avg,
+           alternative = "two.sided")
+```
+</div>
+No spatial autocorrelation.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing 1km total boats avg no app hours protect concurvity, echo=FALSE}
+concurvity(total_mod_1km_total_boats_avg_no_hours_protect, full = FALSE)
+#concurvity(total_mod_1km_total_boats_avg_no_hours_protect, full = TRUE)
 ```
 </div>
 Still high concurvity but it is improved slightly and the other ones are not as
@@ -1824,14 +1981,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_1km_total_boats_transect, lw)
+moran.test(residuals_total_mod_1km_total_boats_transect, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_1km_total_boats_transect, lw_inverse)
+moran.test(residuals_total_mod_1km_total_boats_transect, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 No autocorrelation.
@@ -1901,7 +2060,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_1km_nb, lw)
+moran.test(residuals_total_mod_snail_counts_1km_nb, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_total_mod_snail_counts_1km_nb, lw_inverse,
+           alternative = "two.sided")
 ```
 Some autocorrelation present.
 
@@ -1963,7 +2131,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_1.5km_nb, lw)
+moran.test(residuals_total_mod_snail_counts_1.5km_nb, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_total_mod_snail_counts_1.5km_nb, lw_inverse,
+           alternative = "two.sided")
 ```
 Some autocorrelation present.
 
@@ -2022,7 +2199,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_2km_nb, lw)
+moran.test(residuals_total_mod_snail_counts_2km_nb, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_total_mod_snail_counts_2km_nb, lw_inverse,
+           alternative = "two.sided")
 ```
 Some autocorrelation present.
 
@@ -2084,14 +2270,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_1km_log, lw)
+moran.test(residuals_total_mod_snail_counts_1km_log, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_snail_counts_1km_log, lw_inverse)
+moran.test(residuals_total_mod_snail_counts_1km_log, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 
@@ -2152,14 +2340,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_1.5km_log, lw)
+moran.test(residuals_total_mod_snail_counts_1.5km_log, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_snail_counts_1.5km_log, lw_inverse)
+moran.test(residuals_total_mod_snail_counts_1.5km_log, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 Some autocorrelation present. Only significant with the inverse distance method.
@@ -2219,14 +2409,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_2km_log, lw)
+moran.test(residuals_total_mod_snail_counts_2km_log, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_snail_counts_2km_log, lw_inverse)
+moran.test(residuals_total_mod_snail_counts_2km_log, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 No autocorrelation present.
@@ -2289,17 +2481,20 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_1km_log_no_app_hours, lw)
+moran.test(residuals_total_mod_snail_counts_1km_log_no_app_hours, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_snail_counts_1km_log_no_app_hours, lw_inverse)
+moran.test(residuals_total_mod_snail_counts_1km_log_no_app_hours, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 Some autocorrelation present. Only significant with the inverse distance method.
+CORRECTION: no autocorrelation for both methods when using a two sided test.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
@@ -2354,17 +2549,20 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_1.5km_log_no_app_hours, lw)
+moran.test(residuals_total_mod_snail_counts_1.5km_log_no_app_hours, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_snail_counts_1.5km_log_no_app_hours, lw_inverse)
+moran.test(residuals_total_mod_snail_counts_1.5km_log_no_app_hours, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 Some autocorrelation present. Only significant with the inverse distance method.
+CORRECTION: no autocorrelation for both methods when using a two sided test.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
@@ -2420,14 +2618,16 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_2km_log_no_app_hours, lw)
+moran.test(residuals_total_mod_snail_counts_2km_log_no_app_hours, lw,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_total_mod_snail_counts_2km_log_no_app_hours, lw_inverse)
+moran.test(residuals_total_mod_snail_counts_2km_log_no_app_hours, lw_inverse,
+           alternative = "two.sided")
 ```
 </div>
 No autocorrelation.
@@ -2444,10 +2644,13 @@ Concurvity slightly improved without the app hours.
 
 
 
-### Building GAMs on the snail counts with TOTAL boats and urchin biomass (log transformed){.tabset}
+### Building GAMs on the snail counts with TOTAL boats and urchin biomass and no app hours(log transformed){.tabset}
 
 Seeing some different trends to those with the env mod data, because this data
-does not include the hosie or raymond kelp sites.
+does not include the hosie or raymond kelp sites. The mean apparent fishing
+hours becomes significant but this seems to be due to removing one point that
+had high mean apparent fishing and medium to high snails. Removing this point
+then causes the trend to be more downward. 
 
 Included those sites with biomass of zero and the trends go back to the same as
 the other models.
@@ -2457,7 +2660,47 @@ the other models.
 ```{r Plot of urchin biomass vs urchin counts, echo=FALSE}
 ggplot(urch_biomass_mod_data, aes(x = total_site_biomass_per_m2, y = Urchins))+
   geom_point()+
+  geom_smooth(method = "lm")+
+   stat_cor(method = "pearson", label.x = 200, label.y = 2)+ # Add R2 and correlation
   theme.figure()
+```
+Urchins and urchin biomass are quite correlated so likely would have similar
+effect in the model on the snails.
+
+#### Plotting Urchin biomass vs Number of turban snails
+```{r Plot of urchin biomass vs snail counts, echo=FALSE}
+ggplot(urch_biomass_mod_data, aes(x = total_site_biomass_per_m2, y = Turban_Snails))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  theme.figure()
+```
+Urchin biomass not having a clear effect on the snail counts.
+
+
+#### Test Model with the Hosie and Raymond sites ommitted.
+
+```{r Modelling the snail counts 1km log total with biomass no hosie/raymond with a total model}
+total_mod_snail_counts_1km_log_biomass_no_HR <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                              s(mean_total_boat_counts_1km_scale)+
+                                s(mean_app_fishing_hours_scale)+
+                               s(Urchins_scale)+
+                                s(total_site_biomass_per_m2_scale),
+                             data = urch_biomass_mod_data[-c(10, 24, 25), ],
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+
+```{r Snail 1km log total boats with biomass no HRmodel output, echo=FALSE}
+set.seed(10)
+gam.check(total_mod_snail_counts_1km_log_biomass_no_HR, rep = 500)
+plot(total_mod_snail_counts_1km_log_biomass_no_HR, rug = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
+summary(total_mod_snail_counts_1km_log_biomass_no_HR)
+shapiro.test(total_mod_snail_counts_1km_log_biomass_no_HR$residuals)
 ```
 
 
@@ -2467,13 +2710,20 @@ ggplot(urch_biomass_mod_data, aes(x = total_site_biomass_per_m2, y = Urchins))+
 total_mod_snail_counts_1km_log_biomass <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
                                s(norm_openness_scale)+
                               s(mean_total_boat_counts_1km_scale)+
-                              # s(mean_app_fishing_hours_scale)+
                                s(Urchins_scale)+
                                 s(total_site_biomass_per_m2_scale),
                              data = urch_biomass_mod_data,
                              family = gaussian(link = "identity"),
                              method = "REML",
                              select = TRUE)
+```
+
+```{r Testing out the model with and with and without biomass}
+#For this I set the method to ML and tried the model with and without biomass
+#AIC(total_mod_snail_counts_1km_log_biomass,
+   # total_mod_snail_counts_1km_log_biomass_no_biomass)
+
+#Results showed identical AIC scores
 ```
 
 
@@ -2507,14 +2757,16 @@ lw_biomass <- nb2listw(nb_biomass, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_1km_log_biomass, lw_biomass)
+moran.test(residuals_total_mod_snail_counts_1km_log_biomass, lw_biomass,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_biomass <- as.matrix(dist(extracted_coords_for_auto_test_projected_biomass))
 inverse_dist_matrix_biomass <- 1 / (dist_matrix_biomass + 0.001)
 diag(inverse_dist_matrix_biomass) <- 0
 lw_inverse_biomass <- mat2listw(inverse_dist_matrix_biomass, style = "W")
-moran.test(residuals_total_mod_snail_counts_1km_log_biomass, lw_inverse_biomass)
+moran.test(residuals_total_mod_snail_counts_1km_log_biomass, lw_inverse_biomass,
+           alternative = "two.sided")
 ```
 </div>
 Some autocorrelation present. Only significant with the inverse distance method.
@@ -2535,7 +2787,6 @@ Some high concurvity so might need to eliminate certain variables.
 total_mod_snail_counts_1.5km_log_biomass <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
                                s(norm_openness_scale)+
                               s(mean_total_boat_counts_1.5km_scale)+
-                              # s(mean_app_fishing_hours_scale)+
                                s(Urchins_scale)+
                                 s(total_site_biomass_per_m2_scale),
                              data = urch_biomass_mod_data,
@@ -2575,14 +2826,16 @@ lw_biomass <- nb2listw(nb_biomass, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_1.5km_log_biomass, lw_biomass)
+moran.test(residuals_total_mod_snail_counts_1.5km_log_biomass, lw_biomass,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_biomass <- as.matrix(dist(extracted_coords_for_auto_test_projected_biomass))
 inverse_dist_matrix_biomass <- 1 / (dist_matrix_biomass + 0.001)
 diag(inverse_dist_matrix_biomass) <- 0
 lw_inverse_biomass <- mat2listw(inverse_dist_matrix_biomass, style = "W")
-moran.test(residuals_total_mod_snail_counts_1.5km_log_biomass, lw_inverse_biomass)
+moran.test(residuals_total_mod_snail_counts_1.5km_log_biomass, lw_inverse_biomass,
+           alternative = "two.sided")
 ```
 </div>
 Some autocorrelation present. Only significant with the inverse distance method.
@@ -2604,7 +2857,6 @@ Some high concurvity so might need to eliminate certain variables.
 total_mod_snail_counts_2km_log_biomass <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
                                s(norm_openness_scale)+
                               s(mean_total_boat_counts_2km_scale)+
-                              # s(mean_app_fishing_hours_scale)+
                                s(Urchins_scale)+
                                 s(total_site_biomass_per_m2_scale),
                              data = urch_biomass_mod_data,
@@ -2644,14 +2896,16 @@ lw_biomass <- nb2listw(nb_biomass, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_2km_log_biomass, lw_biomass)
+moran.test(residuals_total_mod_snail_counts_2km_log_biomass, lw_biomass,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_biomass <- as.matrix(dist(extracted_coords_for_auto_test_projected_biomass))
 inverse_dist_matrix_biomass <- 1 / (dist_matrix_biomass + 0.001)
 diag(inverse_dist_matrix_biomass) <- 0
 lw_inverse_biomass <- mat2listw(inverse_dist_matrix_biomass, style = "W")
-moran.test(residuals_total_mod_snail_counts_2km_log_biomass, lw_inverse_biomass)
+moran.test(residuals_total_mod_snail_counts_2km_log_biomass, lw_inverse_biomass,
+           alternative = "two.sided")
 ```
 </div>
 No autocorrelation.
@@ -2692,7 +2946,7 @@ total_mod_snail_counts_1km_avg_log <- gam(log(snails_avg + 1) ~ s(sst_scale) +
                      s(urchins_avg_scale),
                data = env_mod_data_avg,
                family = gaussian(link = "identity"),
-               method = 'ML',
+               method = 'REML',
                select = TRUE)
 ```
 
@@ -2723,14 +2977,16 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_1km_avg_log, lw_avg)
+moran.test(residuals_total_mod_snail_counts_1km_avg_log, lw_avg,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
 inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
 diag(inverse_dist_matrix_avg) <- 0
 lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
-moran.test(residuals_total_mod_snail_counts_1km_avg_log, lw_inverse_avg)
+moran.test(residuals_total_mod_snail_counts_1km_avg_log, lw_inverse_avg,
+           alternative = "two.sided")
 ```
 </div>  
 No evidence of autocorrelation of the residuals.
@@ -2758,7 +3014,7 @@ total_mod_snail_counts_1.5km_avg_log <- gam(log(snails_avg + 1) ~ s(sst_scale) +
                      s(urchins_avg_scale),
                data = env_mod_data_avg,
                family = gaussian(link = "identity"),
-               method = 'ML',
+               method = 'REML',
                select = TRUE)
 ```
 
@@ -2789,14 +3045,16 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_1.5km_avg_log, lw_avg)
+moran.test(residuals_total_mod_snail_counts_1.5km_avg_log, lw_avg,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
 inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
 diag(inverse_dist_matrix_avg) <- 0
 lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
-moran.test(residuals_total_mod_snail_counts_1.5km_avg_log, lw_inverse_avg)
+moran.test(residuals_total_mod_snail_counts_1.5km_avg_log, lw_inverse_avg,
+           alternative = "two.sided")
 ```
 </div>  
 No evidence of autocorrelation of the residuals.
@@ -2824,7 +3082,7 @@ total_mod_snail_counts_2km_avg_log <- gam(log(snails_avg + 1) ~ s(sst_scale) +
                      s(urchins_avg_scale),
                data = env_mod_data_avg,
                family = gaussian(link = "identity"),
-               method = 'ML',
+               method = 'REML',
                select = TRUE)
 ```
 
@@ -2855,14 +3113,16 @@ lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
 
 
 ##Testing the residuals with Moran's I test and weight matrix
-moran.test(residuals_total_mod_snail_counts_2km_avg_log, lw_avg)
+moran.test(residuals_total_mod_snail_counts_2km_avg_log, lw_avg,
+           alternative = "two.sided")
 
 #Testing the residuals with inverse distance matrix as well to confirm
 dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
 inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
 diag(inverse_dist_matrix_avg) <- 0
 lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
-moran.test(residuals_total_mod_snail_counts_2km_avg_log, lw_inverse_avg)
+moran.test(residuals_total_mod_snail_counts_2km_avg_log, lw_inverse_avg,
+           alternative = "two.sided")
 ```
 </div>  
 No evidence of autocorrelation of the residuals.
@@ -2879,3 +3139,201 @@ Some of the variables appear to have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots. May need to get
 rid of the mean apparent fishing hours however. Since the concurvity was very
 high.
+
+### Building GAMs on the snail counts with TOTAL boats avg points and no app hours(log transformed){.tabset}
+
+#### Snail model with 1km total boats and avg transects and no app hours
+
+```{r Modelling the snail counts 1km total avg no app hours log with a total model}
+total_mod_snail_counts_1km_avg_log_no_app_hours <- gam(log(snails_avg + 1) ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_1km_scale)+
+                     s(urchins_avg_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r snail 1km avg no app hours log model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_snail_counts_1km_avg_log_no_app_hours, rep = 500)
+shapiro.test(total_mod_snail_counts_1km_avg_log_no_app_hours$residuals)
+
+plot(total_mod_snail_counts_1km_avg_log_no_app_hours)
+summary(total_mod_snail_counts_1km_avg_log_no_app_hours)
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing snail 1km avg no app hours log residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_snail_counts_1km_avg_log_no_app_hours <- residuals(total_mod_snail_counts_1km_avg_log_no_app_hours, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_snail_counts_1km_avg_log_no_app_hours, lw_avg,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_snail_counts_1km_avg_log_no_app_hours, lw_inverse_avg,
+           alternative = "two.sided")
+```
+</div>  
+No evidence of autocorrelation of the residuals.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing snail 1km avg no app hours log concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_1km_avg_log_no_app_hours, full = FALSE)
+#concurvity(total_mod_snail_counts_1km_avg_log_no_app_hours, full = TRUE)
+```
+</div>  
+
+Some of the variables appear to have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots.
+
+#### Snail model with 1.5km total boats and avg transects and no app hours
+
+```{r Modelling the snail counts 1.5km total avg no app hours log with a total model}
+total_mod_snail_counts_1.5km_avg_log_no_app_hours <- gam(log(snails_avg + 1) ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_1.5km_scale)+
+                     s(urchins_avg_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r snail 1.5km avg no app hours log model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_snail_counts_1.5km_avg_log_no_app_hours, rep = 500)
+shapiro.test(total_mod_snail_counts_1.5km_avg_log_no_app_hours$residuals)
+
+plot(total_mod_snail_counts_1.5km_avg_log_no_app_hours)
+summary(total_mod_snail_counts_1.5km_avg_log_no_app_hours)
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing snail 1.5km avg no app hours log residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_snail_counts_1.5km_avg_log_no_app_hours <- residuals(total_mod_snail_counts_1.5km_avg_log_no_app_hours, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_snail_counts_1.5km_avg_log_no_app_hours, lw_avg,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_snail_counts_1.5km_avg_log_no_app_hours, lw_inverse_avg,
+           alternative = "two.sided")
+```
+</div>  
+No evidence of autocorrelation of the residuals.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing snail 1.5km avg no app hours log concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_1.5km_avg_log_no_app_hours, full = FALSE)
+#concurvity(total_mod_snail_counts_1.5km_avg_log_no_app_hours, full = TRUE)
+```
+</div>  
+
+Some of the variables appear to have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots.
+
+
+#### Snail model with 2km total boats and avg transects and no app hours
+
+```{r Modelling the snail counts 2km total avg no app hours log with a total model}
+total_mod_snail_counts_2km_avg_log_no_app_hours <- gam(log(snails_avg + 1) ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_2km_scale)+
+                     s(urchins_avg_scale),
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r snail 2km avg no app hours log model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_snail_counts_2km_avg_log_no_app_hours, rep = 500)
+shapiro.test(total_mod_snail_counts_2km_avg_log_no_app_hours$residuals)
+
+plot(total_mod_snail_counts_2km_avg_log_no_app_hours)
+summary(total_mod_snail_counts_2km_avg_log_no_app_hours)
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing snail 2km avg no app hours log residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_snail_counts_2km_avg_log_no_app_hours <- residuals(total_mod_snail_counts_2km_avg_log_no_app_hours, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_snail_counts_2km_avg_log_no_app_hours, lw_avg,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_snail_counts_2km_avg_log_no_app_hours, lw_inverse_avg,
+           alternative = "two.sided")
+```
+</div>  
+No evidence of autocorrelation of the residuals.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing snail 1km avg no app hours log concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_1km_avg_log_no_app_hours, full = FALSE)
+#concurvity(total_mod_snail_counts_1km_avg_log_no_app_hours, full = TRUE)
+```
+</div>  
+
+Some of the variables appear to have high concurvity scores in the worst case,
+but confidence intervals seem stable for the model plots.
