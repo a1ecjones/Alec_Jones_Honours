@@ -79,9 +79,19 @@ env_mod_data_avg <- env_mod_data%>%
 ```
 
 ```{r Creating a subset dataset for the sites with urchin size info}
-env_mod_data_biomass <- env_mod_data%>%
+env_mod_data_biomass <- urch_sn_ratio_mod_2024%>%
   left_join(max_biomass_df, by = c("site_code", "depth"))%>%
-  left_join(inbetween_biomass_df, c("site_code", "depth"))
+  #left_join(inbetween_biomass_df, c("site_code", "depth"))%>%  #the inbetween categories are wrong because they start between 0 and 2.5
+    #filter(!site_code %in% c("BMSC15", "BMSC26"))%>%
+  replace(is.na(.), 0)%>%
+  select(-c(site_name.y, latitude.x, longitude.x, visibility.y, hour.y))
+
+
+```
+
+```{r Writing as a csv}
+write_csv(env_mod_data_biomass,
+          here("./03_clean_data/urchin_biomass_data_updated_jan_25.csv"))
 ```
 
 

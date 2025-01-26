@@ -96,6 +96,42 @@ env_mod_data_avg$turban_snails_avg_scale <- scale(env_mod_data_avg$snails_avg)
 ```
 
 
+### Urchin Biomass data
+```{r Loading in the urchin biomass data set}
+urch_biomass_mod_data <- read_csv(here("./03_clean_data/urchin_biomass_data_updated_jan_25.csv"))
+```
+
+
+```{r Creating a subset dataset for the sites with urchin size info}
+urch_biomass_mod_data$sst_scale <- scale(urch_biomass_mod_data$sst)
+urch_biomass_mod_data$openness_scale <- scale(urch_biomass_mod_data$openness)
+urch_biomass_mod_data$norm_openness_scale <- scale(urch_biomass_mod_data$norm_openness)
+urch_biomass_mod_data$mean_app_fishing_hours_scale <- scale(urch_biomass_mod_data$mean_app_fishing_hours)
+urch_biomass_mod_data$mean_rec_boat_counts_500m_scale <- scale(urch_biomass_mod_data$mean_rec_boat_counts_500m)
+urch_biomass_mod_data$mean_rec_boat_counts_1km_scale <- scale(urch_biomass_mod_data$mean_rec_boat_counts_1km)
+urch_biomass_mod_data$mean_rec_boat_counts_1.5km_scale <- scale(urch_biomass_mod_data$mean_rec_boat_counts_1.5km)
+urch_biomass_mod_data$mean_rec_boat_counts_750m_scale <- scale(urch_biomass_mod_data$mean_rec_boat_counts_750m)
+urch_biomass_mod_data$mean_rec_boat_counts_2km_scale <- scale(urch_biomass_mod_data$mean_rec_boat_counts_2km)
+urch_biomass_mod_data$dominant_score <- as.factor(urch_biomass_mod_data$dominant_score)
+urch_biomass_mod_data$site_code <- as.factor(urch_biomass_mod_data$site_code)
+urch_biomass_mod_data$Urchins_scale <- scale(urch_biomass_mod_data$Urchins)
+urch_biomass_mod_data$Turban_Snails_scale <- scale(urch_biomass_mod_data$Turban_Snails)
+#Total boat counts
+urch_biomass_mod_data$mean_total_boat_counts_1km_scale <- scale(urch_biomass_mod_data$mean_total_boat_counts_1km)
+urch_biomass_mod_data$mean_total_boat_counts_1.5km_scale <- scale(urch_biomass_mod_data$mean_total_boat_counts_1.5km)
+urch_biomass_mod_data$mean_total_boat_counts_2km_scale <- scale(urch_biomass_mod_data$mean_total_boat_counts_2km)
+
+#Urchin Biomass
+urch_biomass_mod_data$total_site_biomass_scale <- scale(urch_biomass_mod_data$total_site_biomass)
+urch_biomass_mod_data$total_site_biomass_per_m2_scale <- scale(urch_biomass_mod_data$total_site_biomass_per_m2)
+
+levels(urch_biomass_mod_data$dominant_score) <- list(loose = "3", solid = "4")
+
+regions <- c("region1", "region2", "region3", "region4")
+urch_biomass_mod_data[regions] <- lapply(urch_biomass_mod_data[regions], factor)
+```
+
+
 ```{r Making theme for all subsequent figures, echo=FALSE}
 theme.figure <- function (){
   theme_bw(base_size = 12) +
@@ -2205,6 +2241,83 @@ concurvity(total_mod_snail_counts_2km_log_no_app_hours, full = FALSE)
 </div>
 
 Concurvity slightly improved without the app hours.
+
+
+
+### Building GAMs on the snail counts with TOTAL boats and urchin biomass (log transformed)
+
+Seeing some different trends to those with the env mod data, because this data
+does not include the hosie or raymond kelp sites.
+
+Included those sites with biomass of zero and the trends go back to the same as
+the other models.
+
+#### Model with 1 km total boats
+
+```{r Modelling the snail counts 1km log total with biomass with a total model}
+total_mod_snail_counts_1km_log_biomass <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                              s(mean_total_boat_counts_1km_scale)+
+                              # s(mean_app_fishing_hours_scale)+
+                               s(Urchins_scale)+
+                                s(total_site_biomass_per_m2_scale),
+                             data = urch_biomass_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+
+```{r Snail 1km log total boats with biomass model output, echo=FALSE}
+set.seed(10)
+gam.check(total_mod_snail_counts_1km_log_biomass, rep = 500)
+plot(total_mod_snail_counts_1km_log_biomass, rug = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
+summary(total_mod_snail_counts_1km_log_biomass)
+shapiro.test(total_mod_snail_counts_1km_log_biomass$residuals)
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing snail mod 1km log total with biomass residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_snail_counts_1km_log_biomass <- residuals(total_mod_snail_counts_1km_log_biomass, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_biomass <- st_as_sf(urch_biomass_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_biomass <- st_transform(coords_for_auto_test_biomass, crs = 3857)
+extracted_coords_for_auto_test_projected_biomass <- st_coordinates(coords_for_auto_test_projected_biomass)
+
+
+nb_biomass <- dnearneigh(extracted_coords_for_auto_test_projected_biomass, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw_biomass <- nb2listw(nb_biomass, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_snail_counts_1km_log_biomass, lw_biomass)
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_biomass <- as.matrix(dist(extracted_coords_for_auto_test_projected_biomass))
+inverse_dist_matrix_biomass <- 1 / (dist_matrix_biomass + 0.001)
+diag(inverse_dist_matrix_biomass) <- 0
+lw_inverse_biomass <- mat2listw(inverse_dist_matrix_biomass, style = "W")
+moran.test(residuals_total_mod_snail_counts_1km_log_biomass, lw_inverse_biomass)
+```
+Some autocorrelation present. Only significant with the inverse distance method.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing snail 1km total with biomass log boats concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_1km_log_biomass, full = FALSE)
+#concurvity(total_mod_snail_counts_1km_log_biomass, full = TRUE)
+```
+</div>
+
+Some high concurvity so might need to eliminate certain variables.
 
 
 ### Building GAMs on the snail counts with TOTAL boats and averaged points (log transformed)

@@ -2811,7 +2811,6 @@ ggplot(test_size_df[-c(10, 24, 25), ], aes(x = Turban_Snails, y = Urchins))+
 ```
 
 
-
 ##Biodiversity analysis
 
 ###Calculating biodiversity at each site
