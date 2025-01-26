@@ -97,12 +97,12 @@ env_mod_data_avg$turban_snails_avg_scale <- scale(env_mod_data_avg$snails_avg)
 
 
 ### Urchin Biomass data
-```{r Loading in the urchin biomass data set}
+```{r Loading in the urchin biomass data set, echo==FALSE}
 urch_biomass_mod_data <- read_csv(here("./03_clean_data/urchin_biomass_data_updated_jan_25.csv"))
 ```
 
 
-```{r Creating a subset dataset for the sites with urchin size info}
+```{r Creating a subset dataset for the sites with urchin size info, include=FALSE}
 urch_biomass_mod_data$sst_scale <- scale(urch_biomass_mod_data$sst)
 urch_biomass_mod_data$openness_scale <- scale(urch_biomass_mod_data$openness)
 urch_biomass_mod_data$norm_openness_scale <- scale(urch_biomass_mod_data$norm_openness)
@@ -2093,6 +2093,8 @@ diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
 moran.test(residuals_total_mod_snail_counts_1km_log, lw_inverse)
 ```
+</div>
+
 Some autocorrelation present. Only significant with the inverse distance method.
 
 ##### Testing the model for concurvity
@@ -2159,6 +2161,7 @@ diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
 moran.test(residuals_total_mod_snail_counts_1.5km_log, lw_inverse)
 ```
+</div>
 Some autocorrelation present. Only significant with the inverse distance method.
 
 ##### Testing the model for concurvity
@@ -2225,6 +2228,7 @@ diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
 moran.test(residuals_total_mod_snail_counts_2km_log, lw_inverse)
 ```
+</div>
 No autocorrelation present.
 
 ##### Testing the model for concurvity
@@ -2254,7 +2258,7 @@ total_mod_snail_counts_1km_log_no_app_hours <- gam(log(Turban_Snails + 1) ~ s(ss
                              select = TRUE)
 ```
 
-<div class="fold o"> 
+
 ```{r Snail 1km log total no app hours boats model output, echo=FALSE}
 set.seed(10)
 gam.check(total_mod_snail_counts_1km_log_no_app_hours, rep = 500)
@@ -2264,7 +2268,7 @@ plot(total_mod_snail_counts_1km_log_no_app_hours, rug = TRUE)
 summary(total_mod_snail_counts_1km_log_no_app_hours)
 shapiro.test(total_mod_snail_counts_1km_log_no_app_hours$residuals)
 ```
-</div>
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
@@ -2294,6 +2298,7 @@ diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
 moran.test(residuals_total_mod_snail_counts_1km_log_no_app_hours, lw_inverse)
 ```
+</div>
 Some autocorrelation present. Only significant with the inverse distance method.
 
 ##### Testing the model for concurvity
@@ -2319,7 +2324,7 @@ total_mod_snail_counts_1.5km_log_no_app_hours <- gam(log(Turban_Snails + 1) ~ s(
                              select = TRUE)
 ```
 
-<div class="fold o"> 
+
 ```{r Snail 1.5km log total no app hours boats model output, echo=FALSE}
 set.seed(10)
 gam.check(total_mod_snail_counts_1.5km_log_no_app_hours, rep = 500)
@@ -2329,7 +2334,6 @@ plot(total_mod_snail_counts_1.5km_log_no_app_hours, rug = TRUE)
 summary(total_mod_snail_counts_1.5km_log_no_app_hours)
 shapiro.test(total_mod_snail_counts_1.5km_log_no_app_hours$residuals)
 ```
-</div>
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
@@ -2359,6 +2363,7 @@ diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
 moran.test(residuals_total_mod_snail_counts_1.5km_log_no_app_hours, lw_inverse)
 ```
+</div>
 Some autocorrelation present. Only significant with the inverse distance method.
 
 ##### Testing the model for concurvity
@@ -2424,6 +2429,7 @@ diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
 moran.test(residuals_total_mod_snail_counts_2km_log_no_app_hours, lw_inverse)
 ```
+</div>
 No autocorrelation.
 
 ##### Testing the model for concurvity
@@ -2510,6 +2516,7 @@ diag(inverse_dist_matrix_biomass) <- 0
 lw_inverse_biomass <- mat2listw(inverse_dist_matrix_biomass, style = "W")
 moran.test(residuals_total_mod_snail_counts_1km_log_biomass, lw_inverse_biomass)
 ```
+</div>
 Some autocorrelation present. Only significant with the inverse distance method.
 
 ##### Testing the model for concurvity
@@ -2577,6 +2584,7 @@ diag(inverse_dist_matrix_biomass) <- 0
 lw_inverse_biomass <- mat2listw(inverse_dist_matrix_biomass, style = "W")
 moran.test(residuals_total_mod_snail_counts_1.5km_log_biomass, lw_inverse_biomass)
 ```
+</div>
 Some autocorrelation present. Only significant with the inverse distance method.
 
 ##### Testing the model for concurvity
@@ -2645,6 +2653,7 @@ diag(inverse_dist_matrix_biomass) <- 0
 lw_inverse_biomass <- mat2listw(inverse_dist_matrix_biomass, style = "W")
 moran.test(residuals_total_mod_snail_counts_2km_log_biomass, lw_inverse_biomass)
 ```
+</div>
 No autocorrelation.
 
 ##### Testing the model for concurvity
@@ -2664,7 +2673,7 @@ spatial autocorrelation.
 
 #### Looking at the distribution of avg snail counts
 
-```{r Histogram of avg snail counts}
+```{r Histogram of avg snail counts, echo=FALSE}
 ggplot(env_mod_data_avg, aes(x = snails_avg))+
   geom_histogram(binwidth = 75)+
   theme.figure()
