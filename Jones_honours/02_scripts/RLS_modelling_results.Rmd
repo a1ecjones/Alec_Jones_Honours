@@ -1864,13 +1864,54 @@ ggplot(env_mod_data_avg, aes(x = protect_status, y = mean_total_boat_counts_1km)
   theme.figure()
 ```
 
+```{r Plot of protect status vs urch sn ratio, echo=FALSE}
+ggplot(env_mod_data_avg, aes(x = protect_status, y = urch_sn_ratio_avg))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+```
+
+#### Doing a statistical comparison of urch sn ratio between protected and non-protected sites
+
+```{r Comparing histograms of urch sn ratio between protection level}
+ggplot(env_mod_data_avg, aes(x = urch_sn_ratio_avg))+
+  geom_histogram(binwidth = 0.45)+
+  facet_wrap(~protect_status, ncol = 1)+
+  theme.figure()
+```
+
+
+```{r Testing the urch sn ratio for normality between groups}
+protected_sites_avg <- subset(env_mod_data_avg, protect_status == "Protected")
+non_protected_sites_avg <- subset(env_mod_data_avg, protect_status == "No Protection")
+
+shapiro.test(protected_sites_avg$urch_sn_ratio_avg)
+shapiro.test(non_protected_sites_avg$urch_sn_ratio_avg)
+
+#Both are normal
+```
+
+```{r Testing for assumption of equal variances between groups}
+leveneTest(urch_sn_ratio_avg ~ protect_status, env_mod_data_avg)
+
+#Variance is equal between groups so we can run an anova
+```
+
+```{r Doing an ANOVA on urch sn ratio between protection levels}
+urch_sn_ratio_avg_protection_mod <- lm(urch_sn_ratio_avg ~ protect_status, data = env_mod_data_avg)
+
+anova(urch_sn_ratio_avg_protection_mod)
+summary(urch_sn_ratio_avg_protection_mod)
+```
+
 
 #### Model with 1 km total boats avg, no app hours and protect status
 
-```{r Total 1km avg no app hours total boats model}
+```{r Total 1km avg no app hours protect total boats model}
 total_mod_1km_total_boats_avg_no_hours_protect <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
                    s(norm_openness_scale) +
-                   s(mean_total_boat_counts_1km_scale),
+                   s(mean_total_boat_counts_1km_scale)+
+                     protect_status,
                data = env_mod_data_avg,
                family = gaussian(link = "identity"),
                method = 'REML',
@@ -1925,6 +1966,207 @@ No spatial autocorrelation.
 ```{r Testing 1km total boats avg no app hours protect concurvity, echo=FALSE}
 concurvity(total_mod_1km_total_boats_avg_no_hours_protect, full = FALSE)
 #concurvity(total_mod_1km_total_boats_avg_no_hours_protect, full = TRUE)
+```
+</div>
+Still high concurvity but it is improved slightly and the other ones are not as
+high as the mean apparent fishing hours were.
+
+#### Model with 1.5 km total boats avg, no app hours and protect status
+
+```{r Total 1.5km avg no app hours protect total boats model}
+total_mod_1.5km_total_boats_avg_no_hours_protect <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_1.5km_scale)+
+                     protect_status,
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 1.5km total boats avg no app hours protect model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1.5km_total_boats_avg_no_hours_protect, rep = 500)
+#coef(total_mod_1.5km_total_boats_avg_no_hours_protect)
+shapiro.test(total_mod_1.5km_total_boats_avg_no_hours_protect$residuals)
+
+plot(total_mod_1.5km_total_boats_avg_no_hours_protect)
+summary(total_mod_1.5km_total_boats_avg_no_hours_protect)
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing 1.5km total boats avg no app hours protect residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_1.5km_total_boats_avg_no_hours_protect <- residuals(total_mod_1.5km_total_boats_avg_no_hours_protect, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1.5km_total_boats_avg_no_hours_protect, lw_avg,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_1.5km_total_boats_avg_no_hours_protect, lw_inverse_avg,
+           alternative = "two.sided")
+```
+</div>
+No spatial autocorrelation.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing 1.5km total boats avg no app hours protect concurvity, echo=FALSE}
+concurvity(total_mod_1.5km_total_boats_avg_no_hours_protect, full = FALSE)
+#concurvity(total_mod_1.5km_total_boats_avg_no_hours_protect, full = TRUE)
+```
+</div>
+Still high concurvity but it is improved slightly and the other ones are not as
+high as the mean apparent fishing hours were.
+
+#### Model with 2 km total boats avg, no app hours and protect status
+
+```{r Total 2km avg no app hours protect total boats model}
+total_mod_2km_total_boats_avg_no_hours_protect <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_2km_scale)+
+                     protect_status,
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 2km total boats avg no app hours protect model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_2km_total_boats_avg_no_hours_protect, rep = 500)
+#coef(total_mod_2km_total_boats_avg_no_hours_protect)
+shapiro.test(total_mod_2km_total_boats_avg_no_hours_protect$residuals)
+
+plot(total_mod_2km_total_boats_avg_no_hours_protect)
+summary(total_mod_2km_total_boats_avg_no_hours_protect)
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing 2km total boats avg no app hours protect residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_2km_total_boats_avg_no_hours_protect <- residuals(total_mod_2km_total_boats_avg_no_hours_protect, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_2km_total_boats_avg_no_hours_protect, lw_avg,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_2km_total_boats_avg_no_hours_protect, lw_inverse_avg,
+           alternative = "two.sided")
+```
+</div>
+No spatial autocorrelation.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing 2km total boats avg no app hours protect concurvity, echo=FALSE}
+concurvity(total_mod_2km_total_boats_avg_no_hours_protect, full = FALSE)
+#concurvity(total_mod_2km_total_boats_avg_no_hours_protect, full = TRUE)
+```
+</div>
+Still high concurvity but it is improved slightly and the other ones are not as
+high as the mean apparent fishing hours were.
+
+
+### Building GAMs on the urch sn ratio with TOTAL boats, avg transects, no app hours, and protect status with interaction with total boats{.tabset}
+
+#### Model with 1 km total boats avg, no app hours and protect status with interaction
+
+```{r Total 1km avg no app hours protect int total boats model}
+total_mod_1km_total_boats_avg_no_hours_protect_int <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+                   s(norm_openness_scale) +
+                   s(mean_total_boat_counts_1km_scale, by = protect_status)+
+                     protect_status,
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = 'REML',
+               select = TRUE)
+```
+
+```{r 1km total boats avg no app hours protect int model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1km_total_boats_avg_no_hours_protect_int, rep = 500)
+#coef(total_mod_1km_total_boats_avg_no_hours_protect_int)
+shapiro.test(total_mod_1km_total_boats_avg_no_hours_protect_int$residuals)
+
+plot(total_mod_1km_total_boats_avg_no_hours_protect_int)
+summary(total_mod_1km_total_boats_avg_no_hours_protect_int)
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing 1km total boats avg no app hours protect int residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_1km_total_boats_avg_no_hours_protect_int <- residuals(total_mod_1km_total_boats_avg_no_hours_protect_int, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+#picked 1000 m for distance so that it has some neighbours for enough sites
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_1km_total_boats_avg_no_hours_protect_int, lw_avg,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_total_mod_1km_total_boats_avg_no_hours_protect_int, lw_inverse_avg,
+           alternative = "two.sided")
+```
+</div>
+No spatial autocorrelation.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing 1km total boats avg no app hours protect int concurvity, echo=FALSE}
+concurvity(total_mod_1km_total_boats_avg_no_hours_protect_int, full = FALSE)
+#concurvity(total_mod_1km_total_boats_avg_no_hours_protect_int, full = TRUE)
 ```
 </div>
 Still high concurvity but it is improved slightly and the other ones are not as
@@ -2435,7 +2677,7 @@ Some high concurvity so might need to eliminate certain variables.
 
 
 
-### Building GAMs on the snail counts with TOTAL boats and no app hours (log transformed){.tabset}
+### CURRENT TOP SNAIL Building GAMs on the snail counts with TOTAL boats and no app hours (log transformed){.tabset}
 
 #### Model with 1 km total boats
 
@@ -3329,11 +3571,349 @@ No evidence of autocorrelation of the residuals.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
-```{r Testing snail 1km avg no app hours log concurvity, echo=FALSE}
-concurvity(total_mod_snail_counts_1km_avg_log_no_app_hours, full = FALSE)
-#concurvity(total_mod_snail_counts_1km_avg_log_no_app_hours, full = TRUE)
+```{r Testing snail 2km avg no app hours log concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_2km_avg_log_no_app_hours, full = FALSE)
+#concurvity(total_mod_snail_counts_2km_avg_log_no_app_hours, full = TRUE)
 ```
 </div>  
 
 Some of the variables appear to have high concurvity scores in the worst case,
 but confidence intervals seem stable for the model plots.
+
+### Building GAMs on the snail counts with TOTAL boats, no app hours, protection status(log transformed){.tabset}
+
+#### Making exploratory plots with protection status
+
+```{r Plot of protect status vs snail counts, echo=FALSE}
+ggplot(env_mod_data, aes(x = protect_status, y = Turban_Snails))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+```
+
+#### Doing a statistical comparison of snail counts between protected and non-protected sites
+
+```{r Comparing histograms of snail counts between protection level}
+ggplot(env_mod_data, aes(x = log(Turban_Snails + 1)))+
+  geom_histogram(binwidth = 0.7)+
+  facet_wrap(~protect_status, ncol = 1)+
+  theme.figure()
+```
+
+
+```{r Testing the snail counts for normality between groups}
+protected_sites <- subset(env_mod_data, protect_status == "Protected")
+non_protected_sites <- subset(env_mod_data, protect_status == "No Protection")
+
+shapiro.test(protected_sites$Turban_Snails)
+shapiro.test(non_protected_sites$Turban_Snails)
+#non protected sites not normal
+
+protected_sites$log_Turban_Snails <- log(protected_sites$Turban_Snails + 1)
+non_protected_sites$log_Turban_Snails <- log(non_protected_sites$Turban_Snails + 1)
+
+shapiro.test(protected_sites$log_Turban_Snails)
+shapiro.test(non_protected_sites$log_Turban_Snails)
+#protected sites not normal
+
+protected_sites$Turban_Snails_sq <- sqrt(protected_sites$Turban_Snails)
+non_protected_sites$Turban_Snails_sq <- sqrt(non_protected_sites$Turban_Snails)
+
+shapiro.test(protected_sites$Turban_Snails_sq)
+shapiro.test(non_protected_sites$Turban_Snails_sq)
+#non-protected not normal
+```
+
+```{r Testing for assumption of equal variances between groups for snail counts}
+leveneTest(Turban_Snails ~ protect_status, env_mod_data)
+
+#Variance is equal between groups
+```
+
+```{r Doing a wilcoxon test on snail counts between protection levels}
+wilcox.test(Turban_Snails ~ protect_status, data = env_mod_data,
+            alternative = "two.sided")
+```
+
+#### Model with 1 km total boats protect
+
+```{r Modelling the snail counts 1km log total no app hours protect with a total model}
+total_mod_snail_counts_1km_log_no_app_hours_protect <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                              s(mean_total_boat_counts_1km_scale)+
+                               s(Urchins_scale)+
+                                protect_status,
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+
+```{r Snail 1km log total no app hours boats protect model output, echo=FALSE}
+set.seed(10)
+gam.check(total_mod_snail_counts_1km_log_no_app_hours_protect, rep = 500)
+plot(total_mod_snail_counts_1km_log_no_app_hours_protect, rug = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
+summary(total_mod_snail_counts_1km_log_no_app_hours_protect)
+shapiro.test(total_mod_snail_counts_1km_log_no_app_hours_protect$residuals)
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing snail mod 1km log total no app hours protect residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_snail_counts_1km_log_no_app_hours_protect <- residuals(total_mod_snail_counts_1km_log_no_app_hours_protect, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_snail_counts_1km_log_no_app_hours_protect, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_total_mod_snail_counts_1km_log_no_app_hours_protect, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+Some autocorrelation present. Only significant with the inverse distance method.
+CORRECTION: no autocorrelation for both methods when using a two sided test.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing snail 1km total log no app hours protect boats concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_1km_log_no_app_hours_protect, full = FALSE)
+#concurvity(total_mod_snail_counts_1km_log_no_app_hours_protect, full = TRUE)
+```
+</div>
+
+Concurvity slightly improved without the app hours.
+
+#### Model with 1.5 km total boats protect
+
+```{r Modelling the snail counts 1.5km log total no app hours protect with a total model}
+total_mod_snail_counts_1.5km_log_no_app_hours_protect <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                              s(mean_total_boat_counts_1.5km_scale)+
+                               s(Urchins_scale)+
+                                protect_status,
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+
+```{r Snail 1.5km log total no app hours boats protect model output, echo=FALSE}
+set.seed(10)
+gam.check(total_mod_snail_counts_1.5km_log_no_app_hours_protect, rep = 500)
+plot(total_mod_snail_counts_1.5km_log_no_app_hours_protect, rug = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
+summary(total_mod_snail_counts_1.5km_log_no_app_hours_protect)
+shapiro.test(total_mod_snail_counts_1.5km_log_no_app_hours_protect$residuals)
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing snail mod 1.5km log total no app hours protect residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_snail_counts_1.5km_log_no_app_hours_protect <- residuals(total_mod_snail_counts_1.5km_log_no_app_hours_protect, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_snail_counts_1.5km_log_no_app_hours_protect, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_total_mod_snail_counts_1.5km_log_no_app_hours_protect, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+Some autocorrelation present. Only significant with the inverse distance method.
+CORRECTION: no autocorrelation for both methods when using a two sided test.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing snail 1.5km total log no app hours protect boats concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_1.5km_log_no_app_hours_protect, full = FALSE)
+#concurvity(total_mod_snail_counts_1.5km_log_no_app_hours_protect, full = TRUE)
+```
+</div>
+
+Concurvity slightly improved without the app hours.
+
+#### Model with 2 km total boats protect
+
+```{r Modelling the snail counts 2km log total no app hours protect with a total model}
+total_mod_snail_counts_2km_log_no_app_hours_protect <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                              s(mean_total_boat_counts_2km_scale)+
+                               s(Urchins_scale)+
+                                protect_status,
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+
+```{r Snail 2km log total no app hours boats protect model output, echo=FALSE}
+set.seed(10)
+gam.check(total_mod_snail_counts_2km_log_no_app_hours_protect, rep = 500)
+plot(total_mod_snail_counts_2km_log_no_app_hours_protect, rug = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
+summary(total_mod_snail_counts_2km_log_no_app_hours_protect)
+shapiro.test(total_mod_snail_counts_2km_log_no_app_hours_protect$residuals)
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing snail mod 2km log total no app hours protect residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_snail_counts_2km_log_no_app_hours_protect <- residuals(total_mod_snail_counts_2km_log_no_app_hours_protect, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_snail_counts_2km_log_no_app_hours_protect, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_total_mod_snail_counts_2km_log_no_app_hours_protect, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+Some autocorrelation present. Only significant with the inverse distance method.
+CORRECTION: no autocorrelation for both methods when using a two sided test.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing snail 2km total log no app hours protect boats concurvity, echo=FALSE}
+concurvity(total_mod_snail_counts_2km_log_no_app_hours_protect, full = FALSE)
+#concurvity(total_mod_snail_counts_2km_log_no_app_hours_protect, full = TRUE)
+```
+</div>
+
+Concurvity slightly improved without the app hours.
+
+## Modelling the urchin counts{.tabset}
+
+### Building GAMS on the urchin counts with TOTAL boats
+
+```{r Modelling the urchin counts 1km total with a total model}
+total_mod_urchin_counts_1km <- gam(Urchins ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                              s(mean_total_boat_counts_1km_scale)+
+                              #  s(mean_app_fishing_hours_scale)+
+                               s(Turban_Snails_scale)+
+                                protect_status,
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+
+```{r Urchin 1km total boats model output, echo=FALSE}
+set.seed(10)
+gam.check(total_mod_urchin_counts_1km, rep = 500)
+plot(total_mod_urchin_counts_1km, rug = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
+summary(total_mod_urchin_counts_1km)
+shapiro.test(total_mod_urchin_counts_1km$residuals)
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing urchin mod 1km total residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_total_mod_urchin_counts_1km <- residuals(total_mod_urchin_counts_1km, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_total_mod_urchin_counts_1km, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_total_mod_urchin_counts_1km, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+Some autocorrelation present. Only significant with the inverse distance method.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing urchin 1km total boats concurvity, echo=FALSE}
+concurvity(total_mod_urchin_counts_1km, full = FALSE)
+#concurvity(total_mod_urchin_counts_1km, full = TRUE)
+```
+</div>
+
+Some high concurvity so might need to eliminate certain variables.
