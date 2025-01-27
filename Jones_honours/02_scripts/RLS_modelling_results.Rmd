@@ -3847,6 +3847,49 @@ Concurvity slightly improved without the app hours.
 
 ## Modelling the urchin counts{.tabset}
 
+### Seeing if protection status impacts urchin counts
+
+#### Making exploratory plots with protection status
+
+```{r Plot of protect status vs urchin counts, echo=FALSE}
+ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+```
+
+
+####Statistical analysis if urchin counts are different between protection status
+
+```{r Comparing histograms of urchin counts between protection level}
+ggplot(env_mod_data, aes(x = Urchins))+
+  geom_histogram(binwidth = 75)+
+  facet_wrap(~protect_status, ncol = 1)+
+  theme.figure()
+```
+
+```{r Testing the urchin counts for normality between groups}
+protected_sites <- subset(env_mod_data, protect_status == "Protected")
+non_protected_sites <- subset(env_mod_data, protect_status == "No Protection")
+
+shapiro.test(protected_sites$Urchins)
+shapiro.test(non_protected_sites$Urchins)
+#non protected sites barely not normal but hist looks ok
+```
+
+```{r Testing for assumption of equal variances between groups for urchin counts}
+leveneTest(Urchins ~ protect_status, env_mod_data)
+
+#Variance is equal between groups
+```
+
+```{r Doing an ANOVA on urchin counts between protection levels}
+urchin_counts_protection_mod <- lm(Urchins ~ protect_status, data = env_mod_data)
+
+anova(urchin_counts_protection_mod)
+summary(urchin_counts_protection_mod)
+```
+
 ### Building GAMS on the urchin counts with TOTAL boats
 
 ```{r Modelling the urchin counts 1km total with a total model}
@@ -3854,8 +3897,8 @@ total_mod_urchin_counts_1km <- gam(Urchins ~ s(sst_scale)+
                                s(norm_openness_scale)+
                               s(mean_total_boat_counts_1km_scale)+
                               #  s(mean_app_fishing_hours_scale)+
-                               s(Turban_Snails_scale)+
-                                protect_status,
+                               s(Turban_Snails_scale),
+                                #protect_status,
                              data = env_mod_data,
                              family = gaussian(link = "identity"),
                              method = "REML",
