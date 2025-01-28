@@ -25,9 +25,9 @@ library(sf)
 library(car)
 library(MuMIn)
 library(lme4)
-library(flextable)
 library(spdep)
 library(ggpubr)
+library(glmmTMB)
 ```
 
 <!--Jan. 22. I have updated the data with the flights with fog ommitted from the data.
@@ -2299,6 +2299,42 @@ high.
 
 ## Modelling the snail counts{.tabset}
 
+### Ecology model on the snail counts with temperature, openness, and bottom type
+
+```{r Turban snail ecology/environmental model}
+ecology_snail_mod <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score,
+                                # s(region1, bs = "re"),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+gam.check(ecology_snail_mod)
+plot(ecology_snail_mod, all.terms = TRUE)
+summary(ecology_snail_mod)
+```
+
+Initially did this model with openness as a smooth term but fitting produced a linear effect of openness so re fit model with linear openness.
+
+```{r Turban snail ecology/environmental model linear}
+ecology_snail_mod_linear <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               norm_openness_scale +
+                           dominant_score,
+                                # s(region1, bs = "re"),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+gam.check(ecology_snail_mod_linear)
+plot(ecology_snail_mod_linear, all.terms = TRUE)
+summary(ecology_snail_mod_linear)
+```
+Results showing the same trends with normalized openness included as a linear term.
+Ultimately the results of the environmental model for turban snail abundance/counts
+indicate the turban snails are not controlled by temperature or substrate type,
+but they are strongly controlled by the openness gradient, with less snails in
+more exposed sites. 
 ### Building GAMs on the snail counts with TOTAL boats (negative binomial){.tabset}
 
 #### Model with 1 km total boats
@@ -3698,28 +3734,19 @@ plot(ecology_urchin_mod, all.terms = TRUE)
 summary(ecology_urchin_mod)
 ```
 
+
 ```{r}
-urchin_fishing_mod <- gam(Urchins ~ #s(mean_rec_boat_counts_1.5km_scale)+
-                               protect_status,
-                           
-                               # s(region1, bs = "re"),
-                             data = env_mod_data,
-                             family = scat(),
-                             method = "REML",
-                             select = TRUE)
-
-plot(urchin_fishing_mod, all.terms = TRUE)
-gam.check(urchin_fishing_mod)
-summary(urchin_fishing_mod)
-
-
-
+ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
+  geom_boxplot()+
+  geom_jitter()
 ```
 
+
+
 ```{r}
-urch_sn_ratio_test <- gam(urch_sn_ratio ~ s(mean_rec_boat_counts_2km_scale)+
-                            protect_status,
-                           # s(region1, bs = "re"), 
+urch_sn_ratio_test <- gam(urch_sn_ratio ~ #s(mean_rec_boat_counts_2km_scale)+
+                            protect_status+
+                            s(region1, bs = "re"), 
                           data = env_mod_data,
                           method = "REML",
                           family = scat(),
@@ -3728,25 +3755,8 @@ plot(urch_sn_ratio_test, all.terms = TRUE)
 gam.check(urch_sn_ratio_test)
 summary(urch_sn_ratio_test)
 ```
-```{r}
-ggplot(env_mod_data, aes(x = protect_status, y = mean_rec_boat_counts_1km))+
-  geom_boxplot()
-```
 
 
-```{r snail ecology}
-ecology_snail_mod <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
-                               norm_openness_scale+
-                           dominant_score,
-                                # s(region1, bs = "re"),
-                             data = env_mod_data,
-                             family = gaussian(link = "identity"),
-                             method = "REML",
-                             select = TRUE)
-gam.check(ecology_snail_mod)
-plot(ecology_snail_mod, all.terms = TRUE)
-summary(ecology_snail_mod)
-```
 
 
 
@@ -4683,10 +4693,437 @@ concurvity(total_mod_urchin_counts_2km_protect_avg, full = FALSE)
 
 Some high concurvity so might need to eliminate certain variables.
 
+## Updated modelling methodology following meeting with Amanda{.tabset}
 
-```{r}
-ggplot(env_mod_data, aes())
+### Red Turban Snail Models
+
+#### Ecology model on the snail counts with temperature, openness, and bottom type
+
+```{r Turban snail ecology/environmental model}
+ecology_snail_mod <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score,
+                                # s(region1, bs = "re"), #Random effect of region does not have an impact on the snails
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Turban snail ecology/environmental model output, echo=FALSE}
+gam.check(ecology_snail_mod)
+plot(ecology_snail_mod, all.terms = TRUE)
+summary(ecology_snail_mod)
+```
+
+Initially did this model with openness as a smooth term but fitting produced a linear effect of openness so re fit model with linear openness.
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Turban snail ecology model residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_ecology_snail_mod <- residuals(ecology_snail_mod, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ecology_snail_mod, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_ecology_snail_mod, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+No autocorrelation for both methods when using a two sided test.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing turban snail ecology model for concurvity, echo=FALSE}
+concurvity(ecology_snail_mod, full = FALSE)
+concurvity(ecology_snail_mod, full = TRUE)
+```
+</div>
+
+Temperature and openness seem to be somewhat concurve. Temp having no impact on
+the model (being removed by select).
+
+#### Ecology model on the snail counts with temperature, openness, and bottom type (linear openness)
+
+```{r Turban snail ecology/environmental model linear}
+ecology_snail_mod_linear <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               norm_openness_scale +
+                           dominant_score,
+                                #s(region1, bs = "re"), #Random effect of region does not have an impact on the snails
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Turban snail ecology/environmental model linear output, echo=FALSE}
+gam.check(ecology_snail_mod_linear)
+plot(ecology_snail_mod_linear, all.terms = TRUE)
+summary(ecology_snail_mod_linear)
+```
+Results showing the same trends with normalized openness included as a linear term.
+Ultimately the results of the environmental model for turban snail abundance/counts
+indicate the turban snails are not controlled by temperature or substrate type,
+but they are strongly controlled by the openness gradient, with less snails in
+more exposed sites. 
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Turban snail ecology model linear residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_ecology_snail_mod_linear <- residuals(ecology_snail_mod_linear, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ecology_snail_mod_linear, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_ecology_snail_mod_linear, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+No autocorrelation for both methods when using a two sided test.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing turban snail ecology model linear for concurvity, echo=FALSE}
+concurvity(ecology_snail_mod_linear, full = FALSE)
+concurvity(ecology_snail_mod_linear, full = TRUE)
+```
+</div>
+
+Concurvity seems to be improved when having openness as a linear term. Maybe not
+and it is just how the function calculates it differently or omits it.
+
+### Red Sea urchin models
+
+For the urchin ecology models the main result from all is that the ecological
+or environmental variables are not explaining their numbers at all. The urchins
+seem to have broken normal ecological controls and are out of control in the 
+system. 
+
+!!!!The one potential exception is when including a random effect of region, the
+openness becomes borderline and negative.
+
+#### Ecology model on the urchin counts with temperature, openness, and bottom type
+
+```{r Urchin ecology/environmental model}
+ecology_urchin_mod <- gam(Urchins ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score,
+                                #s(region1, bs = "re"),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Urchin ecology/environmental model output, echo=FALSE}
+set.seed(299)
+gam.check(ecology_urchin_mod, rep = 500)
+plot(ecology_urchin_mod, all.terms = TRUE)
+summary(ecology_urchin_mod)
+shapiro.test(ecology_urchin_mod$residuals)
+```
+Tried with other distributions as well but gaussian appears to be the best.
+Confirm this with Amanda.
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin ecology model residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_ecology_urchin_mod <- residuals(ecology_urchin_mod, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ecology_urchin_mod, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_ecology_urchin_mod, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+Some positive autocorrelation but only with the inverse distance method. The 
+neighbour method has no autocorrelation.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing urchin ecology model for concurvity, echo=FALSE}
+concurvity(ecology_urchin_mod, full = FALSE)
+concurvity(ecology_urchin_mod, full = TRUE)
+```
+</div>
+
+Concurvity is high for temperature and openness. Both are being removed by the 
+double penalty.
+
+
+#### Ecology model on the urchin counts with temperature, openness, and bottom type (region re)
+
+```{r Urchin ecology/environmental model region re}
+ecology_urchin_mod_re <- gam(Urchins ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score+
+                                s(region1, bs = "re"),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Urchin ecology/environmental model region re output, echo=FALSE}
+set.seed(299)
+gam.check(ecology_urchin_mod_re, rep = 500)
+plot(ecology_urchin_mod_re, all.terms = TRUE)
+summary(ecology_urchin_mod_re)
+shapiro.test(ecology_urchin_mod_re$residuals)
+```
+Gaussian looks ok. When adding the random effect of region the openness becomes
+borderline and negative. 
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin ecology model region re residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_ecology_urchin_mod_re <- residuals(ecology_urchin_mod_re, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ecology_urchin_mod_re, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_ecology_urchin_mod_re, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+No autocorrelation.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing urchin ecology model for concurvity, echo=FALSE}
+concurvity(ecology_urchin_mod_re, full = FALSE)
+concurvity(ecology_urchin_mod_re, full = TRUE)
+```
+</div>
+
+Temp and region are basically fully concurve.
+
+
+
+
+#### Ecology model on the urchin counts with temperature, openness, and bottom type (average transects)
+
+```{r Urchin ecology/environmental model avg}
+ecology_urchin_mod_avg <- gam(urchins_avg ~ s(sst_scale)+
+                               s(norm_openness_scale),
+                           #dominant_score,
+                                #s(region1, bs = "re"),
+                             data = env_mod_data_avg,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Urchin ecology/environmental model avg output, echo=FALSE}
+set.seed(299)
+gam.check(ecology_urchin_mod_avg, rep = 500)
+plot(ecology_urchin_mod_avg, all.terms = TRUE)
+summary(ecology_urchin_mod_avg)
+shapiro.test(ecology_urchin_mod_avg$residuals)
 ```
 
 
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin ecology model avg residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_ecology_urchin_mod_avg <- residuals(ecology_urchin_mod_avg, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test_avg <- st_as_sf(env_mod_data_avg, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected_avg <- st_transform(coords_for_auto_test_avg, crs = 3857)
+extracted_coords_for_auto_test_projected_avg <- st_coordinates(coords_for_auto_test_projected_avg)
+
+
+nb_avg <- dnearneigh(extracted_coords_for_auto_test_projected_avg, d1 = 0, d2 = 1000)
+
+
+lw_avg <- nb2listw(nb_avg, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ecology_urchin_mod_avg, lw_avg,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix_avg <- as.matrix(dist(extracted_coords_for_auto_test_projected_avg))
+inverse_dist_matrix_avg <- 1 / (dist_matrix_avg + 0.001)
+diag(inverse_dist_matrix_avg) <- 0
+lw_inverse_avg <- mat2listw(inverse_dist_matrix_avg, style = "W")
+moran.test(residuals_ecology_urchin_mod_avg, lw_inverse_avg,
+           alternative = "two.sided")
+```
+</div>
+
+No positive autocorrelation
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing urchin ecology model avg for concurvity, echo=FALSE}
+concurvity(ecology_urchin_mod_avg, full = FALSE)
+concurvity(ecology_urchin_mod_avg, full = TRUE)
+```
+</div>
+
+Concurvity is high for temperature and openness. Both are being removed by the 
+double penalty.
+
+
+#### Protection status model on the urchin counts (GAM)
+
+```{r Fishing model on the urchin counts}
+urchin_fishing_mod <- gam(Urchins ~ protect_status,
+                             data = env_mod_data,
+                             family = gaussian(),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Urchin fishing model output}
+plot(urchin_fishing_mod, all.terms = TRUE)
+gam.check(urchin_fishing_mod)
+summary(urchin_fishing_mod)
+```
+
+Seems to be a weak (non-significant) effect on the urchin counts of less urchins
+in the protected sites. 
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin fishing model residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_urchin_fishing_mod <- residuals(urchin_fishing_mod, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_urchin_fishing_mod, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_urchin_fishing_mod, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+Some autocorrelation but only in the inverse method.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing urchin ecology model for concurvity, echo=FALSE}
+#concurvity(urchin_fishing_mod, full = FALSE)
+#concurvity(urchin_fishing_mod, full = TRUE)
+```
+</div>
+
+Only one variable so no concurvity in this model.
+
+#### Protection status model on the urchin counts (glmm)
+
+```{r Urchin fishing model glmm}
+urchin_fishing_mod_glmm <- glmmTMB(Urchins ~ protect_status,
+                                   data = env_mod_data,
+                                   family = gaussian(link = "identity"))
+```
+
+```{r Urchin fishing mod glmm output}
+#Checking resids
+urchin_fishing_mod_glmm_resids <- simulateResiduals(urchin_fishing_mod_glmm)
+plot(urchin_fishing_mod_glmm_resids)
+```
 
