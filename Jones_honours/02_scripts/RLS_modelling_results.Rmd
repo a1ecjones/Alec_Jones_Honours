@@ -258,6 +258,20 @@ ggplot(env_mod_data, aes(x = norm_openness, y = mean_rec_boat_counts_1km, colour
   theme.figure()
 ```
 
+```{r Openness vs mean rec boats 1km, echo=FALSE}
+ggplot(env_mod_data, aes(x = norm_openness, y = log(Turban_Snails + 1), colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+
+
+```{r Openness vs mean rec boats 1km, echo=FALSE}
+ggplot(env_mod_data, aes(x = norm_openness, y = Urchins, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
 ```{r Openness vs mean apparent fishing hours, echo=FALSE}
 ggplot(env_mod_data, aes(x = norm_openness, y = mean_app_fishing_hours, colour = region1))+
   geom_point()+
@@ -1653,6 +1667,37 @@ high.
 
 ### CURRENT TOP Building GAMs on the urch sn ratio with TOTAL boats, avg transects, and no app hours {.tabset}
 
+```{r Total 1km avg no app hours total boats model}
+total_mod_1km_total_boats_avg_no_hours <- gam(urch_sn_ratio_avg ~
+                   s(norm_openness_scale) +
+                   protect_status,
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = "REML",
+               select = TRUE)
+```
+
+```{r 1km total boats avg no app hours model output, echo=FALSE}
+set.seed(13)
+gam.check(total_mod_1km_total_boats_avg_no_hours, rep = 500)
+#coef(total_mod_1km_total_boats_avg_no_hours)
+shapiro.test(total_mod_1km_total_boats_avg_no_hours$residuals)
+
+plot(total_mod_1km_total_boats_avg_no_hours, all.terms = TRUE)
+summary(total_mod_1km_total_boats_avg_no_hours)
+```
+
+```{r Total 1km avg no app hours total boats model}
+total_mod_1km_total_boats_avg_no_hours_test <- gam(urch_sn_ratio_avg ~# s(sst_scale) + 
+                   #s(norm_openness_scale) +
+                   s(mean_total_boat_counts_1km_scale)+
+                     protect_status,
+               data = env_mod_data_avg,
+               family = gaussian(link = "identity"),
+               method = "REML",
+               select = TRUE)
+```
+
 #### Model with 1 km total boats avg and no app hours
 
 ```{r Total 1km avg no app hours total boats model}
@@ -2041,10 +2086,10 @@ high as the mean apparent fishing hours were.
 #### Model with 2 km total boats avg, no app hours and protect status
 
 ```{r Total 2km avg no app hours protect total boats model}
-total_mod_2km_total_boats_avg_no_hours_protect <- gam(urch_sn_ratio_avg ~ s(sst_scale) + 
+total_mod_2km_total_boats_avg_no_hours_protect <- gam(urch_sn_ratio_avg ~ #s(sst_scale) + 
                    s(norm_openness_scale) +
-                   s(mean_total_boat_counts_2km_scale)+
-                     protect_status,
+                   s(mean_total_boat_counts_2km_scale),
+                    # protect_status,
                data = env_mod_data_avg,
                family = gaussian(link = "identity"),
                method = 'REML',
@@ -2183,11 +2228,12 @@ individual point.
 #### Model with 1 km total boats and RE of transect
 
 ```{r Total 1km total boats RE transect model}
-total_mod_1km_total_boats_transect <- gam(urch_sn_ratio ~ s(sst_scale) + 
+total_mod_1km_total_boats_transect <- gam(urch_sn_ratio ~ #s(sst_scale) + 
                    s(norm_openness_scale) +
-                   s(mean_total_boat_counts_1km_scale)+
-                   s(mean_app_fishing_hours_scale)+
-                     s(site_code, bs = "re"),
+                   s(mean_total_boat_counts_1km_scale),
+                    # protect_status,
+                #   s(mean_app_fishing_hours_scale),
+                   #  s(site_code, bs = "re"),
                data = env_mod_data,
                family = gaussian(link = "identity"),
                method = 'REML',
@@ -2314,6 +2360,7 @@ lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
 moran.test(residuals_total_mod_snail_counts_1km_nb, lw_inverse,
            alternative = "two.sided")
 ```
+</div>
 Some autocorrelation present.
 
 ##### Testing the model for concurvity
@@ -2385,6 +2432,7 @@ lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
 moran.test(residuals_total_mod_snail_counts_1.5km_nb, lw_inverse,
            alternative = "two.sided")
 ```
+</div>
 Some autocorrelation present.
 
 ##### Testing the model for concurvity
@@ -3636,6 +3684,94 @@ wilcox.test(Turban_Snails ~ protect_status, data = env_mod_data,
             alternative = "two.sided")
 ```
 
+```{r urchin ecology}
+ecology_urchin_mod <- gam(Urchins ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score,
+                                # s(region1, bs = "re"),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+gam.check(ecology_urchin_mod)
+plot(ecology_urchin_mod, all.terms = TRUE)
+summary(ecology_urchin_mod)
+```
+
+```{r}
+urchin_fishing_mod <- gam(Urchins ~ #s(mean_rec_boat_counts_1.5km_scale)+
+                               protect_status,
+                           
+                               # s(region1, bs = "re"),
+                             data = env_mod_data,
+                             family = scat(),
+                             method = "REML",
+                             select = TRUE)
+
+plot(urchin_fishing_mod, all.terms = TRUE)
+gam.check(urchin_fishing_mod)
+summary(urchin_fishing_mod)
+
+
+
+```
+
+```{r}
+urch_sn_ratio_test <- gam(urch_sn_ratio ~ s(mean_rec_boat_counts_2km_scale)+
+                            protect_status,
+                           # s(region1, bs = "re"), 
+                          data = env_mod_data,
+                          method = "REML",
+                          family = scat(),
+                          select = TRUE)
+plot(urch_sn_ratio_test, all.terms = TRUE)
+gam.check(urch_sn_ratio_test)
+summary(urch_sn_ratio_test)
+```
+```{r}
+ggplot(env_mod_data, aes(x = protect_status, y = mean_rec_boat_counts_1km))+
+  geom_boxplot()
+```
+
+
+```{r snail ecology}
+ecology_snail_mod <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               norm_openness_scale+
+                           dominant_score,
+                                # s(region1, bs = "re"),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+gam.check(ecology_snail_mod)
+plot(ecology_snail_mod, all.terms = TRUE)
+summary(ecology_snail_mod)
+```
+
+
+
+
+```{r Modelling the snail counts 1km log total no app hours protect with a total model}
+total_mod_snail_counts_1km_log_random_effect_test <- gam(log(Turban_Snails + 1) ~
+                               s(norm_openness_scale)+
+                                 s(region1, bs = "re"),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+
+```{r Snail 1km log total no app hours boats protect model output, echo=FALSE}
+set.seed(10)
+gam.check(total_mod_snail_counts_1km_log_random_effect_test, rep = 500)
+plot(total_mod_snail_counts_1km_log_random_effect_test, rug = TRUE, all.terms = TRUE)
+     #residuals = TRUE, pch = 1, shade = TRUE,
+     #shift = coef(total_mod_snail_counts)[1])
+summary(total_mod_snail_counts_1km_log_random_effect_test)
+shapiro.test(total_mod_snail_counts_1km_log_random_effect_test$residuals)
+```
+
 #### Model with 1 km total boats protect
 
 ```{r Modelling the snail counts 1km log total no app hours protect with a total model}
@@ -3854,9 +3990,6 @@ Concurvity slightly improved without the app hours.
 ggplot(env_mod_data, aes(x = Urchins))+
   geom_histogram(binwidth = 100)+
   theme.figure()
-
-#shapiro.test(env_mod_data$Urchins)
-#Urchin counts are ~normal
 ```
 
 
@@ -3872,7 +4005,7 @@ ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
 ```
 
 
-####Statistical analysis if urchin counts are different between protection status
+#### Statistical analysis if urchin counts are different between protection status
 
 ```{r Comparing histograms of urchin counts between protection level}
 ggplot(env_mod_data, aes(x = Urchins))+
@@ -3908,7 +4041,7 @@ summary(urchin_counts_protection_mod)
 #### Urchin model 1km no app hours
 
 ```{r Modelling the urchin counts 1km total with a total model}
-total_mod_urchin_counts_1km <- gam(Urchins ~ s(sst_scale)+
+total_mod_urchin_counts_1km <- gam(log(Urchins + 1) ~ s(sst_scale)+
                                s(norm_openness_scale)+
                               s(mean_total_boat_counts_1km_scale)+
                                s(Turban_Snails_scale),
@@ -4121,10 +4254,10 @@ Some high concurvity so might need to eliminate certain variables.
 #### Urchin model 1km no app hours with protection status
 
 ```{r Modelling the urchin counts 1km total protect with a total model}
-total_mod_urchin_counts_1km_protect <- gam(Urchins ~ s(sst_scale, k = 5)+ #limiting temp in this model because it gets very wiggly with default k
-                               s(norm_openness_scale)+
+total_mod_urchin_counts_1km_protect <- gam(Urchins ~ #s(sst_scale, k = 5)+ #limiting temp in this model because it gets very wiggly with default k
+                               #s(norm_openness_scale)+
                               s(mean_total_boat_counts_1km_scale)+
-                               s(Turban_Snails_scale)+
+                             #  s(Turban_Snails_scale)+
                                 protect_status,
                              data = env_mod_data,
                              family = gaussian(link = "identity"),
@@ -4549,3 +4682,11 @@ concurvity(total_mod_urchin_counts_2km_protect_avg, full = FALSE)
 </div>
 
 Some high concurvity so might need to eliminate certain variables.
+
+
+```{r}
+ggplot(env_mod_data, aes())
+```
+
+
+
