@@ -5335,7 +5335,7 @@ lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
 moran.test(residuals_urchin_fishing_mod_glm, lw_inverse,
            alternative = "two.sided")
 ```
-
+</div>
 Seeing some autocorrelation in the inverse method but not the neighbour method.
 
 ### Confirming the validity of protection status with DFO flyover data
@@ -5421,5 +5421,113 @@ ggplot(env_mod_data[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_
 ggplot(env_mod_data[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_total_boat_counts_2km))+
   geom_boxplot()+
   geom_point()+
+  theme.figure()
+```
+
+
+### Urchin Ratio fishing model
+
+```{r Urchin ratio protection GAM model}
+urch_sn_ratio_protection_model <- gam(urch_sn_ratio ~ protect_status+
+                            s(region1, bs = "re"), 
+                          data = env_mod_data,
+                          method = "REML",
+                          family = scat(),
+                          select = TRUE)
+```
+
+
+```{r Urchin ratio protection GAM model output, echo=FALSE}
+plot(urch_sn_ratio_protection_model, all.terms = TRUE)
+
+set.seed(32823)
+gam.check(urch_sn_ratio_protection_model, rep = 500)
+summary(urch_sn_ratio_protection_model)
+shapiro.test(urch_sn_ratio_protection_model$residuals)
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin snail ratio protection model for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_urch_sn_ratio_protection_model <- residuals(urch_sn_ratio_protection_model, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_urch_sn_ratio_protection_model, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_urch_sn_ratio_protection_model, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+No autocorrelation present.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing urchin fishing model for concurvity, echo=FALSE}
+concurvity(urch_sn_ratio_protection_model, full = FALSE)
+concurvity(urch_sn_ratio_protection_model, full = TRUE)
+```
+</div>
+
+Concurvity seems high but not sure what that actually means since there is one variable.
+
+
+### Urchin Ratio fishing model glm
+
+```{r Checking variance between protected and non-protected, echo=FALSE}
+leveneTest(urch_sn_ratio ~ protect_status, data = env_mod_data)
+```
+Variance is equal between protection status.
+
+
+```{r Urchin ratio protection GLM model}
+urch_sn_ratio_protection_model_glm <- glmmTMB(urch_sn_ratio ~ protect_status+
+                          (1|region1), 
+                          data = env_mod_data,
+                          family = gaussian(link = "identity"))
+```
+
+```{r Urchin sn ratio protection mod glm output}
+#Checking resids
+urch_sn_ratio_protection_model_glm_resids <- simulateResiduals(urch_sn_ratio_protection_model_glm)
+plot(urch_sn_ratio_protection_model_glm_resids)
+
+#Plot residuals of random effects 
+urch_sn_ratio_protection_model_glm_ranef_values <- ranef(urch_sn_ratio_protection_model_glm)$cond$region1
+urch_sn_ratio_protection_model_glm_ranef_values_numeric <- urch_sn_ratio_protection_model_glm_ranef_values$`(Intercept)`
+
+qqnorm(urch_sn_ratio_protection_model_glm_ranef_values_numeric) #This is fine as far as I know 
+
+#hist(urch_sn_ratio_protection_model_glm$residuals)
+#shapiro.test(residuals(urch_sn_ratio_protection_model_glm))
+
+#Looking at model results
+summary(urch_sn_ratio_protection_model_glm)
+```
+
+```{r Plotting the effect of protection status on urchin ratio in glm}
+pred_urch_sn_ratio_protection_model_glm <- ggpredict(urch_sn_ratio_protection_model_glm, terms = "protect_status")
+
+ggplot(pred_urch_sn_ratio_protection_model_glm, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
   theme.figure()
 ```
