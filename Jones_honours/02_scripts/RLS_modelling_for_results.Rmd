@@ -1,0 +1,855 @@
+---
+title: "RLS Modelling for Amanda"
+author: "Alec"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+   toc: true
+---
+
+   <script src="hideOutput.js"></script> 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+library(mgcv)
+library(DHARMa)
+library(mgcViz)
+library(ggeffects)
+library(gratia)
+library(geoR)
+library(geosphere)
+library(gstat)
+library(sf)
+library(car)
+library(MuMIn)
+library(lme4)
+library(spdep)
+library(ggpubr)
+library(glmmTMB)
+library(emmeans)
+```
+
+
+```{r Loading in the data, include=FALSE}
+env_mod_data <- read_csv(here("./03_clean_data/urch_sn_ratio_mod_data.csv"))
+```
+
+```{r Scaling the explanatory variables and converting substrate type to factor, include=FALSE}
+env_mod_data$sst_scale <- scale(env_mod_data$sst)
+env_mod_data$openness_scale <- scale(env_mod_data$openness)
+env_mod_data$norm_openness_scale <- scale(env_mod_data$norm_openness)
+env_mod_data$mean_app_fishing_hours_scale <- scale(env_mod_data$mean_app_fishing_hours)
+env_mod_data$mean_rec_boat_counts_500m_scale <- scale(env_mod_data$mean_rec_boat_counts_500m)
+env_mod_data$mean_rec_boat_counts_1km_scale <- scale(env_mod_data$mean_rec_boat_counts_1km)
+env_mod_data$mean_rec_boat_counts_1.5km_scale <- scale(env_mod_data$mean_rec_boat_counts_1.5km)
+env_mod_data$mean_rec_boat_counts_750m_scale <- scale(env_mod_data$mean_rec_boat_counts_750m)
+env_mod_data$mean_rec_boat_counts_2km_scale <- scale(env_mod_data$mean_rec_boat_counts_2km)
+env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
+env_mod_data$site_code <- as.factor(env_mod_data$site_code)
+env_mod_data$Urchins_scale <- scale(env_mod_data$Urchins)
+env_mod_data$Turban_Snails_scale <- scale(env_mod_data$Turban_Snails)
+#Total boat counts
+env_mod_data$mean_total_boat_counts_1km_scale <- scale(env_mod_data$mean_total_boat_counts_1km)
+env_mod_data$mean_total_boat_counts_1.5km_scale <- scale(env_mod_data$mean_total_boat_counts_1.5km)
+env_mod_data$mean_total_boat_counts_2km_scale <- scale(env_mod_data$mean_total_boat_counts_2km)
+
+levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
+
+regions <- c("region1", "region2", "region3", "region4")
+env_mod_data[regions] <- lapply(env_mod_data[regions], factor)
+```
+
+```{r Creating a factor variable of protection status for the modelling data, include=FALSE}
+#In this chunk I am making three objects with the various protection statuses
+#of the different sites. protect_status has all sites protected from fishing
+#to some degree (RCA, ecological reserve, finfish closure area) and 
+#protect_status_park includes the sites within the Broken Group Park that are
+#not within the RCA.
+protect_status <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 
+                    0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
+
+protect_status_park <- c(0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
+
+#kelp_forest <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+
+  env_mod_data$protect_status <- as.factor(protect_status)
+levels(env_mod_data$protect_status) <- c("No Protection", "Protected")
+
+env_mod_data$protect_status_park <- as.factor(protect_status_park)
+levels(env_mod_data$protect_status_park) <- c("No Protection", "Protected")
+
+
+#Reordering so easier to see which sites are protected in the DF
+env_mod_data <- env_mod_data[, c(seq(1, 11, by = 1), 44, 45, seq(12, 43, by = 1))]
+
+
+#Will need to confirm which areas were kelp forests based on the photos or
+#talking with Jasmin but likely will just be hosie and raymond
+
+#env_mod_data$kelp_forest <- as.factor(kelp_forest)
+#levels(env_mod_data$kelp_forest) <- c("No Kelp", "Kelp Forest")
+```
+
+```{r Making theme for all subsequent figures, echo=FALSE}
+theme.figure <- function (){
+  theme_bw(base_size = 12) +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    #axis.line = element_line(colour = "black"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12, face = "plain"),
+    legend.text = element_text(size = 10, face = "plain"),
+    legend.title = element_text(size = 14, face = "bold")) 
+}
+
+```
+
+# Modelling{.tabset}
+
+## Ecology models{.tabset}
+
+### Red Turban Snail Ecology Models{.tabset}
+
+#### Model 1: Ecology model on the snail counts with temperature, openness, and bottom type
+
+```{r Turban snail ecology/environmental model}
+ecology_snail_mod <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score,
+                                # s(region1, bs = "re"), #Random effect of region does not have an impact on the snails
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Turban snail ecology/environmental model output, echo=FALSE}
+gam.check(ecology_snail_mod)
+plot(ecology_snail_mod, all.terms = TRUE)
+summary(ecology_snail_mod)
+```
+
+Initially did this model with openness as a smooth term but fitting produced a linear effect of openness so re fit model with linear openness.
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Turban snail ecology model residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_ecology_snail_mod <- residuals(ecology_snail_mod, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ecology_snail_mod, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_ecology_snail_mod, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+No autocorrelation for both methods when using a two sided test.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing turban snail ecology model for concurvity, echo=FALSE}
+concurvity(ecology_snail_mod, full = FALSE)
+concurvity(ecology_snail_mod, full = TRUE)
+```
+</div>
+
+Temperature and openness seem to be somewhat concurve. Temp having no impact on
+the model (being removed by select).
+
+
+#### Model 2: Ecology model on the snail counts with temperature, openness, and bottom type (linear openness)
+
+```{r Turban snail ecology/environmental model linear}
+ecology_snail_mod_linear <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               norm_openness_scale +
+                           dominant_score,
+                                #s(region1, bs = "re"), #Random effect of region does not have an impact on the snails
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Turban snail ecology/environmental model linear output, echo=FALSE}
+gam.check(ecology_snail_mod_linear)
+plot(ecology_snail_mod_linear, all.terms = TRUE)
+summary(ecology_snail_mod_linear)
+```
+Results showing the same trends with normalized openness included as a linear term.
+Ultimately the results of the environmental model for turban snail abundance/counts
+indicate the turban snails are not controlled by temperature or substrate type,
+but they are strongly controlled by the openness gradient, with less snails in
+more exposed sites. 
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Turban snail ecology model linear residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_ecology_snail_mod_linear <- residuals(ecology_snail_mod_linear, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ecology_snail_mod_linear, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_ecology_snail_mod_linear, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+No autocorrelation for both methods when using a two sided test.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing turban snail ecology model linear for concurvity, echo=FALSE}
+concurvity(ecology_snail_mod_linear, full = FALSE)
+concurvity(ecology_snail_mod_linear, full = TRUE)
+```
+</div>
+
+Concurvity seems to be improved when having openness as a linear term. Maybe not
+and it is just how the function calculates it differently or omits it.
+
+
+### Red Sea urchin ecology models{.tabset}
+
+#### Model 3: Ecology model on the urchin counts with temperature, openness, and bottom type
+
+```{r Urchin ecology/environmental model}
+ecology_urchin_mod <- gam(Urchins ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score,
+                                #s(region1, bs = "re"),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Urchin ecology/environmental model output, echo=FALSE}
+set.seed(299)
+gam.check(ecology_urchin_mod, rep = 500)
+plot(ecology_urchin_mod, all.terms = TRUE)
+summary(ecology_urchin_mod)
+shapiro.test(ecology_urchin_mod$residuals)
+```
+Tried with other distributions as well but gaussian appears to be the best.
+Confirm this with Amanda.
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin ecology model residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_ecology_urchin_mod <- residuals(ecology_urchin_mod, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ecology_urchin_mod, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_ecology_urchin_mod, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+Some positive autocorrelation but only with the inverse distance method. The 
+neighbour method has no autocorrelation.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing urchin ecology model for concurvity, echo=FALSE}
+concurvity(ecology_urchin_mod, full = FALSE)
+concurvity(ecology_urchin_mod, full = TRUE)
+```
+</div>
+
+Concurvity is high for temperature and openness. Both are being removed by the 
+double penalty.
+
+
+#### Model 4: Ecology model on the urchin counts with temperature, openness, and bottom type (random effect of region)
+
+```{r Urchin ecology/environmental model region re}
+ecology_urchin_mod_re <- gam(Urchins ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score+
+                                s(region1, bs = "re"),
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Urchin ecology/environmental model region re output, echo=FALSE}
+set.seed(299)
+gam.check(ecology_urchin_mod_re, rep = 500)
+plot(ecology_urchin_mod_re, all.terms = TRUE)
+summary(ecology_urchin_mod_re)
+shapiro.test(ecology_urchin_mod_re$residuals)
+```
+Gaussian looks ok. When adding the random effect of region the openness becomes
+borderline and negative. 
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin ecology model region re residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_ecology_urchin_mod_re <- residuals(ecology_urchin_mod_re, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ecology_urchin_mod_re, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_ecology_urchin_mod_re, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+No autocorrelation.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing urchin ecology model re for concurvity, echo=FALSE}
+concurvity(ecology_urchin_mod_re, full = FALSE)
+concurvity(ecology_urchin_mod_re, full = TRUE)
+```
+</div>
+
+Temp and region are basically fully concurve.
+
+
+
+## Fishing models{.tabset}
+
+### Confirming the validity of protection status with DFO flyover data
+
+For the protection status categories, I have grouped them as sites that 
+experience at least a ban on fishing for part of the year as protected and all
+others as non-protected. This means that the sites that are in the Broken group
+but are not within the RCA are counted as not protected.
+
+In order to confirm/support our assumptions of which sites are protected,
+I am using the DFO flyover data to compare the numbers of boats around the 
+different sites.
+
+Based on the boxplots below it seems evident that the protected sites selected
+are experiencing less fishing pressure and less overall human/boat pressure.
+
+#### Plot indicating which regions protected and non-protected sites are located in
+
+It seems that our current region scheme has no protected sites located within the deer group/bamfield,
+will need to look into if this is a problem.
+
+```{r Plot indicating the groupings of protected/non-protected and region, echo=FALSE}
+ggplot(env_mod_data, aes(y = region1, x = protect_status))+
+  geom_jitter(width = 0.2, height = 0.2)+
+  labs(x = "Protection Status", y = "Region")+
+  theme.figure()
+```
+
+
+
+#### Boxplots of rec boat counts between protection levels
+
+```{r Boxplots of the rec boats at the three distances between protection levels, echo=FALSE}
+ggplot(env_mod_data, aes(x = protect_status, y = mean_rec_boat_counts_1km))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+
+ggplot(env_mod_data, aes(x = protect_status, y = mean_rec_boat_counts_1.5km))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+
+ggplot(env_mod_data, aes(x = protect_status, y = mean_rec_boat_counts_2km))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+```
+
+#### Boxplots of total boat counts between protection levels
+
+```{r Boxplots of the total boats at the three distances between protection levels, echo=FALSE}
+ggplot(env_mod_data, aes(x = protect_status, y = mean_total_boat_counts_1km))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+
+ggplot(env_mod_data, aes(x = protect_status, y = mean_total_boat_counts_1.5km))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+
+ggplot(env_mod_data, aes(x = protect_status, y = mean_total_boat_counts_2km))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+```
+
+#### Comparing the rec boat counts between sites in the broken group that have been labelled as protected or non-protected
+
+```{r Comparing the rec boat counts between sites in the broken group that have been labelled as protected or non-protected, echo=FALSE}
+ggplot(env_mod_data[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_rec_boat_counts_1km))+
+  geom_boxplot()+
+  geom_point()+
+  theme.figure()
+
+ggplot(env_mod_data[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_rec_boat_counts_1.5km))+
+  geom_boxplot()+
+  geom_point()+
+  theme.figure()
+
+ggplot(env_mod_data[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_rec_boat_counts_2km))+
+  geom_boxplot()+
+  geom_point()+
+  theme.figure()
+```
+
+#### Comparing the total boat counts between sites in the broken group that have been labelled as protected or non-protected
+
+```{r Comparing the total boat counts between sites in the broken group that have been labelled as protected or non-protected, echo=FALSE}
+ggplot(env_mod_data[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_total_boat_counts_1km))+
+  geom_boxplot()+
+  geom_point()+
+  theme.figure()
+
+ggplot(env_mod_data[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_total_boat_counts_1.5km))+
+  geom_boxplot()+
+  geom_point()+
+  theme.figure()
+
+ggplot(env_mod_data[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_total_boat_counts_2km))+
+  geom_boxplot()+
+  geom_point()+
+  theme.figure()
+```
+
+
+### Red Turban snail fishing models{.tabset}
+
+#### Plotting counts of snails between protected and non-protected
+
+```{r Plotting counts of snails between protected and non-protected, echo=FALSE}
+ggplot(env_mod_data, aes(x = protect_status, y = Turban_Snails))+
+  geom_boxplot()+
+  geom_jitter(height = 0)+
+  labs(x = "Protection Status", y = "Turban Snail counts")+
+  theme.figure()
+```
+
+Seeing a weak trend of more snails in the protected sites when compared to the non-
+protected sites.
+
+
+
+#### Model 5: Fishing model on the snail counts with protection and openness (glm)
+
+For this model we are seeing that protection status has a non-significant
+positive effect on the log snail counts
+
+```{r Checking variance between protected and non-protected for turban snails, echo=FALSE}
+leveneTest(Turban_Snails ~ protect_status, data = env_mod_data)
+```
+
+
+```{r Snail count fishing  model with protection and openness linear}
+snail_fishing_mod_linear <- glmmTMB(log(Turban_Snails +1) ~ norm_openness_scale +
+                                      protect_status,
+                                    data = env_mod_data,
+                                    family = gaussian(link = "identity"))
+```
+
+```{r Snail count fishing model with protection and openness linear output, echo=FALSE}
+#Checking resids
+snail_fishing_mod_linear_resids <- simulateResiduals(snail_fishing_mod_linear)
+plot(snail_fishing_mod_linear_resids)
+
+hist(residuals(snail_fishing_mod_linear))
+shapiro.test(residuals(snail_fishing_mod_linear))
+
+#residuals_test <- residuals(snail_fishing_mod_linear, type = "pearson")
+#fitted_values_test <- fitted(snail_fishing_mod_linear)
+
+#ggplot(data = data.frame(fitted_values_test, residuals_test), aes(x = fitted_values_test, y = residuals_test)) +
+#  geom_point() +
+#  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+#  labs(x = "Fitted Values", y = "Pearson Residuals", title = "Residuals vs Fitted") +
+#  theme_minimal()
+
+#Looking at model results
+summary(snail_fishing_mod_linear)
+```
+
+
+```{r Plotting the linear snail fishing model with protection and openness, echo=FALSE}
+pred_snail_fishing_mod_linear_openness <- ggpredict(snail_fishing_mod_linear, terms = c("norm_openness_scale", "protect_status"))
+
+
+plot(pred_snail_fishing_mod_linear_openness)
+
+
+pred_snail_fishing_mod_linear_protect_status <- ggpredict(snail_fishing_mod_linear, terms = "protect_status")
+#plot(pred_snail_fishing_mod_linear_protect_status)
+
+ggplot(pred_snail_fishing_mod_linear_protect_status, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Turban Snail Counts", x = "Protection Status")+
+  theme.figure()
+
+#Using emmeans to represent the protection status
+#plot(emmeans(snail_fishing_mod_linear, ~ protect_status, comparisons = TRUE))
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Turban snail fishing model linear residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_snail_fishing_mod_linear <- residuals(snail_fishing_mod_linear, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_snail_fishing_mod_linear, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_snail_fishing_mod_linear, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+No autocorrelation with neighbours but it is significant with inverse distance.
+
+
+#### Model 6: Fishing model on the snail counts with just protection (glm)
+
+```{r Snail count fishing model with protection linear}
+snail_fishing_mod_linear_no_op <- glmmTMB(log(Turban_Snails +1) ~
+                                      protect_status,
+                                    data = env_mod_data,
+                                    family = gaussian(link = "identity"))
+```
+
+```{r Snail count fishing model with protection linear output, echo=FALSE}
+#Checking resids
+snail_fishing_mod_linear_no_op_resids <- simulateResiduals(snail_fishing_mod_linear_no_op)
+plot(snail_fishing_mod_linear_no_op_resids)
+
+hist(residuals(snail_fishing_mod_linear_no_op))
+shapiro.test(residuals(snail_fishing_mod_linear_no_op))
+
+#residuals_test <- residuals(snail_fishing_mod_linear, type = "pearson")
+#fitted_values_test <- fitted(snail_fishing_mod_linear)
+
+#ggplot(data = data.frame(fitted_values_test, residuals_test), aes(x = fitted_values_test, y = residuals_test)) +
+#  geom_point() +
+#  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+#  labs(x = "Fitted Values", y = "Pearson Residuals", title = "Residuals vs Fitted") +
+#  theme_minimal()
+
+#Looking at model results
+summary(snail_fishing_mod_linear_no_op)
+```
+
+
+```{r Plotting the linear snail fishing model with protection, echo=FALSE}
+pred_snail_fishing_mod_linear_no_op_protect_status <- ggpredict(snail_fishing_mod_linear_no_op, terms = "protect_status")
+#plot(pred_snail_fishing_mod_linear_protect_status)
+
+ggplot(pred_snail_fishing_mod_linear_no_op_protect_status, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Turban Snail Counts", x = "Protection Status")+
+  theme.figure()
+
+#Using emmeans to represent the protection status
+#plot(emmeans(snail_fishing_mod_linear, ~ protect_status, comparisons = TRUE))
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Turban snail fishing model linear no openness residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_snail_fishing_mod_linear_no_op <- residuals(snail_fishing_mod_linear_no_op, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_snail_fishing_mod_linear_no_op, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_snail_fishing_mod_linear_no_op, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+No autocorrelation.
+
+### Red Sea Urchin fishing models{.tabset}
+
+#### Plot of urchin counts between protection status
+
+```{r Plot of number of urchins between protected and non-protected sites}
+ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
+  geom_boxplot()+
+  geom_jitter()+
+  labs(x = "Protection Status", y = "Red Sea urchin counts")+
+  theme.figure()
+```
+
+
+#### Model 7: Fishing model on the urchin counts (glm)
+
+```{r Checking variance between protected and non-protected for urchins, echo=FALSE}
+leveneTest(Urchins ~ protect_status, data = env_mod_data)
+```
+Equal variance between protected and non-protected sites so assumption of 
+homogeneity of variance is met.
+
+
+```{r Urchin fishing model glm}
+urchin_fishing_mod_glm <- glmmTMB(Urchins ~ protect_status,
+                               family = gaussian(link = "identity"),
+                                   data = env_mod_data)
+```
+
+```{r Urchin fishing mod glm output, echo=FALSE}
+#Checking resids
+urchin_fishing_mod_glm_resids <- simulateResiduals(urchin_fishing_mod_glm)
+plot(urchin_fishing_mod_glm_resids)
+
+hist(residuals(urchin_fishing_mod_glm))
+shapiro.test(residuals(urchin_fishing_mod_glm))
+
+#Looking at model results
+summary(urchin_fishing_mod_glm)
+```
+Residuals look ok for just using a gaussian distribution. Seeing a non-significant
+negative effect of protection status on red sea urchins. That is, there are less
+red sea urchins in protected sites.
+
+
+```{r Plotting the effect of protection status on urchin counts, echo=FALSE}
+pred_urchin_fishing_mod_glm <- ggpredict(urchin_fishing_mod_glm, terms = "protect_status")
+
+ggplot(pred_urchin_fishing_mod_glm, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(x = "Protection Status", y = "Predicted Urchin Counts")+
+  theme.figure()
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin fishing model glm residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_urchin_fishing_mod_glm <- residuals(urchin_fishing_mod_glm, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_urchin_fishing_mod_glm, lw,
+           alternative = "two.sided")
+
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_urchin_fishing_mod_glm, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+Seeing some autocorrelation in the inverse method but not the neighbour method.
+
+
+## Urchin Snail ratio models{.tabset}
+
+### Model 8: Urchin Snail Ratio fishing model (glm)
+
+```{r Checking variance between protected and non-protected for urch sn ratio, echo=FALSE}
+leveneTest(urch_sn_ratio ~ protect_status, data = env_mod_data)
+```
+Variance is equal between protection status.
+
+
+```{r Urchin ratio protection GLMM model}
+urch_sn_ratio_protection_model_glmm <- glmmTMB(urch_sn_ratio ~ protect_status +
+                          (1|region1), 
+                          data = env_mod_data,
+                          family = gaussian(link = "identity"))
+```
+
+```{r Urchin sn ratio protection mod glmm output, echo=FALSE}
+#Checking resids
+urch_sn_ratio_protection_model_glmm_resids <- simulateResiduals(urch_sn_ratio_protection_model_glmm)
+plot(urch_sn_ratio_protection_model_glmm_resids)
+
+#Plot residuals of random effects 
+urch_sn_ratio_protection_model_glmm_ranef_values <- ranef(urch_sn_ratio_protection_model_glmm)$cond$region1
+urch_sn_ratio_protection_model_glmm_ranef_values_numeric <- urch_sn_ratio_protection_model_glmm_ranef_values$`(Intercept)`
+
+qqnorm(urch_sn_ratio_protection_model_glmm_ranef_values_numeric) #This is fine as far as I know 
+
+hist(residuals(urch_sn_ratio_protection_model_glmm))
+shapiro.test(residuals(urch_sn_ratio_protection_model_glmm))
+
+#Looking at model results
+summary(urch_sn_ratio_protection_model_glmm)
+```
+
+```{r Plotting the effect of protection status on urchin ratio in glm, echo=FALSE}
+pred_urch_sn_ratio_protection_model_glmm <- ggpredict(urch_sn_ratio_protection_model_glmm, terms = "protect_status")
+
+ggplot(pred_urch_sn_ratio_protection_model_glmm, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Log Urchin to Snail ratio", x = "Protection Status")+
+  theme.figure()
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing urch sn ratio model linear residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_urch_sn_ratio_protection_model_glmm <- residuals(urch_sn_ratio_protection_model_glmm, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_urch_sn_ratio_protection_model_glmm, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_urch_sn_ratio_protection_model_glmm, lw_inverse,
+           alternative = "two.sided")
+```
