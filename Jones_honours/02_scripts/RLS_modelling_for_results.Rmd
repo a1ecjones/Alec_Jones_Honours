@@ -813,6 +813,8 @@ shapiro.test(residuals(urch_sn_ratio_protection_model_glmm))
 summary(urch_sn_ratio_protection_model_glmm)
 ```
 
+This model is fitting a separate intercept for each level of the random effect.
+
 ```{r Plotting the effect of protection status on urchin ratio in glm, echo=FALSE}
 pred_urch_sn_ratio_protection_model_glmm <- ggpredict(urch_sn_ratio_protection_model_glmm, terms = "protect_status")
 
