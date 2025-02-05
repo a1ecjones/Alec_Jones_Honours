@@ -2379,10 +2379,10 @@ total_boats_total <- rbind(total_boats_2021, total_boats_2022, total_boats_2023)
 ```{r Making a plot of the points, fig.height= 10, fig.width= 8}
 (rec_fishing_boats_2023_plot <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
-    coord_sf(xlim = c(long_min_tfn, long_max_tfn),
-           ylim = c(lat_min_tfn, lat_max_tfn)) +
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
     geom_label_repel(
-    data = urch_sn_ratio_mod_2024, 
+    data = env_mod_data, 
     mapping = aes(x = longitude, y = latitude, label = site_code), 
     size = 2,
     box.padding = 0.45,  # Add padding between labels and points
@@ -2397,7 +2397,7 @@ total_boats_total <- rbind(total_boats_2021, total_boats_2022, total_boats_2023)
    geom_point(data = rec_boats_fishing2023,
              mapping = aes(x = Longitude, y = Latitude, colour = rec_boats_fishing), 
               shape = 1, size = 1.5, colour = "black") +
-      geom_point(data = urch_sn_ratio_mod_2024,
+      geom_point(data = env_mod_data,
              mapping = aes(x = longitude, y = latitude), 
               shape = 21, size = 3, colour = "black", fill = "black")+
  # scale_colour_viridis_c() +
@@ -3432,18 +3432,9 @@ dev.off()
 #####Adding using a polygon around each site
 
 ```{r Creating a circular radius around each site}
-site_locations <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = 4326)
-site_locations_proj_m <- st_transform(site_locations, crs = 3857)
-site_locations_radius_500m <- st_buffer(x = site_locations_proj_m, dist = 500) #Can change the radius with dist to be based on effects of rec fishers
-site_locations_radius_1km <- st_buffer(x = site_locations_proj_m, dist = 1000)
-site_locations_radius_1.5km <- st_buffer(x = site_locations_proj_m, dist = 1500)
-site_locations_radius_250m <- st_buffer(x = site_locations_proj_m, dist = 250)
-site_locations_radius_2km <- st_buffer(x = site_locations_proj_m, dist = 2000)
-```
-
-
-```{r redoing the method with only unique sites}
 ##Doing it this way most recent time Jan. 15
+#Taking only the unique site locations
+site_locations <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = 4326)
 site_locations_u <- site_locations%>%
   distinct(site_code, geometry)
 

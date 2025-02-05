@@ -671,3 +671,16 @@ summary(total_mod_snail_counts_1km_avg_tweedie)
 
 Tweedie seems somewhat ok but will definitely need to be confirmed. How I set 
 the p for the tweedie distribtuion has a large impact on the model residuals.
+
+
+
+
+```{r Creating a circular radius around each site}
+site_locations <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = 4326)
+site_locations_proj_m <- st_transform(site_locations, crs = 3857)
+site_locations_radius_500m <- st_buffer(x = site_locations_proj_m, dist = 500) #Can change the radius with dist to be based on effects of rec fishers
+site_locations_radius_1km <- st_buffer(x = site_locations_proj_m, dist = 1000)
+site_locations_radius_1.5km <- st_buffer(x = site_locations_proj_m, dist = 1500)
+site_locations_radius_250m <- st_buffer(x = site_locations_proj_m, dist = 250)
+site_locations_radius_2km <- st_buffer(x = site_locations_proj_m, dist = 2000)
+```

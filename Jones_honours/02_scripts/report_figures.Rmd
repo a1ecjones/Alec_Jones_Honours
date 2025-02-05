@@ -13,6 +13,9 @@ library(here)
 library(sf)
 library(ggspatial)
 library(ggrepel)
+library(cowplot)
+library(sp)
+library(raster)
 ```
 
 #Loading in the data
@@ -32,6 +35,14 @@ plotting_data_minor_shifted <- plotting_data%>%
   mutate(latitude = if_else(site_code == "BMSC5", 48.82333, latitude))%>%
   mutate(latitude = if_else(site_code == "BMSC9", 48.83179, latitude))%>%
   mutate(longitude = if_else(site_code == "BMSC9", -125.1490, longitude))
+  
+  
+  #adding protected status
+  protect_status <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 
+                    0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
+
+  plotting_data_minor_shifted$protect_status <- as.factor(protect_status)
+levels(plotting_data_minor_shifted$protect_status) <- c("No Protection", "Protected")
 ```
 
 
@@ -41,11 +52,41 @@ plotting_data_minor_shifted <- plotting_data%>%
 plotting_data_shifted <- read_csv(here("./03_clean_data/plotting_data_shifted.csv"))
 ```
 
+### Loading in the temperature data
+```{r Loading in the temp .nc file downloaded from Copernicus}
+temp_2023_2024 <- brick(here("./01_raw_data/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2_1730223986748.nc"))
+crs(temp_2023_2024) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+```
+
+```{r Calculating the average temperature for each pixel}
+average_temperature <- calc(temp_2023_2024, fun = mean, na.rm = TRUE)
+
+writeRaster(average_temperature, 
+            here("./01_raw_data/average_temperature.nc"), 
+            format = "CDF", 
+            overwrite = TRUE)
+```
+
+### Making a theme for all subsequent figures
+
+```{r Making theme for all subsequent figures, echo=FALSE}
+theme.figure.report <- function (){
+  theme_bw(base_size = 12) +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    #axis.line = element_line(colour = "black"),
+    axis.title = element_text(size = 20, face = "bold"),
+    axis.text = element_text(size = 18, face = "plain"),
+    legend.text = element_text(size = 14, face = "plain"),
+    legend.title = element_text(size = 16, face = "bold")) 
+}
+
+```
 
 
-##Site maps
+## Site maps
 
-###Making the map ranges
+### Making the map ranges
 
 ```{r Seting the ranges for the maps}
 #first need to specify the range of the map
@@ -56,7 +97,7 @@ long_min = min(plotting_data$longitude) - 0.05
 long_max = max(plotting_data$longitude) + 0.05
 ```
 
-###Loading in the shape file
+### Loading in the shape file
 
 ```{r Loading in the new high res shape file}
 VI_base_layer_hi_res <- read_sf(dsn = here("./01_raw_data/hakai_zip"),
@@ -77,7 +118,7 @@ VI_base_layer_sf <- st_as_sf(VI_base_layer)
 st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 ```
 
-###Loading in the shapefiles for the protected areas
+### Loading in the shapefiles for the protected areas
 
 ```{r loading in the RCA polygon}
 broken_group_RCA <- st_read(here("./01_raw_data/Broken_group_RCA.kml"))
@@ -92,7 +133,7 @@ baeria_rocks_er <- st_read(here("./01_raw_data/baeria_rocks.kml"))
 ```
 
 
-###Overall site map
+### Overall site map
 
 ```{r Overall Barkley Sound Map}
 (overall_Barkley_sound_map <- ggplot()+
@@ -103,7 +144,7 @@ baeria_rocks_er <- st_read(here("./01_raw_data/baeria_rocks.kml"))
    coord_sf(xlim = c(long_min - 0.1, long_max),
            ylim = c(lat_min - 0.05, lat_max)) +
   labs(x = " \nLongitude", y = "Latitude\n ") +
-  theme.figure() +
+  theme.figure.report() +
  scale_x_continuous(breaks = c(-125.5, -125.25, -125.0)) +
   scale_y_continuous(breaks = c(48.75, 48.85, 48.95))+
   annotation_north_arrow(
@@ -130,6 +171,16 @@ baeria_rocks_er <- st_read(here("./01_raw_data/baeria_rocks.kml"))
           axis.title = element_blank()))
 ```
 
+####Saving the van isl map
+
+```{r Saving the van isl map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/report_figures/van_isl_map.png"), width = 4, height = 3, 
+    units = "in", pointsize = 15, res = 600)
+
+van_isl_map
+
+dev.off()
+```
 
 ```{r basemap with inset, fig.width=7.5, fig.height=5.5}
 (map_w_inset <- ggdraw(overall_Barkley_sound_map) +
@@ -148,7 +199,7 @@ dev.off()
 ```
 
 
-###Site map with points
+### Site map with points
 
 ```{r Overall site map with the site locations}
 (overall_site_map <- ggplot()+
@@ -157,12 +208,14 @@ dev.off()
    geom_sf(data = numukamis_area, fill = "#481567FF", colour = "#481567FF", alpha = 0.2)+
    geom_sf(data = baeria_rocks_er, fill = "#CD2626", colour = "#CD2626", alpha = 0.2)+
      geom_point(plotting_data_minor_shifted, 
-              mapping = aes(x = longitude, y = latitude),
-              shape = 21, size = 3, fill = "red")+
+              mapping = aes(x = longitude, y = latitude, fill = protect_status),
+              shape = 21, size = 3)+
        coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
            ylim = c(lat_min + 0.01, lat_max - 0.04)) +
-  labs(x = " \nLongitude", y = "Latitude\n ") +
-  theme.figure() +
+  labs(x = "Longitude", y = "Latitude", fill = "Protection\nStatus") +
+  theme.figure.report() +
+   theme(legend.position = "none",
+         axis.text.y = element_text(angle = 45))+
   scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
  # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
   annotation_north_arrow(
@@ -170,7 +223,7 @@ dev.off()
     which_north = "true",
     style = north_arrow_fancy_orienteering
   ) +
-  annotation_scale(location = "br")+
+  annotation_scale(location = "br", text_cex = 1.3)+
       geom_point( 
              mapping = aes(x = -125.134813, y = 48.83), shape = 23,
                            fill = "yellow", size = 4))
@@ -180,7 +233,7 @@ dev.off()
 ####Saving the site map
 
 ```{r Saving the overall site map, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/report_figures/overall_site_map.png"), width = 8, height = 6, 
+png(filename = here("./04_plots/report_figures/overall_site_map.png"), width = 6, height = 4.5, 
     units = "in", pointsize = 15, res = 600)
 
 overall_site_map
@@ -189,17 +242,19 @@ dev.off()
 ```
 
 
-###Site map with inset
+### Site map with inset
 
 ```{r Making the site map with the van isl inset}
 (site_map_w_inset <- ggdraw(overall_site_map) +
-  draw_plot(van_isl_map, x = 0.07, y = 0.13, width = 0.5, height = 0.3))
+  draw_plot(van_isl_map, x = 0.13, y = 0.19, width = 0.5, height = 0.3))
+
+#can alternatively make the width 0.4 and the height 0.25 and it wont cover any of the islands
 ```
 
 ####Saving the site map with inset
 
 ```{r Saving the overall site map, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/report_figures/site_map_with_inset.png"), width = 8, height = 6, 
+png(filename = here("./04_plots/report_figures/site_map_with_inset.png"), width = 6, height = 4.5, 
     units = "in", pointsize = 15, res = 600)
 
 site_map_w_inset
@@ -207,7 +262,7 @@ site_map_w_inset
 dev.off()
 ```
 
-###Urchin Ratio map
+## Urchin Ratio map
 
 ```{r Making the plot with the urch to sn ratio on the map 2024}
 (urch_sn_ratio_map_figures <- ggplot()+
@@ -252,7 +307,7 @@ urch_sn_ratio_map_figures
 dev.off()
 ```
 
-###Urchin Counts
+## Urchin Counts
 
 ```{r Making a non-linear colour palette to effectively show the urchin counts}
 colour_breaks_urchins <- c(0, 100, 250, 350, 529, 709)
@@ -296,7 +351,7 @@ urchin_counts_map_figs
 dev.off()
 ```
 
-###Snail Counts
+## Snail Counts
 
 ```{r Making a non-linear colour palette to effectively show the snail counts}
 colour_breaks_snails <- c(0, 50, 100, 200, 300, 645)
@@ -341,7 +396,7 @@ dev.off()
 ```
 
 
-###Site openness map
+## Site openness map
 
 ```{r Making a non-linear colour palette to effectively show the normalized openness}
 colour_breaks <- c(0, 0.1, 0.2, 0.5, 1)
@@ -376,7 +431,7 @@ openness_colours <- c("#440154", "#3b528b", "#21918c", "#5ec962", "#fde725")
                            fill = "yellow", size = 4))
 ```
 
-####Saving the openness map
+#### Saving the openness map
 
 ```{r Saving the openness map, fig.width=7.5, fig.height=5.5, include=FALSE}
 png(filename = here("./04_plots/report_figures/site_openness_map.png"), width = 6.5, height = 4, 
@@ -389,4 +444,101 @@ dev.off()
 
 
 
-###Rec boats with differing radius
+## Temperature map
+
+### Plotting the temp data onto the barkley sound map
+```{r Converting the raster to a data frame so ggplot can use it}
+avg_temp_df <- as.data.frame(average_temperature, xy = TRUE, na.rm = TRUE)
+colnames(avg_temp_df) <- c("longitude", "latitude", "average_temp")
+
+avg_temp_df <- avg_temp_df%>%
+  mutate(avg_temp_c = average_temp - 273.15)
+```
+
+```{r Making the temperature map}
+(temp_map_23_24 <- ggplot() +
+  geom_raster(data = avg_temp_df, aes(x = longitude, y = latitude, fill = avg_temp_c)) +
+   geom_sf(data = VI_base_layer_hi_res_sf, colour = "#424A4E", fill = "lightgrey")+
+  coord_sf(xlim = c(long_min + 0.029, long_max - 0.032),
+           ylim = c(lat_min , lat_max - 0.025)) +
+     scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
+  #scale_fill_viridis_c(option = "C", name = "Avg Temperature (°C)") +  # Optional color scale
+     scale_fill_gradient(
+    low = "#8EBAD2",          
+    high = "#E95E48"
+  ) +
+  theme.figure.report() +
+  labs(x = "Longitude",
+       y = "Latitude",
+       fill = "Mean SST (ºC)") +
+  theme(#legend.position = "none",
+        axis.text.y = element_text(angle = 45))+
+  annotation_scale(location = "br", text_cex = 1.3)+
+   annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering))
+```
+
+
+#### Saving the temperature map
+
+```{r Saving the temperature map, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/report_figures/temperature_map_23_24.png"), width = 6, height = 4.5, 
+    units = "in", pointsize = 15, res = 600)
+
+temp_map_23_24
+
+dev.off()
+```
+
+
+
+## Example Recreational boat plot
+
+### Using 1km radius
+
+```{r total rec boat }
+(total_rec_boats_map_2023 <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+      coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max))+
+   
+ coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  geom_point(data = rec_boats_fishing2023, 
+             mapping = aes(x = Longitude, y = Latitude))+
+  labs(x = "Longitude", y = "Latitude") +
+  theme.figure.report() +
+   theme(axis.text.y = element_text(angle = 45))+
+ scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br", text_cex = 1.3))
+```
+
+
+```{r Inset view of smaller area with the radii around the sites}
+(broken_group_rec_boats <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+  geom_sf(data = site_locations_radius_1km, fill = "red", alpha = 0.3)+
+      coord_sf(xlim = c(long_min, long_max - 0.26),
+           ylim = c(lat_min + 0.08, lat_max - 0.08))+
+      geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 2, colour = "black")+
+  geom_point(data = rec_boats_fishing2023, 
+             mapping = aes(x = Longitude, y = Latitude))+
+  labs(x = "Longitude", y = "Latitude") +
+  theme.figure.report() +
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br", text_cex = 1.3))
+```
+
