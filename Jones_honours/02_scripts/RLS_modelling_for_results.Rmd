@@ -190,7 +190,7 @@ ecology_snail_mod_linear <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
                                 #s(region1, bs = "re"), #Random effect of region does not have an impact on the snails
                              data = env_mod_data,
                              family = gaussian(link = "identity"),
-                             method = "REML",
+                             method = "ML",
                              select = TRUE)
 ```
 
@@ -614,7 +614,7 @@ For this model we are seeing that protection status has a non-significant
 positive effect on the log snail counts
 
 ```{r Checking variance between protected and non-protected for turban snails, echo=FALSE}
-leveneTest(log(Turban_Snails + 1) ~ protect_status, data = env_mod_data)
+leveneTest(sqrt(Turban_Snails) ~ protect_status, data = env_mod_data)
 ```
 Variance is equal for raw turban snail counts but significantly different for 
 log transformed turban snail counts
@@ -804,6 +804,9 @@ AICc(snail_fishing_mod_linear,
     snail_fishing_mod_linear_re)%>%
   arrange(AICc)%>%
   mutate(delta_AICc = AICc - AICc[1])
+
+AICc(snail_fishing_mod_linear_no_op,
+     ecology_snail_mod_linear)
 ```
 
 ```{r ANOVA of the turban snail fishing models with openness}
@@ -816,7 +819,7 @@ in the data and both AICc and ANOVA prefer the model without the random effect.
 #### Model 8: Fishing model on the snail counts with just protection (glm)
 
 ```{r Snail count fishing model with protection linear}
-snail_fishing_mod_linear_no_op <- glmmTMB(log(Turban_Snails +1) ~
+snail_fishing_mod_linear_no_op <- glmmTMB(sqrt(Turban_Snails) ~
                                       protect_status,
                                     data = env_mod_data,
                                     family = gaussian(link = "identity"))
