@@ -185,12 +185,11 @@ the model (being removed by select).
 
 ```{r Turban snail ecology/environmental model linear}
 ecology_snail_mod_linear <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
-                               norm_openness_scale +
+                               norm_openness_scale+
                            dominant_score,
-                                #s(region1, bs = "re"), #Random effect of region does not have an impact on the snails
                              data = env_mod_data,
                              family = gaussian(link = "identity"),
-                             method = "ML",
+                             method = "REML",
                              select = TRUE)
 ```
 
@@ -249,6 +248,18 @@ concurvity(ecology_snail_mod_linear, full = TRUE)
 
 Concurvity seems to be improved when having openness as a linear term. Maybe not
 and it is just how the function calculates it differently or omits it.
+
+
+##### Extracting the predicted values for snails based on openness for plotting
+
+```{r extracting predicted snail counts based on openness values}
+snail_intercept <- coef(ecology_snail_mod_linear)[1]
+snail_op_slope <- coef(ecology_snail_mod_linear)["norm_openness_scale"]
+
+#Calculating the expected values based on the equation
+snail_op_pred_data <- env_mod_data
+snail_op_pred_data$predicted_snails <- exp(snail_intercept + snail_op_slope * snail_op_pred_data$norm_openness_scale)
+```
 
 
 #### Model 3: Ecology model on the snail counts with temperature, openness, and bottom type and random effect (linear openness)
@@ -330,8 +341,8 @@ AICc(ecology_snail_mod_linear,
 ```
 
 AIC indicates that it does not improve the model by adding a random effect of 
-region.
-
+region. This means that for the snail ecology model I will pick the more parsimonius
+model without the random effect.
 
 ### Red Sea urchin ecology models{.tabset}
 
@@ -471,6 +482,7 @@ concurvity(ecology_urchin_mod_re, full = TRUE)
 
 Temp and region are basically fully concurve.
 
+
 #### Comparing the urchin ecology models
 
 ```{r AIC of Urchin ecology models}
@@ -480,8 +492,8 @@ AICc(ecology_urchin_mod,
   mutate(delta_AICc = AICc - AICc[1])
 ```
 The urchin ecology model with the random effect appears to be a much better
-fitting model than the one without the random effect. However, it is using 5 more
-degrees of freedom.
+fitting model than the one without the random effect. I will select the model 
+with the random effect as it seems much better.
 
 
 ## Fishing models{.tabset}
@@ -590,6 +602,40 @@ ggplot(env_mod_data[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_
   theme.figure()
 ```
 
+
+
+#### Testing the differences in rec boat counts between protected and non-protected with a glm
+
+```{r Testing the variance between protection status}
+leveneTest(mean_rec_boat_counts_1km ~ protect_status, data = env_mod_data)
+```
+Equal variance
+
+```{r Mean rec boat counts 1km glm}
+rec_boat_1km_mod <- glmmTMB(mean_rec_boat_counts_1km ~ protect_status,
+                            data = env_mod_data,
+                             family = gaussian(link = "identity"))
+```
+
+
+```{r Normality of rec boat counts}
+rec_boat_protected <- subset(env_mod_data, protect_status == "Protected")
+shapiro.test(rec_boat_protected$mean_rec_boat_counts_1km)
+hist(rec_boat_protected$mean_rec_boat_counts_1km)
+```
+
+
+```{r Snail count fishing model with protection linear output, echo=FALSE}
+#Checking resids
+rec_boat_1km_mod_resids <- simulateResiduals(rec_boat_1km_mod)
+plot(rec_boat_1km_mod_resids)
+
+hist(residuals(rec_boat_1km_mod))
+shapiro.test(residuals(rec_boat_1km_mod))
+
+#Looking at model results
+summary(rec_boat_1km_mod)
+```
 
 ### Red Turban snail fishing models{.tabset}
 
@@ -818,6 +864,15 @@ in the data and both AICc and ANOVA prefer the model without the random effect.
 
 #### Model 8: Fishing model on the snail counts with just protection (glm)
 
+```{r Testing the snail counts for equal variance among protection levels}
+leveneTest(log(Turban_Snails + 1) ~ protect_status, data = env_mod_data)
+#Log transformed is not equal variance so will try with square root transform
+
+leveneTest(sqrt(Turban_Snails) ~ protect_status, data = env_mod_data)
+#There is equal variance with the square rooted values
+```
+
+
 ```{r Snail count fishing model with protection linear}
 snail_fishing_mod_linear_no_op <- glmmTMB(sqrt(Turban_Snails) ~
                                       protect_status,
@@ -898,7 +953,7 @@ No autocorrelation.
 #### Model 9: Fishing model on the snail counts with protection and a random effect (glmm)
 
 ```{r Snail count fishing model with protection linear re}
-snail_fishing_mod_linear_no_op_re <- glmmTMB(log(Turban_Snails +1) ~
+snail_fishing_mod_linear_no_op_re <- glmmTMB(sqrt(Turban_Snails) ~
                                       protect_status + (1|region1),
                                     data = env_mod_data,
                                     family = gaussian(link = "identity"))
@@ -984,11 +1039,9 @@ AICc(snail_fishing_mod_linear_no_op,
   mutate(delta_AICc = AICc - AICc[1])
 ```
 
-```{r ANOVA comparison of the two snail fishing models with no openness}
-anova(snail_fishing_mod_linear_no_op, snail_fishing_mod_linear_no_op_re)
-```
-AICc and ANOVA seem to indicate that the model without the random effect is a 
-better model and that the random effect is not explaining any of the variance.
+AIC indicates that the simpler model is better. Adding the additional term adds
+~2 AIC which I believe means that it is not improving the model at all, and it 
+is just getting a 2 point penalty applied.
 
 ### Red Sea Urchin fishing models{.tabset}
 
@@ -1164,13 +1217,43 @@ AICc(urchin_fishing_mod_glm,
   mutate(delta_AICc = AICc - AICc[1])
 ```
 
+Model with the random effect included has slightly worse AIC, but it is within
+2 points even with an additional degree of freedom. The random effect model also
+eliminates the autocorrelation. Will need to talk to Dom about this.
 
-```{r ANOVA of both urchin fishing models}
-anova(urchin_fishing_mod_glm, urchin_fishing_mod_glmm)
+
+##### Testing the model with a subset without the deer group sites
+
+```{r Subsetting the data to exclude deer group}
+env_mod_data_wo_deer <- env_mod_data%>%
+  filter(region1 != "Deer group/Bamfield")
 ```
 
-ANOVA indicates that the model without the random effect of region is a better
-model so we will go with that for now.
+
+```{r Checking variance between protected and non-protected for urchins, echo=FALSE}
+leveneTest(sqrt(Urchins) ~ protect_status, data = env_mod_data_wo_deer)
+```
+Equal variance between protected and non-protected sites so assumption of 
+homogeneity of variance is met.
+
+
+```{r Urchin fishing model glmm no deer}
+urchin_fishing_mod_glmm_no_deer <- glmmTMB(Urchins ~ protect_status + (1|region1),
+                               family = gaussian(link = "identity"),
+                                   data = env_mod_data_wo_deer)
+```
+
+```{r Urchin fishing mod glmm output no deer, echo=FALSE}
+#Checking resids
+urchin_fishing_mod_glmm_no_deer_resids <- simulateResiduals(urchin_fishing_mod_glmm_no_deer)
+plot(urchin_fishing_mod_glmm_no_deer_resids)
+
+hist(residuals(urchin_fishing_mod_glmm_no_deer))
+shapiro.test(residuals(urchin_fishing_mod_glmm_no_deer))
+
+#Looking at model results
+summary(urchin_fishing_mod_glmm_no_deer)
+```
 
 ## Urchin Snail ratio models{.tabset}
 
@@ -1269,8 +1352,6 @@ plot(urch_sn_ratio_protection_model_glmm_resids)
 urch_sn_ratio_protection_model_glmm_ranef_values <- ranef(urch_sn_ratio_protection_model_glmm)$cond$region1
 urch_sn_ratio_protection_model_glmm_ranef_values_numeric <- urch_sn_ratio_protection_model_glmm_ranef_values$`(Intercept)`
 
-qqnorm(urch_sn_ratio_protection_model_glmm_ranef_values_numeric) #This is fine as far as I know 
-
 hist(residuals(urch_sn_ratio_protection_model_glmm))
 shapiro.test(residuals(urch_sn_ratio_protection_model_glmm))
 
@@ -1331,13 +1412,34 @@ AICc(urch_sn_ratio_protection_model_glm,
   arrange(AICc)%>%
   mutate(delta_AICc = AICc - AICc[1])
 ```
+AIC suggests that the model with the random effect included may be slightly better
+as it has a lower AIC even with an additional degree of freedom.
 
-```{r ANOVA of the urchin snail ratio models without openness}
-anova(urch_sn_ratio_protection_model_glm, urch_sn_ratio_protection_model_glmm)
+
+#### Testing the model without the deer group sites
+
+```{r Urchin ratio protection re GLMM model no deer}
+urch_sn_ratio_protection_model_glmm_no_deer <- glmmTMB(urch_sn_ratio ~ protect_status,
+                         # (1|region1), 
+                          data = env_mod_data_wo_deer,
+                          family = gaussian(link = "identity"))
 ```
 
-AIC and ANOVA indicate that the model with a random effect is better but may not
-be significantly better/different than the model without the random effect.
+```{r Urchin sn ratio protection mod re glmm output no deer, echo=FALSE}
+#Checking resids
+urch_sn_ratio_protection_model_glmm_no_deer_resids <- simulateResiduals(urch_sn_ratio_protection_model_glmm_no_deer)
+plot(urch_sn_ratio_protection_model_glmm_no_deer_resids)
+
+#Plot residuals of random effects 
+urch_sn_ratio_protection_model_glmm_no_deer_ranef_values <- ranef(urch_sn_ratio_protection_model_glmm_no_deer)$cond$region1
+urch_sn_ratio_protection_model_glmm_no_deer_ranef_values_numeric <- urch_sn_ratio_protection_model_glmm_no_deer_ranef_values$`(Intercept)`
+
+hist(residuals(urch_sn_ratio_protection_model_glmm_no_deer))
+shapiro.test(residuals(urch_sn_ratio_protection_model_glmm_no_deer))
+
+#Looking at model results
+summary(urch_sn_ratio_protection_model_glmm_no_deer)
+```
 
 ### Model 14: Urchin snail ratio model with openness (glm)
 

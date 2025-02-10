@@ -16,6 +16,7 @@ library(ggrepel)
 library(cowplot)
 library(sp)
 library(raster)
+library(rphylopic)
 ```
 
 #Loading in the data
@@ -587,4 +588,74 @@ dev.off()
 ```{r Making the rec fishing boats map with inset}
 (rec_boat_map_2023_with_inset <- ggdraw(total_rec_boats_map_2023) +
   draw_plot(broken_group_rec_boats, x = 0.2, y = 0.19, width = 0.3, height = 0.5))
+```
+
+
+### Plot of effect of openness on snails
+
+```{r Getting snail silhouette with phylopic}
+#pick_phylopic(name = "Trochidae")
+#The uuid for the snail silhouette is "af3b0a39-4ba9-4134-800e-d181a7288689"
+
+snail_picture_uuid <- "af3b0a39-4ba9-4134-800e-d181a7288689"
+snail_picture_img <- get_phylopic(uuid = snail_picture_uuid)
+```
+
+```{r Making a plot of the effect of openness on snails}
+ggplot(env_mod_data, aes(x = norm_openness, y = Turban_Snails))+
+  geom_point()+
+  geom_line(data = snail_op_pred_data, aes(
+                                           y = predicted_snails))+
+  geom_ribbon(data = snail_op_pred_data,
+              aes(ymin = predicted_snails - (1.96 * exp(0.2691)),
+                  ymax = predicted_snails + (1.96 * exp(0.2691))))+
+  add_phylopic(img = snail_picture_img, x = 0.95, y = 570, height = 150)+
+  labs(x = "Normalized Openness", y = "Red turban snail counts")+
+  theme.figure.report()
+exp
+```
+
+
+
+### Boxplot of urchins between protection status
+
+```{r Getting urchin silhouette with phylopic}
+#urchin_picture_img <- pick_phylopic(name = "Strongylocentrotus purpuratus", n = 4, view = 4)
+#The uuid for the image i am using is "a6125e0d-c627-40e3-9966-5ad288277545"
+
+urchin_picture_uuid <- "a6125e0d-c627-40e3-9966-5ad288277545"
+urchin_picture_img <- get_phylopic(uuid = urchin_picture_uuid)
+urchin_picture_img_red <- recolor_phylopic(img = urchin_picture_img, alpha = 0.5, fill = "#E95E48")
+```
+
+
+```{r Making a boxplot of urchin counts between protection status}
+(urchin_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
+  geom_boxplot()+
+  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  labs(x = "Protection Status", y = "Red sea urchin counts")+
+  add_phylopic(img = urchin_picture_img_red, x = 2.4, y = 620, height = 150)+
+  theme.figure.report())
+```
+
+
+```{r Saving the urchin fishing boxplot}
+png(filename = here("./04_plots/report_figures/urchin_fishing_boxplot.png"), width = 6, height = 4.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urchin_fishing_boxplot
+
+dev.off()
+```
+
+
+### Urchin snail ratio boxplot
+
+```{r Making a boxplot of urchin counts between protection status}
+(urchin_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
+  geom_boxplot()+
+  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  labs(x = "Protection Status", y = "Red sea urchin counts")+
+  add_phylopic(img = urchin_picture_img_red, x = 2.4, y = 620, height = 150)+
+  theme.figure.report())
 ```
