@@ -258,7 +258,7 @@ snail_op_slope <- coef(ecology_snail_mod_linear)["norm_openness_scale"]
 
 #Calculating the expected values based on the equation
 snail_op_pred_data <- env_mod_data
-snail_op_pred_data$predicted_snails <- exp(snail_intercept + snail_op_slope * snail_op_pred_data$norm_openness_scale)
+snail_op_pred_data$predicted_snails <- exp(snail_intercept + (snail_op_slope * snail_op_pred_data$norm_openness_scale))
 ```
 
 

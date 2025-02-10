@@ -607,8 +607,9 @@ ggplot(env_mod_data, aes(x = norm_openness, y = Turban_Snails))+
   geom_line(data = snail_op_pred_data, aes(
                                            y = predicted_snails))+
   geom_ribbon(data = snail_op_pred_data,
-              aes(ymin = predicted_snails - (1.96 * exp(0.2691)),
-                  ymax = predicted_snails + (1.96 * exp(0.2691))))+
+              aes(ymin = exp(log(predicted_snails) - 1.96 * 0.2691),
+                  ymax = exp(log(predicted_snails) + 1.96 * 0.2691)),
+              alpha = 0.5, fill = "#E95E48")+
   add_phylopic(img = snail_picture_img, x = 0.95, y = 570, height = 150)+
   labs(x = "Normalized Openness", y = "Red turban snail counts")+
   theme.figure.report()
