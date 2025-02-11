@@ -258,7 +258,30 @@ snail_op_slope <- coef(ecology_snail_mod_linear)["norm_openness_scale"]
 
 #Calculating the expected values based on the equation
 snail_op_pred_data <- env_mod_data
-snail_op_pred_data$predicted_snails <- exp(snail_intercept + (snail_op_slope * snail_op_pred_data$norm_openness_scale))
+snail_op_pred_data$predicted_snails <- snail_intercept + (snail_op_slope * snail_op_pred_data$norm_openness_scale)
+```
+
+
+```{r Using the methods from Isabel to extract the predicted values}
+#Making new dataframe for predicted values
+
+new_data_openness <- expand.grid(
+  norm_openness_scale = env_mod_data$norm_openness_scale,
+  sst_scale = mean(env_mod_data$sst_scale),
+  dominant_score = env_mod_data$dominant_score)
+
+new_data_openness$dominant_score <- as.factor(new_data_openness$dominant_score)
+
+#Predicting the numbers of turban snails and the confidence intervals
+predictions_openness <- predict.gam(ecology_snail_mod_linear,
+                                    type = "response",
+                                    se.fit = TRUE)
+
+new_data_openness_with_preds <- env_mod_data
+new_data_openness_with_preds$snail_predictions <- predictions_openness$fit
+new_data_openness_with_preds$lower_ci <- (predictions_openness$fit - 1.96 * predictions_openness$se.fit) 
+new_data_openness_with_preds$upper_ci <- (predictions_openness$fit + 1.96 * predictions_openness$se.fit)
+
 ```
 
 
