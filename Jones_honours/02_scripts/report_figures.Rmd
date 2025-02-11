@@ -17,6 +17,7 @@ library(cowplot)
 library(sp)
 library(raster)
 library(rphylopic)
+library(broom)
 ```
 
 #Loading in the data
@@ -639,30 +640,20 @@ dev.off()
                   ymax = predicted_snails + 1.96 * 0.2691),
               alpha = 0.5, fill = "#8EBAD2")+
   add_phylopic(img = snail_picture_img, x = 0.9, y = 5.5, height = 2)+
-  labs(x = "Normalized Openness", y = "Log red turban snail counts")+
+  labs(x = "\nNormalized Openness", y = "Log red turban snail counts")+
   theme.figure.report())
 ```
 
 ##### Saving the snail openness plot
 
 ```{r Saving the snail openness plot}
-png(filename = here("./04_plots/report_figures/pred_snail_openness_plot_log.png"), width = 6, height = 4.5, 
+png(filename = here("./04_plots/report_figures/pred_snail_openness_plot_log.png"), width = 6, height = 4.6, 
     units = "in", pointsize = 15, res = 600)
 
 pred_snail_openness_plot_log
 
 dev.off()
 ```
-
-#### Trying to plot with gratia
-
-```{r Using gratia to plot the effect of openness on the snails}
-ecology_snail_param_effects <- parametric_effects(ecology_snail_mod_linear,
-                                                  terms = "norm_openness_scale")
-
-?parametric_effects.gam
-```
-
 
 
 ### Boxplot of urchins between protection status
@@ -681,7 +672,7 @@ urchin_picture_img_red <- recolor_phylopic(img = urchin_picture_img, alpha = 0.5
 (urchin_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
   geom_boxplot()+
   geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
-  labs(x = "Protection Status", y = "Red sea urchin counts")+
+  labs(x = "\nProtection Status", y = "Red sea urchin counts")+
   add_phylopic(img = urchin_picture_img_red, x = 2.4, y = 620, height = 150)+
   theme.figure.report())
 ```
@@ -700,10 +691,21 @@ dev.off()
 ### Urchin snail ratio boxplot
 
 ```{r Making a boxplot of urchin counts between protection status}
-(urchin_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
+(urch_sn_ratio_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = urch_sn_ratio))+
   geom_boxplot()+
   geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
-  labs(x = "Protection Status", y = "Red sea urchin counts")+
-  add_phylopic(img = urchin_picture_img_red, x = 2.4, y = 620, height = 150)+
+  labs(x = "\nProtection Status", y = "Log urchin to snail ratio")+
+  add_phylopic(img = urchin_picture_img, x = 2.45, y = 2.2, height = 1)+
+   add_phylopic(img = snail_picture_img, x = 2.45, y = 1.2, height = 0.8)+
   theme.figure.report())
+```
+
+
+```{r Saving the urchin to snail ratio fishing boxplot}
+png(filename = here("./04_plots/report_figures/urch_sn_ratio_fishing_boxplot.png"), width = 6, height = 4.5, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_sn_ratio_fishing_boxplot
+
+dev.off()
 ```
