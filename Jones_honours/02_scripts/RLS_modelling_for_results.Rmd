@@ -281,7 +281,33 @@ new_data_openness_with_preds <- env_mod_data
 new_data_openness_with_preds$snail_predictions <- predictions_openness$fit
 new_data_openness_with_preds$lower_ci <- (predictions_openness$fit - 1.96 * predictions_openness$se.fit) 
 new_data_openness_with_preds$upper_ci <- (predictions_openness$fit + 1.96 * predictions_openness$se.fit)
+new_data_openness_with_preds$snail_predictions_normal <- (exp(new_data_openness_with_preds$snail_predictions) - 1)
+new_data_openness_with_preds$lower_ci_normal <- (exp(predictions_openness$fit - 1.96 * predictions_openness$se.fit) - 1)
+new_data_openness_with_preds$upper_ci_normal <- (exp(predictions_openness$fit + 1.96 * predictions_openness$se.fit) - 1)
 
+ggplot(new_data_openness_with_preds, aes(x = norm_openness, Turban_Snails))+
+  geom_line(aes(y = snail_predictions))+
+  geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci))
+
+ggplot(new_data_openness_with_preds, aes(x = norm_openness, y = log(Turban_Snails +1)))+
+  geom_point()+
+  geom_smooth(method = "lm", data = new_data_openness_with_preds, mapping = aes(x = norm_openness, y = snail_predictions))+
+  theme.figure.report()
+
+ggplot(new_data_openness_with_preds, aes(x = norm_openness, y = snail_predictions))+
+  geom_point()+
+  geom_smooth(method = "lm", data = new_data_openness_with_preds, mapping = aes(x = norm_openness, y = snail_predictions))+
+  theme.figure.report()
+  
+ggplot(new_data_openness_with_preds, aes(x = norm_openness, log(Turban_Snails +1)))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  theme.figure.report()
+
+ggplot(new_data_openness_with_preds, aes(x = norm_openness, y = Turban_Snails))+
+  geom_point()+
+  geom_smooth(method = "gam", data = new_data_openness_with_preds, mapping = aes(x = norm_openness, y = snail_predictions_normal))+
+  theme.figure.report()
 ```
 
 
