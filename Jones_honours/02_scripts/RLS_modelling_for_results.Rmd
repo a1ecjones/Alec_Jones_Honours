@@ -285,6 +285,16 @@ new_data_openness_with_preds$upper_ci <- (predictions_openness$fit + 1.96 * pred
 ```
 
 
+```{r Using methods from stickleback DS, include=FALSE, echo=FALSE}
+#Creating summary stats for the model
+sums_stats_snail_ecol_gam <- ggpredict(ecology_snail_mod_linear,
+                                       terms = c("norm_openness_scale"))
+  dplyr::rename("norm_openness_scale" = x,
+               "log_snails" = predicted)%>%
+  as.data.frame()
+```
+
+
 #### Model 3: Ecology model on the snail counts with temperature, openness, and bottom type and random effect (linear openness)
 
 ```{r Turban snail ecology/environmental model linear re}
@@ -629,10 +639,66 @@ ggplot(env_mod_data[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_
 
 #### Testing the differences in rec boat counts between protected and non-protected with a glm
 
-```{r Testing the variance between protection status}
-leveneTest(mean_rec_boat_counts_1km ~ protect_status, data = env_mod_data)
+```{r Making a subset df with only one observation for each site}
+unique_site_df <- env_mod_data%>%
+  ungroup()%>%
+  select(site_code, protect_status,mean_rec_boat_counts_1km, mean_rec_boat_counts_1.5km, mean_rec_boat_counts_2km)%>%
+  distinct()
 ```
-Equal variance
+
+
+```{r Testing the variance between protection status}
+leveneTest(mean_rec_boat_counts_1km ~ protect_status, data = unique_site_df)
+leveneTest(mean_rec_boat_counts_1.5km ~ protect_status, data = unique_site_df)
+leveneTest(mean_rec_boat_counts_2km ~ protect_status, data = unique_site_df)
+```
+Equal variance for 1km, but not for 1.5 or 2
+
+```{r Normality of rec boat counts within protected sites}
+#Making data frame with only sites that are protected
+rec_boat_protected <- subset(unique_site_df, protect_status == "Protected")
+
+shapiro.test(rec_boat_protected$mean_rec_boat_counts_1km)
+hist(rec_boat_protected$mean_rec_boat_counts_1km)
+
+shapiro.test(rec_boat_protected$mean_rec_boat_counts_1.5km)
+hist(rec_boat_protected$mean_rec_boat_counts_1.5km)
+
+shapiro.test(rec_boat_protected$mean_rec_boat_counts_2km)
+hist(rec_boat_protected$mean_rec_boat_counts_2km)
+```
+Only the 1.5 km boat counts are normal
+
+```{r Normality of rec boat counts within non-protected sites}
+#Making data frame with only sites that are non-protected
+rec_boat_non_protected <- subset(unique_site_df, protect_status == "No Protection")
+
+shapiro.test(rec_boat_non_protected$mean_rec_boat_counts_1km)
+hist(rec_boat_non_protected$mean_rec_boat_counts_1km)
+
+shapiro.test(rec_boat_non_protected$mean_rec_boat_counts_1.5km)
+hist(rec_boat_non_protected$mean_rec_boat_counts_1.5km)
+
+shapiro.test(rec_boat_non_protected$mean_rec_boat_counts_2km)
+hist(rec_boat_non_protected$mean_rec_boat_counts_2km)
+#None of the distributions are normal
+```
+2km is normal but the others are not
+
+##### Doing statistical test of differences in rec boat counts between protection status
+
+Since the data do not all fit the assumptions of normality or equal variances we
+will need to use wilcoxon rank sum tests to compare.
+
+```{r Wilcoxon rank sum tests of mean rec boat counts between protected and non-protected sites}
+wilcox.test(mean_rec_boat_counts_1km ~ protect_status, data = unique_site_df, alternative = "t")
+wilcox.test(mean_rec_boat_counts_1.5km ~ protect_status, data = unique_site_df, alternative = "t")
+wilcox.test(mean_rec_boat_counts_2km ~ protect_status, data = unique_site_df, alternative = "t")
+```
+All of the wilcoxon rank sum tests indicate that there is a highly significant
+difference in the number of rec fishing boats between protected and non-protected
+sites. Based on the boxplots we can say that there are significantly more rec
+boats at non-protected sites than protected sites.
 
 ```{r Mean rec boat counts 1km glm}
 rec_boat_1km_mod <- glmmTMB(mean_rec_boat_counts_1km ~ protect_status,
@@ -641,11 +707,7 @@ rec_boat_1km_mod <- glmmTMB(mean_rec_boat_counts_1km ~ protect_status,
 ```
 
 
-```{r Normality of rec boat counts}
-rec_boat_protected <- subset(env_mod_data, protect_status == "Protected")
-shapiro.test(rec_boat_protected$mean_rec_boat_counts_1km)
-hist(rec_boat_protected$mean_rec_boat_counts_1km)
-```
+
 
 
 ```{r Snail count fishing model with protection linear output, echo=FALSE}

@@ -465,7 +465,7 @@ avg_temp_df <- avg_temp_df%>%
      scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
   #scale_fill_viridis_c(option = "C", name = "Avg Temperature (°C)") +  # Optional color scale
      scale_fill_gradient(
-    low = "#8EBAD2",          
+    low = "lightblue",          
     high = "#E95E48"
   ) +
   theme.figure.report() +
@@ -497,9 +497,9 @@ dev.off()
 
 ## Example Recreational boat plot
 
-### Using 1km radius
+### Using 1.5 km radius
 
-```{r total rec boat }
+```{r total rec boats within 1.5 km}
 (total_rec_boats_map_2023_test <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
     geom_sf(data = site_locations_radius_1.5km, fill = "#E95E48", alpha = 0.3)+
@@ -592,6 +592,33 @@ dev.off()
 ```
 
 
+### Plot of mean recreational boat counts between protection levels
+
+```{r Boxplot of mean rec boats between protection levels}
+(rec_boats_boxplot_1.5km <- ggplot(unique_site_df, aes(x = protect_status,
+                                                     y = mean_rec_boat_counts_1.5km,
+                                                     fill = protect_status))+
+  geom_boxplot()+
+  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  labs(x = "\nProtection Status", y = "Mean rec. boat counts")+
+     scale_fill_manual(values = c("#E95E48", "#355173"))+
+  theme.figure.report()+
+   theme(legend.position = "none"))
+```
+
+
+#### Saving the rec boats boxplot
+
+```{r Saving the rec boats boxplot, fig.width=7.5, fig.height=5.5, include=FALSE}
+png(filename = here("./04_plots/report_figures/rec_boats_boxplot_1.5km.png"), width = 6, height = 4.5, 
+    units = "in", pointsize = 15, res = 600)
+
+rec_boats_boxplot_1.5km
+
+dev.off()
+```
+
+
 ### Plot of effect of openness on snails
 
 ```{r Getting snail silhouette with phylopic}
@@ -670,11 +697,13 @@ urchin_picture_img_red <- recolor_phylopic(img = urchin_picture_img, alpha = 0.5
 
 ```{r Making a boxplot of urchin counts between protection status}
 (urchin_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
-  geom_boxplot()+
+  geom_boxplot(env_mod_data, mapping = aes(fill = protect_status))+
   geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
   labs(x = "\nProtection Status", y = "Red sea urchin counts")+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
   add_phylopic(img = urchin_picture_img_red, x = 2.4, y = 620, height = 150)+
-  theme.figure.report())
+  theme.figure.report()+
+    theme(legend.position = "none"))
 ```
 
 
@@ -691,13 +720,17 @@ dev.off()
 ### Urchin snail ratio boxplot
 
 ```{r Making a boxplot of urchin counts between protection status}
-(urch_sn_ratio_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = urch_sn_ratio))+
+(urch_sn_ratio_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status,
+                                                           y = urch_sn_ratio,
+                                                           fill = protect_status))+
   geom_boxplot()+
   geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
   labs(x = "\nProtection Status", y = "Log urchin to snail ratio")+
+     scale_fill_manual(values = c("#E95E48", "#355173"))+
   add_phylopic(img = urchin_picture_img, x = 2.45, y = 2.2, height = 1)+
    add_phylopic(img = snail_picture_img, x = 2.45, y = 1.2, height = 0.8)+
-  theme.figure.report())
+  theme.figure.report()+
+   theme(legend.position = "none"))
 ```
 
 
