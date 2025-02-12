@@ -600,7 +600,7 @@ dev.off()
                                                      fill = protect_status))+
   geom_boxplot()+
   geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
-  labs(x = "\nProtection Status", y = "Mean rec. boat counts")+
+  labs(x = "Protection Status", y = "Mean rec. boat counts")+
      scale_fill_manual(values = c("#E95E48", "#355173"))+
   theme.figure.report()+
    theme(legend.position = "none"))
@@ -667,7 +667,7 @@ dev.off()
                   ymax = predicted_snails + 1.96 * 0.2691),
               alpha = 0.5, fill = "#8EBAD2")+
   add_phylopic(img = snail_picture_img, x = 0.9, y = 5.5, height = 2)+
-  labs(x = "\nNormalized Openness", y = "Log red turban snail counts")+
+  labs(x = "Normalized Openness", y = "Log red turban snail counts")+
   theme.figure.report())
 ```
 
@@ -682,6 +682,18 @@ pred_snail_openness_plot_log
 dev.off()
 ```
 
+### Boxplot of snails between protection status
+
+```{r Making a boxplot of snail counts between protection status}
+(snail_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Turban_Snails))+
+  geom_boxplot(env_mod_data, mapping = aes(fill = protect_status))+
+  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  labs(x = "Protection Status", y = "Red turban snail counts")+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
+  add_phylopic(img = snail_picture_img, x = 2.4, y = 580, height = 150)+
+  theme.figure.report()+
+    theme(legend.position = "none"))
+```
 
 ### Boxplot of urchins between protection status
 
@@ -699,7 +711,7 @@ urchin_picture_img_red <- recolor_phylopic(img = urchin_picture_img, alpha = 0.5
 (urchin_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
   geom_boxplot(env_mod_data, mapping = aes(fill = protect_status))+
   geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
-  labs(x = "\nProtection Status", y = "Red sea urchin counts")+
+  labs(x = "Protection Status", y = "Red sea urchin counts")+
    scale_fill_manual(values = c("#E95E48", "#355173"))+
   add_phylopic(img = urchin_picture_img_red, x = 2.4, y = 620, height = 150)+
   theme.figure.report()+
@@ -725,7 +737,7 @@ dev.off()
                                                            fill = protect_status))+
   geom_boxplot()+
   geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
-  labs(x = "\nProtection Status", y = "Log urchin to snail ratio")+
+  labs(x = "Protection Status", y = "Log urchin to snail ratio")+
      scale_fill_manual(values = c("#E95E48", "#355173"))+
   add_phylopic(img = urchin_picture_img, x = 2.45, y = 2.2, height = 1)+
    add_phylopic(img = snail_picture_img, x = 2.45, y = 1.2, height = 0.8)+
