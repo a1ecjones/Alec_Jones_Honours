@@ -400,8 +400,9 @@ AICc(ecology_snail_mod_linear,
 ```
 
 AIC indicates that it does not improve the model by adding a random effect of 
-region. This means that for the snail ecology model I will pick the more parsimonius
-model without the random effect.
+region. The random effect is basically being removed from the model by the 
+select = TRUE argument. This means that for the snail ecology model I will 
+pick the more parsimonius model without the random effect.
 
 ### Red Sea urchin ecology models{.tabset}
 
@@ -1220,7 +1221,7 @@ coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
 extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
 
 
-nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 325)
 #picked 10 m for distance so that it includes the transects at same sites
 
 lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
@@ -1333,7 +1334,7 @@ Model with the random effect included has slightly worse AIC, but it is within
 eliminates the autocorrelation. Will need to talk to Dom about this.
 
 
-##### Testing the model with a subset without the deer group sites
+#### Testing the model with a subset without the deer group sites
 
 ```{r Subsetting the data to exclude deer group}
 env_mod_data_wo_deer <- env_mod_data%>%
@@ -1514,6 +1515,7 @@ moran.test(residuals_urch_sn_ratio_protection_model_glmm, lw_inverse,
 ```
 </div>
 
+No autocorrelation.
 
 ### Comparing Urchin Snail ratio models without openness
 
@@ -1527,7 +1529,7 @@ AIC suggests that the model with the random effect included may be slightly bett
 as it has a lower AIC even with an additional degree of freedom.
 
 
-#### Testing the model without the deer group sites
+### Testing the model without the deer group sites
 
 ```{r Urchin ratio protection re GLMM model no deer}
 urch_sn_ratio_protection_model_glmm_no_deer <- glmmTMB(urch_sn_ratio ~ protect_status,
