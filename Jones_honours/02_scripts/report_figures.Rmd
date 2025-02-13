@@ -621,6 +621,8 @@ dev.off()
 
 ### Plot of effect of openness on snails
 
+#### Non-log plot
+
 ```{r Getting snail silhouette with phylopic}
 #Run this function and then type into the console which one you want then copy paste the uuid into the next part
 pick_phylopic(name = "Trochidae")
@@ -657,15 +659,12 @@ dev.off()
 ```
 
 
+#### Log plot
+
 ```{r Making a plot of the effect of openness on log snails}
 (pred_snail_openness_plot_log <- ggplot(env_mod_data, aes(x = norm_openness, y = log(Turban_Snails + 1)))+
   geom_point()+
-  geom_line(data = snail_op_pred_data, aes(
-                                           y = predicted_snails))+
-  geom_ribbon(data = snail_op_pred_data,
-              aes(ymin = predicted_snails - 1.96 * 0.2691,
-                  ymax = predicted_snails + 1.96 * 0.2691),
-              alpha = 0.5, fill = "#8EBAD2")+
+  geom_smooth(method = "lm", colour = "#637683", fill = "#8EBAD2")+
   add_phylopic(img = snail_picture_img, x = 0.9, y = 5.5, height = 2)+
   labs(x = "Normalized Openness", y = "Log red turban snail counts")+
   theme.figure.report())
