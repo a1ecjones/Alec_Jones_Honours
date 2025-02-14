@@ -708,18 +708,24 @@ urchin_picture_img_red <- recolor_phylopic(img = urchin_picture_img, alpha = 0.5
 
 ```{r Making a boxplot of urchin counts between protection status}
 (urchin_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
-  geom_boxplot(env_mod_data, mapping = aes(fill = protect_status))+
-  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  geom_boxplot(env_mod_data, mapping = aes(fill = protect_status),
+               alpha = 0.6, width = 0.15, position = position_nudge(x = -0.1))+
+  geom_point(pred_urchin_fishing_mod_glmm, mapping = 
+              aes(x = x, y = predicted, color = group), size = 4, position = position_nudge(0.1))+
+  geom_errorbar(pred_urchin_fishing_mod_glmm, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = x, y = predicted),
+                width = 0.15, position = position_nudge(0.1))+
   labs(x = "Protection Status", y = "Red sea urchin counts")+
    scale_fill_manual(values = c("#E95E48", "#355173"))+
-  add_phylopic(img = urchin_picture_img_red, x = 2.4, y = 620, height = 150)+
+  add_phylopic(img = urchin_picture_img_red, x = 2.3, y = 620, height = 150)+
   theme.figure.report()+
-    theme(legend.position = "none"))
+    theme(legend.position = "none",
+          axis.text = element_text(size = 16)))
 ```
 
 
 ```{r Saving the urchin fishing boxplot}
-png(filename = here("./04_plots/report_figures/urchin_fishing_boxplot.png"), width = 6, height = 4.5, 
+png(filename = here("./04_plots/report_figures/urchin_fishing_boxplot.png"), width = 4, height = 4, 
     units = "in", pointsize = 15, res = 600)
 
 urchin_fishing_boxplot

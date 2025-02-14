@@ -481,7 +481,7 @@ double penalty.
 ecology_urchin_mod_re <- gam(Urchins ~ s(sst_scale)+
                                s(norm_openness_scale)+
                            dominant_score+
-                                s(region1, bs = "re"),
+                                region1,
                              data = env_mod_data,
                              family = gaussian(link = "identity"),
                              method = "REML",
@@ -1254,7 +1254,7 @@ homogeneity of variance is met.
 
 
 ```{r Urchin fishing model glmm}
-urchin_fishing_mod_glmm <- glmmTMB(Urchins ~ protect_status + (1|region1),
+urchin_fishing_mod_glmm <- glmmTMB(Urchins ~ protect_status + region1,
                                family = gaussian(link = "identity"),
                                    data = env_mod_data)
 ```
@@ -1276,7 +1276,7 @@ red sea urchins in protected sites.
 
 
 ```{r Plotting the effect of protection status on urchin counts glmm, echo=FALSE}
-pred_urchin_fishing_mod_glmm <- ggpredict(urchin_fishing_mod_glmm, terms = "protect_status")
+pred_urchin_fishing_mod_glmm <- ggpredict(urchin_fishing_mod_glmm, terms = c("protect_status", "region1"))
 
 ggplot(pred_urchin_fishing_mod_glmm, aes(x = x, y = predicted))+
   geom_point()+
@@ -1450,7 +1450,7 @@ Variance is equal between protection status.
 
 ```{r Urchin ratio protection re GLMM model}
 urch_sn_ratio_protection_model_glmm <- glmmTMB(urch_sn_ratio ~ protect_status +
-                          (1|region1), 
+                          region1, 
                           data = env_mod_data,
                           family = gaussian(link = "identity"))
 ```
