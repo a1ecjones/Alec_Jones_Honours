@@ -30,6 +30,10 @@ library(spdep)
 library(ggpubr)
 library(glmmTMB)
 library(emmeans)
+library(conflicted)
+
+conflict_prefer("select", "dplyr")
+conflict_prefer("filter", "dplyr")
 ```
 
 

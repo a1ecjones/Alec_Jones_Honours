@@ -164,7 +164,7 @@ baeria_rocks_er <- st_read(here("./01_raw_data/baeria_rocks.kml"))
 (van_isl_map <- ggplot(VI_base_layer_sf) +
   geom_sf() +
   coord_sf(ylim = c(48.3, 50.8), xlim = c(-128.2, -123.2)) +
-  theme.figure() +
+  theme.figure.report() +
   geom_rect(xmin = long_min, xmax = long_max, ymin = lat_min, ymax = lat_max,
             color = "red", fill = NA, linewidth = 1) +
   labs(x = "Longitude", y = "Latitude") +
@@ -207,8 +207,8 @@ dev.off()
 (overall_site_map <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
      geom_sf(data = broken_group_RCA, fill = "blue", colour ="blue", alpha = 0.1)+
-   geom_sf(data = numukamis_area, fill = "#481567FF", colour = "#481567FF", alpha = 0.2)+
-   geom_sf(data = baeria_rocks_er, fill = "#CD2626", colour = "#CD2626", alpha = 0.2)+
+   geom_sf(data = numukamis_area, fill = "blue", colour = "blue", alpha = 0.2)+
+   geom_sf(data = baeria_rocks_er, fill = "blue", colour = "blue", alpha = 0.2)+
      geom_point(plotting_data_minor_shifted, 
               mapping = aes(x = longitude, y = latitude, fill = protect_status,
                             shape = protect_status), size = 3)+
@@ -598,7 +598,7 @@ dev.off()
 (rec_boats_boxplot_1.5km <- ggplot(unique_site_df, aes(x = protect_status,
                                                      y = mean_rec_boat_counts_1.5km,
                                                      fill = protect_status))+
-  geom_boxplot()+
+  geom_boxplot(alpha = 0.6, width = 0.15)+
   geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
   labs(x = "Protection Status", y = "Mean rec. boat counts")+
      scale_fill_manual(values = c("#E95E48", "#355173"))+
@@ -610,7 +610,7 @@ dev.off()
 #### Saving the rec boats boxplot
 
 ```{r Saving the rec boats boxplot, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/report_figures/rec_boats_boxplot_1.5km.png"), width = 6, height = 4.5, 
+png(filename = here("./04_plots/report_figures/rec_boats_boxplot_1.5km.png"), width = 4, height = 4, 
     units = "in", pointsize = 15, res = 600)
 
 rec_boats_boxplot_1.5km
@@ -702,7 +702,7 @@ dev.off()
 
 urchin_picture_uuid <- "a6125e0d-c627-40e3-9966-5ad288277545"
 urchin_picture_img <- get_phylopic(uuid = urchin_picture_uuid)
-urchin_picture_img_red <- recolor_phylopic(img = urchin_picture_img, alpha = 0.5, fill = "#E95E48")
+#urchin_picture_img_red <- recolor_phylopic(img = urchin_picture_img, alpha = 0.5, fill = "#E95E48")
 ```
 
 
@@ -717,7 +717,7 @@ urchin_picture_img_red <- recolor_phylopic(img = urchin_picture_img, alpha = 0.5
                 width = 0.15, position = position_nudge(0.1))+
   labs(x = "Protection Status", y = "Red sea urchin counts")+
    scale_fill_manual(values = c("#E95E48", "#355173"))+
-  add_phylopic(img = urchin_picture_img_red, x = 2.3, y = 620, height = 150)+
+  add_phylopic(img = urchin_picture_img, x = 2.3, y = 620, height = 150)+
   theme.figure.report()+
     theme(legend.position = "none",
           axis.text = element_text(size = 16)))
