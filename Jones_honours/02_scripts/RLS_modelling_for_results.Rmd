@@ -64,6 +64,11 @@ levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
 
 regions <- c("region1", "region2", "region3", "region4")
 env_mod_data[regions] <- lapply(env_mod_data[regions], factor)
+
+## Reordering the factor levels of region1 so that Deer group bamfield is the
+#intercept
+
+env_mod_data$region1 <- relevel(env_mod_data$region1, ref = 3)
 ```
 
 ```{r Creating a factor variable of protection status for the modelling data, include=FALSE}
@@ -393,12 +398,78 @@ concurvity(ecology_snail_mod_linear_re, full = TRUE)
 
 Random effect of region is highly concurve.
 
+#### Model 4: Ecology model on the snail counts with temperature, openness, and bottom type and fixed effect of region (linear openness)
+
+```{r Turban snail ecology/environmental model linear FE}
+ecology_snail_mod_linear_fe <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+                               norm_openness_scale +
+                           dominant_score+
+                                region1,
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Turban snail ecology/environmental model linear fe output, echo=FALSE}
+gam.check(ecology_snail_mod_linear_fe)
+plot(ecology_snail_mod_linear_fe, all.terms = TRUE)
+summary(ecology_snail_mod_linear_fe)
+```
+Results showing the same trends with normalized openness included as a linear term.
+Region as a fixed effect does not seem to be significant.
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Turban snail ecology model linear fe residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_ecology_snail_mod_linear_fe <- residuals(ecology_snail_mod_linear_fe, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ecology_snail_mod_linear_fe, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_ecology_snail_mod_linear_fe, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+Slight autocorrelation for inverse distance method
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing turban snail ecology model linear fe for concurvity, echo=FALSE}
+concurvity(ecology_snail_mod_linear_fe, full = FALSE)
+concurvity(ecology_snail_mod_linear_fe, full = TRUE)
+```
+</div>
+
+Temp and para are highly concurve.
+
 
 #### Comparing Turban snail ecology models
 
 ```{r AIC of Turban snail ecology models}
 AICc(ecology_snail_mod_linear,
-    ecology_snail_mod_linear_re)%>%
+    ecology_snail_mod_linear_re,
+    ecology_snail_mod_linear_fe)%>%
   arrange(AICc)%>%
   mutate(delta_AICc = AICc - AICc[1])
 ```
@@ -408,9 +479,13 @@ region. The random effect is basically being removed from the model by the
 select = TRUE argument. This means that for the snail ecology model I will 
 pick the more parsimonius model without the random effect.
 
+Also, having region as a fixed effect makes the AIC much worse.
+Trying with both methods (REML and ML) the model with the fixed effect is much
+worse.
+
 ### Red Sea urchin ecology models{.tabset}
 
-#### Model 4: Ecology model on the urchin counts with temperature, openness, and bottom type
+#### Model 5: Ecology model on the urchin counts with temperature, openness, and bottom type
 
 ```{r Urchin ecology/environmental model}
 ecology_urchin_mod <- gam(Urchins ~ s(sst_scale)+
@@ -479,13 +554,13 @@ Concurvity is high for temperature and openness. Both are being removed by the
 double penalty.
 
 
-#### Model 5: Ecology model on the urchin counts with temperature, openness, and bottom type (random effect of region)
+#### Model 6: Ecology model on the urchin counts with temperature, openness, and bottom type (random effect of region)
 
 ```{r Urchin ecology/environmental model region re}
 ecology_urchin_mod_re <- gam(Urchins ~ s(sst_scale)+
                                s(norm_openness_scale)+
                            dominant_score+
-                                region1,
+                                s(region1, bs = "re"),
                              data = env_mod_data,
                              family = gaussian(link = "identity"),
                              method = "REML",
@@ -547,17 +622,87 @@ concurvity(ecology_urchin_mod_re, full = TRUE)
 Temp and region are basically fully concurve.
 
 
+#### Model 7: Ecology model on the urchin counts with temperature, openness, and bottom type (fixed effect of region)
+
+```{r Urchin ecology/environmental model region fe}
+ecology_urchin_mod_fe <- gam(Urchins ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score+
+                                region1,
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Urchin ecology/environmental model region fe output, echo=FALSE}
+set.seed(299)
+gam.check(ecology_urchin_mod_fe, rep = 500)
+plot(ecology_urchin_mod_fe, all.terms = TRUE)
+summary(ecology_urchin_mod_fe)
+shapiro.test(ecology_urchin_mod_fe$residuals)
+```
+Gaussian looks ok. When adding the fixed effect of region the openness becomes
+borderline and negative. Also dominant substrate type becomes significant with 
+more urchins on solid substrate.
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin ecology model region fe residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_ecology_urchin_mod_fe <- residuals(ecology_urchin_mod_fe, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ecology_urchin_mod_fe, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_ecology_urchin_mod_fe, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+No autocorrelation.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing urchin ecology model fe for concurvity, echo=FALSE}
+concurvity(ecology_urchin_mod_fe, full = FALSE)
+concurvity(ecology_urchin_mod_fe, full = TRUE)
+```
+</div>
+
+Temp is very concurve.
+
 #### Comparing the urchin ecology models
 
 ```{r AIC of Urchin ecology models}
 AICc(ecology_urchin_mod,
-     ecology_urchin_mod_re)%>%
+     ecology_urchin_mod_re,
+     ecology_urchin_mod_fe)%>%
   arrange(AICc)%>%
   mutate(delta_AICc = AICc - AICc[1])
 ```
-The urchin ecology model with the random effect appears to be a much better
-fitting model than the one without the random effect. I will select the model 
-with the random effect as it seems much better.
+When testing with REML, the model with the random effect is much better than 
+the model with no random effect. When comparing with ML, the model with the 
+fixed effect is much better than the model without the fixed effect. In both 
+the model with the fixed effect is better than the model with the random effect.
 
 
 ## Fishing models{.tabset}
@@ -770,7 +915,7 @@ protected sites.
 
 
 
-#### Model 6: Fishing model on the snail counts with protection and openness (glm)
+#### Model 8: Fishing model on the snail counts with protection and openness (glm)
 
 For this model we are seeing that protection status has a non-significant
 positive effect on the log snail counts
@@ -865,7 +1010,7 @@ moran.test(residuals_snail_fishing_mod_linear, lw_inverse,
 No autocorrelation with neighbours but it is significant with inverse distance.
 
 
-#### Model 7: Fishing model on the snail counts with protection and openness and random effect (glmm)
+#### Model 9: Fishing model on the snail counts with protection and openness and random effect (glmm)
 
 For this model we are seeing that protection status has a non-significant
 positive effect on the log snail counts
@@ -978,7 +1123,7 @@ anova(snail_fishing_mod_linear, snail_fishing_mod_linear_re)
 It appears that the random effect of region is not explaining any of the variance
 in the data and both AICc and ANOVA prefer the model without the random effect.
 
-#### Model 8: Fishing model on the snail counts with just protection (glm)
+#### Model 10: Fishing model on the snail counts with just protection (glm)
 
 ```{r Testing the snail counts for equal variance among protection levels}
 leveneTest(log(Turban_Snails + 1) ~ protect_status, data = env_mod_data)
@@ -1066,7 +1211,7 @@ moran.test(residuals_snail_fishing_mod_linear_no_op, lw_inverse,
 </div>
 No autocorrelation.
 
-#### Model 9: Fishing model on the snail counts with protection and a random effect (glmm)
+#### Model 11: Fishing model on the snail counts with protection and a random effect (glmm)
 
 ```{r Snail count fishing model with protection linear re}
 snail_fishing_mod_linear_no_op_re <- glmmTMB(sqrt(Turban_Snails) ~
@@ -1146,11 +1291,91 @@ moran.test(residuals_snail_fishing_mod_linear_no_op_re, lw_inverse,
 No autocorrelation.
 
 
+#### Model 12: Fishing model on the snail counts with protection and a fixed effect of region (glm)
+
+```{r Snail count fishing model with protection linear fe}
+snail_fishing_mod_linear_no_op_fe <- glmmTMB(sqrt(Turban_Snails) ~
+                                      protect_status + region1,
+                                    data = env_mod_data,
+                                    family = gaussian(link = "identity"))
+```
+
+```{r Snail count fishing model with protection linear fe output, echo=FALSE}
+#Checking resids
+snail_fishing_mod_linear_no_op_fe_resids <- simulateResiduals(snail_fishing_mod_linear_no_op_fe)
+plot(snail_fishing_mod_linear_no_op_fe_resids)
+
+hist(residuals(snail_fishing_mod_linear_no_op_fe))
+shapiro.test(residuals(snail_fishing_mod_linear_no_op_fe))
+
+#residuals_test <- residuals(snail_fishing_mod_linear, type = "pearson")
+#fitted_values_test <- fitted(snail_fishing_mod_linear)
+
+#ggplot(data = data.frame(fitted_values_test, residuals_test), aes(x = fitted_values_test, y = residuals_test)) +
+#  geom_point() +
+#  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+#  labs(x = "Fitted Values", y = "Pearson Residuals", title = "Residuals vs Fitted") +
+#  theme_minimal()
+
+#Looking at model results
+summary(snail_fishing_mod_linear_no_op_fe)
+```
+
+
+```{r Plotting the linear snail fishing model with protection fe, echo=FALSE}
+pred_snail_fishing_mod_linear_no_op_fe_protect_status <- ggpredict(snail_fishing_mod_linear_no_op_fe, terms = "protect_status")
+#plot(pred_snail_fishing_mod_linear_protect_status)
+
+ggplot(pred_snail_fishing_mod_linear_no_op_fe_protect_status, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Turban Snail Counts", x = "Protection Status")+
+  theme.figure()
+
+#Using emmeans to represent the protection status
+#plot(emmeans(snail_fishing_mod_linear, ~ protect_status, comparisons = TRUE))
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Turban snail fishing model linear no openness fe residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_snail_fishing_mod_linear_no_op_fe <- residuals(snail_fishing_mod_linear_no_op_fe, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_snail_fishing_mod_linear_no_op_fe, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_snail_fishing_mod_linear_no_op_fe, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+No autocorrelation.
+
 #### Comparing Turban Snail fishing models with no openness
 
 ```{r AIC of the Turban snail fishing models}
 AICc(snail_fishing_mod_linear_no_op, 
-    snail_fishing_mod_linear_no_op_re)%>%
+    snail_fishing_mod_linear_no_op_re,
+    snail_fishing_mod_linear_no_op_fe)%>%
   arrange(AICc)%>%
   mutate(delta_AICc = AICc - AICc[1])
 ```
@@ -1172,7 +1397,7 @@ ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
 ```
 
 
-#### Model 10: Fishing model on the urchin counts (glm)
+#### Model 13: Fishing model on the urchin counts (glm)
 
 ```{r Checking variance between protected and non-protected for urchins, echo=FALSE}
 leveneTest(Urchins ~ protect_status, data = env_mod_data)
@@ -1248,17 +1473,11 @@ moran.test(residuals_urchin_fishing_mod_glm, lw_inverse,
 Seeing some autocorrelation in the inverse method but not the neighbour method.
 
 
-#### Model 11: Fishing model on the urchin counts with random effect (glmm)
-
-```{r Checking variance between protected and non-protected for urchins, echo=FALSE}
-leveneTest(Urchins ~ protect_status, data = env_mod_data)
-```
-Equal variance between protected and non-protected sites so assumption of 
-homogeneity of variance is met.
+#### Model 14: Fishing model on the urchin counts with random effect (glmm)
 
 
 ```{r Urchin fishing model glmm}
-urchin_fishing_mod_glmm <- glmmTMB(Urchins ~ protect_status + region1,
+urchin_fishing_mod_glmm <- glmmTMB(Urchins ~ protect_status + (1|region1),
                                family = gaussian(link = "identity"),
                                    data = env_mod_data)
 ```
@@ -1323,19 +1542,91 @@ moran.test(residuals_urchin_fishing_mod_glmm, lw_inverse,
 </div>
 No autocorrelation with random effect included.
 
+#### Model 15: Fishing model on the urchin counts with fixed effect (glm)
+
+
+```{r Urchin fishing model fe glmm}
+urchin_fishing_mod_glm_fe <- glmmTMB(Urchins ~ protect_status + region1,
+                               family = gaussian(link = "identity"),
+                                   data = env_mod_data)
+```
+
+```{r Urchin fishing mod fe glmm output, echo=FALSE}
+#Checking resids
+urchin_fishing_mod_glm_fe_resids <- simulateResiduals(urchin_fishing_mod_glm_fe)
+plot(urchin_fishing_mod_glm_fe_resids)
+
+hist(residuals(urchin_fishing_mod_glm_fe))
+shapiro.test(residuals(urchin_fishing_mod_glm_fe))
+
+#Looking at model results
+summary(urchin_fishing_mod_glm_fe)
+```
+Residuals look ok for just using a gaussian distribution. Seeing a non-significant
+negative effect of protection status on red sea urchins. That is, there are less
+red sea urchins in protected sites. Main effects that are evident is regional 
+effect with broken group and sarita having lower urchins than bamfield.
+
+
+```{r Plotting the effect of protection status on urchin counts glm fe, echo=FALSE}
+pred_urchin_fishing_mod_glm_fe <- ggpredict(urchin_fishing_mod_glm_fe, terms = c("protect_status", "region1"))
+
+ggplot(pred_urchin_fishing_mod_glm_fe, aes(x = group, y = predicted, colour = x))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(x = "Protection Status", y = "Predicted Urchin Counts")+
+  theme.figure()
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin fishing model fe glm residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_urchin_fishing_mod_glm_fe <- residuals(urchin_fishing_mod_glm_fe, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_urchin_fishing_mod_glm_fe, lw,
+           alternative = "two.sided")
+
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_urchin_fishing_mod_glm_fe, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+No autocorrelation with fixed effect included.
+
 
 #### Comparing urchin fishing models
 
 ```{r AIC of the urchin fishing models}
 AICc(urchin_fishing_mod_glm,
-    urchin_fishing_mod_glmm)%>%
+    urchin_fishing_mod_glmm, 
+    urchin_fishing_mod_glm_fe)%>%
   arrange(AICc)%>%
   mutate(delta_AICc = AICc - AICc[1])
 ```
 
 Model with the random effect included has slightly worse AIC, but it is within
 2 points even with an additional degree of freedom. The random effect model also
-eliminates the autocorrelation. Will need to talk to Dom about this.
+eliminates the autocorrelation. 
+Model with the region included is the best based on AIC.
 
 
 #### Testing the model with a subset without the deer group sites
