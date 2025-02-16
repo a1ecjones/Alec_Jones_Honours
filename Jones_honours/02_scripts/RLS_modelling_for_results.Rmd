@@ -1664,7 +1664,7 @@ summary(urchin_fishing_mod_glmm_no_deer)
 
 ## Urchin Snail ratio models{.tabset}
 
-### Model 12: Urchin Snail Ratio fishing model (glm)
+### Model 16: Urchin Snail Ratio fishing model (glm)
 
 ```{r Checking variance between protected and non-protected for urch sn ratio re, echo=FALSE}
 leveneTest(urch_sn_ratio ~ protect_status, data = env_mod_data)
@@ -1735,7 +1735,7 @@ moran.test(residuals_urch_sn_ratio_protection_model_glm, lw_inverse,
 
 Only some correlation with the inverse distance method.
 
-### Model 13: Urchin Snail Ratio fishing model with random effect (glmm)
+### Model 17: Urchin Snail Ratio fishing model with random effect (glmm)
 
 ```{r Checking variance between protected and non-protected for urch sn ratio re, echo=FALSE}
 leveneTest(urch_sn_ratio ~ protect_status, data = env_mod_data)
