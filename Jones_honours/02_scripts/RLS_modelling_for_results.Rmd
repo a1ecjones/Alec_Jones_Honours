@@ -67,9 +67,11 @@ regions <- c("region1", "region2", "region3", "region4")
 env_mod_data[regions] <- lapply(env_mod_data[regions], factor)
 
 ## Reordering the factor levels of region1 so that Deer group bamfield is the
-#intercept
-
-env_mod_data$region1 <- relevel(env_mod_data$region1, ref = 3)
+#intercept and renaming for plotting
+levels(env_mod_data$region1) <- list(DGB = "Deer group/Bamfield",
+                                     BG = "Broken Group",
+                                     DIEC = "Deep Imperial Eagle Channel",
+                                     SR = "Sarita" )
 ```
 
 ```{r Creating a factor variable of protection status for the modelling data, include=FALSE}
@@ -124,9 +126,15 @@ theme.figure <- function (){
 
 ```{r Making a contingency table for protection status and region1}
 fisher.test(table(unique_site_df$protect_status, unique_site_df$region1))
-
 ```
 Appears that region and protection status are significantly associated
+
+#### Testing the assumption of equal variance of urchins between regions
+
+```{r}
+leveneTest(Urchins ~ region1, data = env_mod_data)
+```
+
 
 ## Ecology models{.tabset}
 
@@ -698,6 +706,18 @@ concurvity(ecology_urchin_mod_fe, full = TRUE)
 </div>
 
 Temp is very concurve.
+
+
+##### Testing the model for VIF stuff
+```{r}
+vif(ecology_urchin_mod_fe)
+
+performance::check_collinearity(ecology_urchin_mod_fe,
+                   component = c("all"))
+
+fisher.test(table(env_mod_data$dominant_score, env_mod_data$region1))
+#Not significant
+```
 
 #### Comparing the urchin ecology models
 
@@ -1554,13 +1574,13 @@ No autocorrelation with random effect included.
 #### Model 15: Fishing model on the urchin counts with fixed effect (glm)
 
 
-```{r Urchin fishing model fe glmm}
+```{r Urchin fishing model fe glm}
 urchin_fishing_mod_glm_fe <- glmmTMB(Urchins ~ protect_status + region1,
                                family = gaussian(link = "identity"),
                                    data = env_mod_data)
 ```
 
-```{r Urchin fishing mod fe glmm output, echo=FALSE}
+```{r Urchin fishing mod fe glm output, echo=FALSE}
 #Checking resids
 urchin_fishing_mod_glm_fe_resids <- simulateResiduals(urchin_fishing_mod_glm_fe)
 plot(urchin_fishing_mod_glm_fe_resids)
@@ -1580,12 +1600,50 @@ effect with broken group and sarita having lower urchins than bamfield.
 ```{r Plotting the effect of protection status on urchin counts glm fe, echo=FALSE}
 pred_urchin_fishing_mod_glm_fe <- ggpredict(urchin_fishing_mod_glm_fe, terms = c("protect_status", "region1"))
 
+
 ggplot(pred_urchin_fishing_mod_glm_fe, aes(x = group, y = predicted, colour = x))+
   geom_point()+
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
   labs(x = "Protection Status", y = "Predicted Urchin Counts")+
   theme.figure()
 ```
+
+
+```{r Making the data in a way that it would plot}
+#renaming group to region1
+pred_urchin_fishing_mod_glm_fe$region1 <- pred_urchin_fishing_mod_glm_fe$group
+pred_urchin_fishing_mod_glm_fe$protect_status <- pred_urchin_fishing_mod_glm_fe$x
+
+#combining with env_mod_data for plotting the faceted boxplots
+plotting_pred_urchin_fishing_mod_glm_fe <- env_mod_data%>%
+  left_join(pred_urchin_fishing_mod_glm_fe, by = c("protect_status", "region1"))
+
+#Adding a row with the info for the bamfield protected estimates so that it plots it
+plotting_pred_urchin_fishing_mod_glm_fe[36,] <- plotting_pred_urchin_fishing_mod_glm_fe[35,]
+
+#Changing the row data to be what the bamfield protected estimates are
+plotting_pred_urchin_fishing_mod_glm_fe <- plotting_pred_urchin_fishing_mod_glm_fe%>%
+ mutate(predicted = if_else(row_number() == 36, 383.59993, predicted))%>%
+  mutate(std.error = if_else(row_number() == 36, 89.97562, std.error))%>%
+  mutate(conf.low = if_else(row_number() == 36, 207.25095, conf.low))%>%
+  mutate(conf.high = if_else(row_number() == 36, 559.9489, conf.high))%>%
+  mutate(x = if_else(row_number() == 36, "Protected", x))%>%
+  #Making the urchins counts NA so that it doesnt plot a boxplot for bamfield protected
+  mutate(Urchins = if_else(row_number() == 36, NA, Urchins))
+```
+
+
+##### Making subsets of the predicted values
+```{r Making subsets for the predicted urchin count values for protected/non-protected}
+urchin_counts_protected_preds <- subset(pred_urchin_fishing_mod_glm_fe,
+                                        x == "Protected")
+
+urchin_counts_non_protected_preds <- subset(pred_urchin_fishing_mod_glm_fe,
+                                            x == "No Protection")
+
+
+```
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
@@ -1621,6 +1679,16 @@ moran.test(residuals_urchin_fishing_mod_glm_fe, lw_inverse,
 </div>
 No autocorrelation with fixed effect included.
 
+
+
+##### Testing the model for VIF stuff
+
+```{r}
+vif(urchin_fishing_mod_glm_fe)
+
+performance::check_collinearity(urchin_fishing_mod_glm_fe,
+                   component = c("all"))
+```
 
 #### Comparing urchin fishing models
 
@@ -1849,6 +1917,38 @@ ggplot(pred_urch_sn_ratio_protection_model_glm_fe, aes(x = group, y = predicted,
   labs(y = "Predicted Log Urchin to Snail ratio", x = "Protection Status")+
   theme.figure()
 ```
+
+```{r Making subsets for the predicted values for protected/non-protected}
+urch_sn_ratio_protected_preds <- subset(pred_urch_sn_ratio_protection_model_glm_fe,
+                                        x == "Protected")
+
+urch_sn_ratio_non_protected_preds <- subset(pred_urch_sn_ratio_protection_model_glm_fe,
+                                            x == "No Protection")
+```
+
+```{r Making the data in a way that it would plot ursh sn ratio}
+#renaming group to region1
+pred_urch_sn_ratio_protection_model_glm_fe$region1 <- pred_urch_sn_ratio_protection_model_glm_fe$group
+pred_urch_sn_ratio_protection_model_glm_fe$protect_status <- pred_urch_sn_ratio_protection_model_glm_fe$x
+
+#combining with env_mod_data for plotting the faceted boxplots
+plotting_pred_urch_sn_ratio_protection_model_glm_fe <- env_mod_data%>%
+  left_join(pred_urch_sn_ratio_protection_model_glm_fe, by = c("protect_status", "region1"))
+
+#Adding a row with the info for the bamfield protected estimates so that it plots it
+plotting_pred_urch_sn_ratio_protection_model_glm_fe[36,] <- plotting_pred_urch_sn_ratio_protection_model_glm_fe[35,]
+
+#Changing the row data to be what the bamfield protected estimates are
+plotting_pred_urch_sn_ratio_protection_model_glm_fe <- plotting_pred_urch_sn_ratio_protection_model_glm_fe%>%
+ mutate(predicted = if_else(row_number() == 36, 0.4249653, predicted))%>%
+  mutate(std.error = if_else(row_number() == 36, 0.4572245, std.error))%>%
+  mutate(conf.low = if_else(row_number() == 36, -0.4711782, conf.low))%>%
+  mutate(conf.high = if_else(row_number() == 36, 1.3211087, conf.high))%>%
+  mutate(x = if_else(row_number() == 36, "Protected", x))%>%
+  #Making the urchins counts NA so that it doesnt plot a boxplot for bamfield protected
+  mutate(urch_sn_ratio = if_else(row_number() == 36, NA, urch_sn_ratio))
+```
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 

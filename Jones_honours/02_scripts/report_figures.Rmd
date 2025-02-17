@@ -533,6 +533,7 @@ total_rec_boats_map_2023_test
 dev.off()
 ```
 
+### Total rec boats
 
 ```{r total rec boat }
 (total_rec_boats_map_2023 <- ggplot()+
@@ -558,6 +559,7 @@ dev.off()
             color = "#E95E48", fill = NA, linewidth = 2))
 ```
 
+### Broken group rec baots
 
 ```{r Inset view of smaller area with the radii around the sites}
 (broken_group_rec_boats <- ggplot()+
@@ -592,7 +594,7 @@ dev.off()
 ```
 
 
-### Plot of mean recreational boat counts between protection levels
+## Plot of mean recreational boat counts between protection levels
 
 ```{r Boxplot of mean rec boats between protection levels}
 (rec_boats_boxplot_1.5km <- ggplot(unique_site_df, aes(x = protect_status,
@@ -625,7 +627,7 @@ dev.off()
 
 ```{r Getting snail silhouette with phylopic}
 #Run this function and then type into the console which one you want then copy paste the uuid into the next part
-pick_phylopic(name = "Trochidae")
+#pick_phylopic(name = "Trochidae")
 #The uuid for the snail silhouette is "af3b0a39-4ba9-4134-800e-d181a7288689"
 
 snail_picture_uuid <- "af3b0a39-4ba9-4134-800e-d181a7288689"
@@ -711,7 +713,7 @@ urchin_picture_img <- get_phylopic(uuid = urchin_picture_uuid)
   geom_boxplot(env_mod_data, mapping = aes(fill = protect_status),
                alpha = 0.6, width = 0.15, position = position_nudge(x = -0.1))+
   geom_point(pred_urchin_fishing_mod_glmm, mapping = 
-              aes(x = x, y = predicted, color = group), size = 4, position = position_nudge(0.1))+
+              aes(x = x, y = predicted), size = 4, position = position_nudge(0.1))+
   geom_errorbar(pred_urchin_fishing_mod_glmm, mapping =
                   aes(ymin = conf.low, ymax = conf.high, x = x, y = predicted),
                 width = 0.15, position = position_nudge(0.1))+
@@ -733,29 +735,296 @@ urchin_fishing_boxplot
 dev.off()
 ```
 
+### Urchin fishing boxplots with the model outputs (with fixed effect of region)
+
+```{r Making a plot of the urchin counts based on protection and region}
+(urchin_fishing_boxplot_fe <- ggplot(env_mod_data, aes(x = region1,
+                                                           y = Urchins
+                                                           ))+
+    geom_boxplot(env_mod_data%>%
+                   filter(protect_status == "Protected"), 
+                 mapping = aes(x = region1, y = Urchins) ,
+              alpha = 0.6, width = 0.15, fill = "#355173", position = position_nudge(x = 0.15))+
+   geom_boxplot(env_mod_data%>%
+                 filter(protect_status == "No Protection"), 
+               mapping = aes(x = region1, y = Urchins) ,
+              alpha = 0.6, width = 0.15, fill = "#E95E48", position = position_nudge(x = -0.35))+
+ 
+  geom_errorbar(urchin_counts_non_protected_preds, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = group, y = predicted),
+                 width = 0.15, position = position_nudge(-0.15))+
+    geom_errorbar(urchin_counts_protected_preds, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = group, y = predicted),
+                 width = 0.15, position = position_nudge(0.35))+
+     geom_point(urchin_counts_non_protected_preds, mapping = 
+              aes(x = group, y = predicted), size = 4, alpha = 1,
+             colour = "#E95E48",
+             position = position_nudge(-0.15))+
+    geom_point(urchin_counts_protected_preds, mapping = 
+              aes(x = group, y = predicted), size = 4, alpha = 1,
+             colour = "#355173",
+             position = position_nudge(0.35))+
+  #geom_boxplot(alpha = 0.6, width = 0.15)+
+ # geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  labs(x = "Region", y = "Red sea urchin counts")+
+     scale_fill_manual(values = c("#E95E48", "#355173"))+
+        scale_colour_manual(values = c("#E95E48", "#355173"))+
+  add_phylopic(img = urchin_picture_img, x = 4.3, y = 680, height = 120)+
+  theme.figure.report()+
+   theme(legend.position = "none"))
+```
+
+```{r Saving the urchin fishing boxplots with model points fe}
+png(filename = here("./04_plots/report_figures/urchin_fishing_boxplot_fe.png"), width = 8, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+urchin_fishing_boxplot_fe
+
+dev.off()
+```
+
+
+### Urchin fishing boxplots with the model outputs (with fixed effect of region) with facetting
+
+```{r Making a plot of the urchin counts based on protection and region}
+(urchin_fishing_boxplot_facet <- ggplot(plotting_pred_urchin_fishing_mod_glm_fe, aes(x = x,
+                                                           y = predicted
+                                                           ))+
+  geom_errorbar(plotting_pred_urchin_fishing_mod_glm_fe, mapping =
+                  aes(ymin = pmax(conf.low, 0), ymax = conf.high, x = x, y = predicted),
+                 width = 0.15, position = position_nudge(-0.15))+
+    #geom_errorbar(plotting_pred_urchin_fishing_mod_glm_fe, mapping =
+     #             aes(ymin = pmax(conf.low, 0), ymax = conf.high, x = x, y = predicted),
+      #           width = 0.15, position = position_nudge(0.35))+
+     geom_point(plotting_pred_urchin_fishing_mod_glm_fe, mapping = 
+              aes(x = x, y = predicted, colour = x), size = 4, alpha = 1,
+            
+             position = position_nudge(-0.15))+
+ #   geom_point(plotting_pred_urchin_fishing_mod_glm_fe, mapping = 
+  #            aes(x = x, y = predicted), size = 4, alpha = 1,
+   #          colour = "#355173",
+     #        position = position_nudge(0.35))+
+   
+       geom_boxplot(plotting_pred_urchin_fishing_mod_glm_fe, 
+                 mapping = aes(x = x, y = Urchins, fill = x) ,
+              alpha = 0.6, width = 0.15, position = position_nudge(x = 0.15))+
+  # geom_boxplot(plotting_pred_urchin_fishing_mod_glm_fe, 
+    #           mapping = aes(x = x, y = Urchins) ,
+       #       alpha = 0.6, width = 0.15, fill = "#E95E48", position = position_nudge(x = -0.35))+
+   
+   
+  #geom_boxplot(alpha = 0.6, width = 0.15)+
+ # geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  labs(x = "Region", y = "Red sea urchin counts")+
+     scale_fill_manual(values = c("#E95E48", "#355173"))+
+        scale_colour_manual(values = c("#E95E48", "#355173"))+
+ # add_phylopic(img = urchin_picture_img, x = 4.3, y = 680, height = 120)+
+  theme.figure.report()+
+   theme(legend.position = "none",
+         axis.text.x = element_blank(),
+         axis.ticks.x = element_blank(),
+         strip.text.x = element_text(size = 14))+
+   facet_wrap(~region1, nrow = 1))
+```
+
+```{r Saving the urchin fishing boxplots with model points fe}
+png(filename = here("./04_plots/report_figures/urchin_fishing_boxplot_facet.png"), width = 6, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+urchin_fishing_boxplot_facet
+
+dev.off()
+```
+
+### Urchin to snail ratio boxplot with just the original random effect of region
+```{r}
+(urchin_snail_ratio_box_re <- ggplot(env_mod_data, aes(x = protect_status, y = urch_sn_ratio))+
+  geom_boxplot(env_mod_data, mapping = aes(fill = protect_status),
+               alpha = 0.6, width = 0.15, position = position_nudge(x = -0.1))+
+  geom_errorbar(pred_urch_sn_ratio_protection_model_glmm, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = x, y = predicted),
+                width = 0.15, position = position_nudge(0.1))+
+   geom_point(pred_urch_sn_ratio_protection_model_glmm, mapping = 
+              aes(x = x, y = predicted, colour = x), size = 4, position = position_nudge(0.1))+
+  labs(x = "Protection Status", y = "Log urchin to snail ratio")+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
+      scale_colour_manual(values = c("#E95E48", "#355173"))+
+   add_phylopic(img = urchin_picture_img, x = 2.35, y = 2.1, height = 1)+
+   add_phylopic(img = snail_picture_img, x = 2.35, y = 1.2, height = 0.8)+
+  theme.figure.report()+
+    theme(legend.position = "none",
+          axis.text = element_text(size = 16)))
+```
+
+```{r Saving the urchin fishing boxplot}
+png(filename = here("./04_plots/report_figures/urchin_snail_ratio_box_re.png"), width = 4, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+urchin_snail_ratio_box_re
+
+dev.off()
+```
 
 ### Urchin snail ratio boxplot
 
+
 ```{r Making a boxplot of urchin counts between protection status}
-(urch_sn_ratio_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status,
-                                                           y = urch_sn_ratio,
-                                                           fill = protect_status))+
-  geom_boxplot()+
-  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
-  labs(x = "Protection Status", y = "Log urchin to snail ratio")+
+(urch_sn_ratio_fishing_boxplot <- ggplot(env_mod_data, aes(x = region1,
+                                                           y = urch_sn_ratio
+                                                           ))+
+    geom_boxplot(env_mod_data%>%
+                   filter(protect_status == "Protected"), 
+                 mapping = aes(x = region1, y = urch_sn_ratio) ,
+              alpha = 0.6, width = 0.15, fill = "#355173", position = position_nudge(x = 0.2))+
+   geom_boxplot(env_mod_data%>%
+                 filter(protect_status == "No Protection"), 
+               mapping = aes(x = region1, y = urch_sn_ratio) ,
+              alpha = 0.6, width = 0.15, fill = "#E95E48", position = position_nudge(x = -0.4))+
+ 
+  geom_errorbar(urch_sn_ratio_non_protected_preds, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = group, y = predicted),
+                 width = 0.15, position = position_nudge(-0.2))+
+    geom_errorbar(urch_sn_ratio_protected_preds, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = group, y = predicted),
+                 width = 0.15, position = position_nudge(0.4))+
+     geom_point(urch_sn_ratio_non_protected_preds, mapping = 
+              aes(x = group, y = predicted), size = 4, alpha = 1,
+             colour = "#E95E48",
+             position = position_nudge(-0.2))+
+    geom_point(urch_sn_ratio_protected_preds, mapping = 
+              aes(x = group, y = predicted), size = 4, alpha = 1,
+             colour = "#355173",
+             position = position_nudge(0.4))+
+  #geom_boxplot(alpha = 0.6, width = 0.15)+
+ # geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  labs(x = "Region", y = "Log urchin to snail ratio")+
      scale_fill_manual(values = c("#E95E48", "#355173"))+
-  add_phylopic(img = urchin_picture_img, x = 2.45, y = 2.2, height = 1)+
-   add_phylopic(img = snail_picture_img, x = 2.45, y = 1.2, height = 0.8)+
+        scale_colour_manual(values = c("#E95E48", "#355173"))+
+  add_phylopic(img = urchin_picture_img, x = 4.4, y = 2.4, height = 0.5)+
+   add_phylopic(img = snail_picture_img, x = 4.4, y = 1.9, height = 0.4)+
   theme.figure.report()+
    theme(legend.position = "none"))
 ```
 
 
 ```{r Saving the urchin to snail ratio fishing boxplot}
-png(filename = here("./04_plots/report_figures/urch_sn_ratio_fishing_boxplot.png"), width = 6, height = 4.5, 
+png(filename = here("./04_plots/report_figures/urch_sn_ratio_fishing_boxplot.png"), width = 8, height = 4.5, 
     units = "in", pointsize = 15, res = 600)
 
 urch_sn_ratio_fishing_boxplot
+
+dev.off()
+```
+
+### Trying with just the model output points
+
+```{r Making a boxplot of urch sn ratio between protection status}
+(urch_sn_ratio_fishing_model_points_only <- ggplot(env_mod_data, aes(x = region1,
+                                                           y = urch_sn_ratio
+                                                           ))+
+ 
+  geom_errorbar(urch_sn_ratio_non_protected_preds, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = group, y = predicted),
+                 width = 0.15, position = position_nudge(-0.1))+
+    geom_errorbar(urch_sn_ratio_protected_preds, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = group, y = predicted),
+                 width = 0.15, position = position_nudge(0.1))+
+     geom_point(urch_sn_ratio_non_protected_preds, mapping = 
+              aes(x = group, y = predicted), size = 4, alpha = 1,
+             colour = "#E95E48",
+             position = position_nudge(-0.1))+
+    geom_point(urch_sn_ratio_protected_preds, mapping = 
+              aes(x = group, y = predicted), size = 4, alpha = 1,
+             colour = "#355173",
+             position = position_nudge(0.1))+
+  #geom_boxplot(alpha = 0.6, width = 0.15)+
+ # geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  labs(x = "Region", y = "Log urchin to snail ratio")+
+     scale_fill_manual(values = c("#E95E48", "#355173"))+
+        scale_colour_manual(values = c("#E95E48", "#355173"))+
+ # add_phylopic(img = urchin_picture_img, x = 2.45, y = 2.2, height = 1)+
+ #  add_phylopic(img = snail_picture_img, x = 2.45, y = 1.2, height = 0.8)+
+  theme.figure.report()+
+   theme(legend.position = "none"))
+```
+
+```{r Saving the urchin to snail ratio fishing model points plot}
+png(filename = here("./04_plots/report_figures/urch_sn_ratio_fishing_model_points_only.png"), width = 4, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_sn_ratio_fishing_model_points_only
+
+dev.off()
+```
+
+### Doing the urchin to snail ratio plots with facetting
+
+```{r Making a plot of the urch sn ratio based on protection and region}
+(urch_sn_ratio_boxplot_facet <- ggplot(plotting_pred_urch_sn_ratio_protection_model_glm_fe, aes(x = x,
+                                                           y = predicted
+                                                           ))+
+  geom_errorbar(plotting_pred_urch_sn_ratio_protection_model_glm_fe, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = x, y = predicted),
+                 width = 0.15, position = position_nudge(-0.15))+
+    #geom_errorbar(plotting_pred_urchin_fishing_mod_glm_fe, mapping =
+     #             aes(ymin = pmax(conf.low, 0), ymax = conf.high, x = x, y = predicted),
+      #           width = 0.15, position = position_nudge(0.35))+
+     geom_point(plotting_pred_urch_sn_ratio_protection_model_glm_fe, mapping = 
+              aes(x = x, y = predicted, colour = x), size = 4, alpha = 1,
+            
+             position = position_nudge(-0.15))+
+ #   geom_point(plotting_pred_urchin_fishing_mod_glm_fe, mapping = 
+  #            aes(x = x, y = predicted), size = 4, alpha = 1,
+   #          colour = "#355173",
+     #        position = position_nudge(0.35))+
+   
+       geom_boxplot(plotting_pred_urch_sn_ratio_protection_model_glm_fe, 
+                 mapping = aes(x = x, y = urch_sn_ratio, fill = x) ,
+              alpha = 0.6, width = 0.15, position = position_nudge(x = 0.15))+
+  # geom_boxplot(plotting_pred_urchin_fishing_mod_glm_fe, 
+    #           mapping = aes(x = x, y = Urchins) ,
+       #       alpha = 0.6, width = 0.15, fill = "#E95E48", position = position_nudge(x = -0.35))+
+   
+   
+  #geom_boxplot(alpha = 0.6, width = 0.15)+
+ # geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  labs(x = "Region", y = "Log urchin to snail ratio")+
+     scale_fill_manual(values = c("#E95E48", "#355173"))+
+        scale_colour_manual(values = c("#E95E48", "#355173"))+
+ # add_phylopic(img = urchin_picture_img, x = 4.3, y = 680, height = 120)+
+  theme.figure.report()+
+   theme(legend.position = "none",
+         axis.text.x = element_blank(),
+         axis.ticks.x = element_blank(),
+         strip.text.x = element_text(size = 14))+
+   facet_wrap(~region1, nrow = 1))
+```
+```{r Saving the urchin to snail ratio fishing model points plot}
+png(filename = here("./04_plots/report_figures/urch_sn_ratio_boxplot_facet.png"), width = 6, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+urch_sn_ratio_boxplot_facet
+
+dev.off()
+```
+
+
+
+### Plotting the effect of dominant substrate on the urchin counts
+
+```{r Plotting dom substrate on urchin counts}
+(dominant_substrate_boxplot <- ggplot(env_mod_data, aes(x = dominant_score, y = Urchins, fill = dominant_score))+
+    geom_boxplot(alpha = 0.6, width = 0.15)+
+  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  labs(x = "Dominant bottom type", y = "Red sea urchin counts")+
+  theme.figure.report()+
+     theme(legend.position = "none"))
+```
+```{r Saving the urchin counts dom score}
+png(filename = here("./04_plots/report_figures/dominant_substrate_boxplot.png"), width = 4, height = 4, 
+    units = "in", pointsize = 15, res = 600)
+
+dominant_substrate_boxplot
 
 dev.off()
 ```
