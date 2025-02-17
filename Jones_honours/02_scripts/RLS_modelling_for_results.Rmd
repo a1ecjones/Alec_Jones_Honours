@@ -1888,6 +1888,7 @@ No autocorrelation.
 ##### Testing for the VIF of the model
 ```{r}
 vif(urch_sn_ratio_protection_model_glm_fe)
+
 performance::check_collinearity(urch_sn_ratio_protection_model_glm_fe,
                    component = c("all"))
 ```
