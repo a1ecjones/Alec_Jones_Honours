@@ -17,7 +17,7 @@ library(cowplot)
 library(sp)
 library(raster)
 library(rphylopic)
-library(broom)
+library(patchwork)
 ```
 
 #Loading in the data
@@ -605,14 +605,17 @@ dev.off()
   labs(x = "Protection Status", y = "Mean rec. boat counts")+
      scale_fill_manual(values = c("#E95E48", "#355173"))+
   theme.figure.report()+
-   theme(legend.position = "none"))
+   theme(legend.position = "none",
+         axis.text.x = element_blank(),
+         axis.title.x = element_blank(),
+         axis.ticks.x = element_blank()))
 ```
 
 
 #### Saving the rec boats boxplot
 
 ```{r Saving the rec boats boxplot, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/report_figures/rec_boats_boxplot_1.5km.png"), width = 4, height = 4, 
+png(filename = here("./04_plots/report_figures/rec_boats_boxplot_1.5km.png"), width = 3.5, height = 3.5, 
     units = "in", pointsize = 15, res = 600)
 
 rec_boats_boxplot_1.5km
@@ -712,22 +715,26 @@ urchin_picture_img <- get_phylopic(uuid = urchin_picture_uuid)
 (urchin_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
   geom_boxplot(env_mod_data, mapping = aes(fill = protect_status),
                alpha = 0.6, width = 0.15, position = position_nudge(x = -0.1))+
-  geom_point(pred_urchin_fishing_mod_glmm, mapping = 
-              aes(x = x, y = predicted), size = 4, position = position_nudge(0.1))+
   geom_errorbar(pred_urchin_fishing_mod_glmm, mapping =
                   aes(ymin = conf.low, ymax = conf.high, x = x, y = predicted),
                 width = 0.15, position = position_nudge(0.1))+
+   geom_point(pred_urchin_fishing_mod_glmm, mapping = 
+              aes(x = x, y = predicted, colour = x), size = 4, position = position_nudge(0.1))+
   labs(x = "Protection Status", y = "Red sea urchin counts")+
    scale_fill_manual(values = c("#E95E48", "#355173"))+
+   scale_colour_manual(values = c("#E95E48", "#355173"))+
   add_phylopic(img = urchin_picture_img, x = 2.3, y = 620, height = 150)+
   theme.figure.report()+
     theme(legend.position = "none",
-          axis.text = element_text(size = 16)))
+          axis.text = element_text(size = 16),
+          axis.text.x = element_blank(),
+         axis.title.x = element_blank(),
+         axis.ticks.x = element_blank()))
 ```
 
 
 ```{r Saving the urchin fishing boxplot}
-png(filename = here("./04_plots/report_figures/urchin_fishing_boxplot.png"), width = 4, height = 4, 
+png(filename = here("./04_plots/report_figures/urchin_fishing_boxplot.png"), width = 3.5, height = 3.5, 
     units = "in", pointsize = 15, res = 600)
 
 urchin_fishing_boxplot
@@ -846,18 +853,21 @@ dev.off()
                 width = 0.15, position = position_nudge(0.1))+
    geom_point(pred_urch_sn_ratio_protection_model_glmm, mapping = 
               aes(x = x, y = predicted, colour = x), size = 4, position = position_nudge(0.1))+
-  labs(x = "Protection Status", y = "Log urchin to snail ratio")+
+  labs(x = "Protection Status", y = "Log urchin:snail ratio")+
    scale_fill_manual(values = c("#E95E48", "#355173"))+
       scale_colour_manual(values = c("#E95E48", "#355173"))+
-   add_phylopic(img = urchin_picture_img, x = 2.35, y = 2.1, height = 1)+
-   add_phylopic(img = snail_picture_img, x = 2.35, y = 1.2, height = 0.8)+
+   add_phylopic(img = urchin_picture_img, x = 2.35, y = 2.1, height = 0.8)+
+   add_phylopic(img = snail_picture_img, x = 2.35, y = 1.2, height = 0.6)+
   theme.figure.report()+
     theme(legend.position = "none",
-          axis.text = element_text(size = 16)))
+          axis.text = element_text(size = 16),
+           axis.text.x = element_blank(),
+         axis.title.x = element_blank()
+        ))
 ```
 
 ```{r Saving the urchin fishing boxplot}
-png(filename = here("./04_plots/report_figures/urchin_snail_ratio_box_re.png"), width = 4, height = 4, 
+png(filename = here("./04_plots/report_figures/urchin_snail_ratio_box_re.png"), width = 3.5, height = 3.5, 
     units = "in", pointsize = 15, res = 600)
 
 urchin_snail_ratio_box_re
@@ -1008,6 +1018,26 @@ urch_sn_ratio_boxplot_facet
 dev.off()
 ```
 
+
+
+### Plotting the three plots for the poster in one ggplot
+
+```{r Arranging the three plots in one ggplot}
+(patchwork_plot <- (rec_boats_boxplot_1.5km | urchin_fishing_boxplot) /
+   (patchwork::plot_spacer() | urchin_snail_ratio_box_re))
+
+
+```
+
+
+```{r Saving the patchwork plot}
+png(filename = here("./04_plots/report_figures/patchwork_plot.png"), width = 7, height = 7, 
+    units = "in", pointsize = 15, res = 1000)
+
+patchwork_plot
+
+dev.off()
+```
 
 
 ### Plotting the effect of dominant substrate on the urchin counts
