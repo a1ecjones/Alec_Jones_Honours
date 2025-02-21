@@ -1520,7 +1520,9 @@ hist(residuals(urchin_fishing_mod_glmm))
 shapiro.test(residuals(urchin_fishing_mod_glmm))
 
 #Looking at model results
-summary(urchin_fishing_mod_glmm)
+model_summary <- summary(urchin_fishing_mod_glmm)
+
+z_values <- model_summary$coefficients$cond[, "z value"]
 ```
 Residuals look ok for just using a gaussian distribution. Seeing a non-significant
 negative effect of protection status on red sea urchins. That is, there are less

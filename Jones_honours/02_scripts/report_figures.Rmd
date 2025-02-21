@@ -602,7 +602,7 @@ dev.off()
                                                      fill = protect_status))+
   geom_boxplot(alpha = 0.6, width = 0.15)+
   geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
-  labs(x = "Protection Status", y = "Mean rec. boat counts")+
+  labs(x = "Protection Status", y = "Mean rec.\nboat counts")+
      scale_fill_manual(values = c("#E95E48", "#355173"))+
   theme.figure.report()+
    theme(legend.position = "none",
@@ -720,7 +720,7 @@ urchin_picture_img <- get_phylopic(uuid = urchin_picture_uuid)
                 width = 0.15, position = position_nudge(0.1))+
    geom_point(pred_urchin_fishing_mod_glmm, mapping = 
               aes(x = x, y = predicted, colour = x), size = 4, position = position_nudge(0.1))+
-  labs(x = "Protection Status", y = "Red sea urchin counts")+
+  labs(x = "Protection Status", y = "Red sea\nurchin counts")+
    scale_fill_manual(values = c("#E95E48", "#355173"))+
    scale_colour_manual(values = c("#E95E48", "#355173"))+
   add_phylopic(img = urchin_picture_img, x = 2.3, y = 620, height = 150)+
@@ -853,7 +853,7 @@ dev.off()
                 width = 0.15, position = position_nudge(0.1))+
    geom_point(pred_urch_sn_ratio_protection_model_glmm, mapping = 
               aes(x = x, y = predicted, colour = x), size = 4, position = position_nudge(0.1))+
-  labs(x = "Protection Status", y = "Log urchin:snail ratio")+
+  labs(x = "Protection Status", y = "Log urchin:snail\nratio")+
    scale_fill_manual(values = c("#E95E48", "#355173"))+
       scale_colour_manual(values = c("#E95E48", "#355173"))+
    add_phylopic(img = urchin_picture_img, x = 2.35, y = 2.1, height = 0.8)+
@@ -861,8 +861,8 @@ dev.off()
   theme.figure.report()+
     theme(legend.position = "none",
           axis.text = element_text(size = 16),
-           axis.text.x = element_blank(),
-         axis.title.x = element_blank()
+          # axis.text.x = element_blank(),
+        # axis.title.x = element_blank()
         ))
 ```
 
@@ -1025,8 +1025,6 @@ dev.off()
 ```{r Arranging the three plots in one ggplot}
 (patchwork_plot <- (rec_boats_boxplot_1.5km | urchin_fishing_boxplot) /
    (patchwork::plot_spacer() | urchin_snail_ratio_box_re))
-
-
 ```
 
 
@@ -1039,6 +1037,21 @@ patchwork_plot
 dev.off()
 ```
 
+```{r}
+(patchwork_plot_vert <- (rec_boats_boxplot_1.5km)/
+   (urchin_fishing_boxplot) /
+   (urchin_snail_ratio_box_re))
+
+```
+
+```{r Saving the patchwork plot}
+png(filename = here("./04_plots/report_figures/patchwork_plot_vert.png"), width = 4.5, height = 9, 
+    units = "in", pointsize = 15, res = 1000)
+
+patchwork_plot_vert
+
+dev.off()
+```
 
 ### Plotting the effect of dominant substrate on the urchin counts
 
@@ -1058,3 +1071,12 @@ dominant_substrate_boxplot
 
 dev.off()
 ```
+
+
+```{r}
+ggplot(env_mod_data, aes(x = protect_status, y = norm_openness))+
+geom_boxplot()
+
+wilcox.test(norm_openness ~ protect_status, data = env_mod_data)
+```
+
