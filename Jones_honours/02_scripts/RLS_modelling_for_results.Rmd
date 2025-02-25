@@ -1168,6 +1168,8 @@ snail_fishing_mod_linear_no_op <- glmmTMB(sqrt(Turban_Snails) ~
                                       protect_status,
                                     data = env_mod_data,
                                     family = gaussian(link = "identity"))
+
+
 ```
 
 ```{r Snail count fishing model with protection linear output, echo=FALSE}
@@ -1189,6 +1191,7 @@ shapiro.test(residuals(snail_fishing_mod_linear_no_op))
 
 #Looking at model results
 summary(snail_fishing_mod_linear_no_op)
+performance::r2(snail_fishing_mod_linear_no_op)
 ```
 
 
@@ -1523,6 +1526,8 @@ shapiro.test(residuals(urchin_fishing_mod_glmm))
 model_summary <- summary(urchin_fishing_mod_glmm)
 
 z_values <- model_summary$coefficients$cond[, "z value"]
+
+performance::r2(urchin_fishing_mod_glmm)
 ```
 Residuals look ok for just using a gaussian distribution. Seeing a non-significant
 negative effect of protection status on red sea urchins. That is, there are less
@@ -1839,6 +1844,7 @@ shapiro.test(residuals(urch_sn_ratio_protection_model_glmm))
 
 #Looking at model results
 summary(urch_sn_ratio_protection_model_glmm)
+performance::r2(urch_sn_ratio_protection_model_glmm)
 ```
 
 This model is fitting a separate intercept for each level of the random effect.
