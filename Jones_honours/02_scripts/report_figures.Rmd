@@ -111,6 +111,22 @@ VI_base_layer_hi_res_sf <- st_as_sf(VI_base_layer_hi_res)
 st_crs(VI_base_layer_hi_res_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 ```
 
+```{r Subsetting the high res shape file for plotting}
+shp_xmin <- -125.4
+shp_xmax <- -124.95
+shp_ymin <- 48.7
+shp_ymax <- 49.0
+
+bbox <- st_bbox(c(xmin = shp_xmin, ymin = shp_ymin, xmax = shp_xmax, ymax = shp_ymax))
+
+bbox_sf <- st_as_sfc(bbox)
+
+VI_base_layer_hi_res_sf_subset <- st_crop(VI_base_layer_hi_res_sf, bbox_sf)
+plot(VI_base_layer_hi_res_sf_subset)
+```
+
+
+
 ```{r Loading in the base layer}
 VI_base_layer <- read_sf(dsn = here("./01_raw_data/canada_sf_data", ""), 
                          stringsAsFactors = F)
@@ -119,6 +135,21 @@ VI_base_layer_sf <- st_as_sf(VI_base_layer)
 #specifying the projection for the sf
 st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 ```
+
+```{r subsetting the low res shape file}
+shp_xmin_low <- -129
+shp_xmax_low <- -122.5
+shp_ymin_low <- 48
+shp_ymax_low <- 52
+
+bbox_low <- st_bbox(c(xmin = shp_xmin_low, ymin = shp_ymin_low, xmax = shp_xmax_low, ymax = shp_ymax_low))
+
+bbox_low_sf <- st_as_sfc(bbox_low)
+
+VI_base_layer_sf_subset <- st_crop(VI_base_layer_hi_res_sf, bbox_low_sf)
+plot(VI_base_layer_sf_subset)
+```
+
 
 ### Loading in the shapefiles for the protected areas
 
@@ -139,7 +170,7 @@ baeria_rocks_er <- st_read(here("./01_raw_data/baeria_rocks.kml"))
 
 ```{r Overall Barkley Sound Map}
 (overall_Barkley_sound_map <- ggplot()+
-    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "darkgrey", fill = "lightgrey")+
       geom_point(plotting_data, 
               mapping = aes(x = longitude, y = latitude),
               shape = 21, size = 2, fill = "red")+
@@ -161,7 +192,7 @@ baeria_rocks_er <- st_read(here("./01_raw_data/baeria_rocks.kml"))
 ```
 
 ```{r Making the inset map}
-(van_isl_map <- ggplot(VI_base_layer_sf) +
+(van_isl_map <- ggplot(VI_base_layer_sf_subset) +
   geom_sf() +
   coord_sf(ylim = c(48.3, 50.8), xlim = c(-128.2, -123.2)) +
   theme.figure.report() +
@@ -205,7 +236,7 @@ dev.off()
 
 ```{r Overall site map with the site locations}
 (overall_site_map <- ggplot()+
-    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "darkgrey", fill = "lightgrey")+
      geom_sf(data = broken_group_RCA, fill = "blue", colour ="blue", alpha = 0.1)+
    geom_sf(data = numukamis_area, fill = "blue", colour = "blue", alpha = 0.2)+
    geom_sf(data = baeria_rocks_er, fill = "blue", colour = "blue", alpha = 0.2)+
@@ -219,8 +250,8 @@ dev.off()
   labs(x = "Longitude", y = "Latitude", shape = "Protection\nStatus",
        fill = "Protection\nStatus") +
   theme.figure.report() +
-   theme(legend.position = "none",
-         axis.text.y = element_text(angle = 45))+
+ #  theme(legend.position.inside = c(0.8, 0.1),
+  #       axis.text.y = element_text(angle = 45))+
   scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
  # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
   annotation_north_arrow(
@@ -228,7 +259,13 @@ dev.off()
     which_north = "true",
     style = north_arrow_fancy_orienteering
   ) +
-  annotation_scale(location = "br", text_cex = 1.3))
+  annotation_scale(location = "br", text_cex = 1.3)+
+    theme(legend.position = "inside",
+      legend.position.inside = c(0.84, 0.2),
+         axis.text.y = element_text(angle = 45),
+      legend.text = element_text(size = 12),
+      legend.title = element_text(size = 14),
+      legend.margin = margin(0.3, 0.3, 0.3, 0.3)))
 ```
 
 
@@ -248,7 +285,7 @@ dev.off()
 
 ```{r Making the site map with the van isl inset}
 (site_map_w_inset <- ggdraw(overall_site_map) +
-  draw_plot(van_isl_map, x = 0.13, y = 0.19, width = 0.5, height = 0.3))
+  draw_plot(van_isl_map, x = 0.1, y = 0.15, width = 0.5, height = 0.3))
 
 #can alternatively make the width 0.4 and the height 0.25 and it wont cover any of the islands
 ```
@@ -256,7 +293,7 @@ dev.off()
 ####Saving the site map with inset
 
 ```{r Saving the overall site map, fig.width=7.5, fig.height=5.5, include=FALSE}
-png(filename = here("./04_plots/report_figures/site_map_with_inset.png"), width = 6, height = 4.5, 
+p(filename = here("./04_plots/report_figures/site_map_with_inset.pdf"), width = 6, height = 4.5, 
     units = "in", pointsize = 15, res = 600)
 
 site_map_w_inset
@@ -268,7 +305,7 @@ dev.off()
 
 ```{r Making the plot with the urch to sn ratio on the map 2024}
 (urch_sn_ratio_map_figures <- ggplot()+
-    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "darkgrey", fill = "lightgrey")+
     coord_sf(xlim = c(long_min + 0.04, long_max - 0.04),
            ylim = c(lat_min + 0.04, lat_max - 0.04)) +
   geom_point(data = plotting_data_shifted,
@@ -318,7 +355,7 @@ openness_colours_urchins <- c("#440154", "#414487", "#2a788e", "#22a884", "#7ad1
 
 ```{r Urchin Counts plot}
 (urchin_counts_map_figs <- ggplot()+
-    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "darkgrey", fill = "lightgrey")+
      geom_point(plotting_data_shifted, 
               mapping = aes(x = longitude, y = latitude, fill = Urchins),
               shape = 21, size = 3, colour = "black")+
@@ -326,7 +363,7 @@ openness_colours_urchins <- c("#440154", "#414487", "#2a788e", "#22a884", "#7ad1
            ylim = c(lat_min + 0.01, lat_max - 0.04)) +
   labs(x = " \nLongitude", y = "Latitude\n ",
        fill = "Urchin\nCounts") +
-  theme.figure() +
+  theme.figure.report() +
    scale_fill_gradientn(colours = openness_colours_urchins,
                         values = scales::rescale(colour_breaks_urchins),
                         limits = c(0, 709))+
@@ -362,7 +399,7 @@ openness_colours_snails <- c("#440154", "#414487", "#2a788e", "#22a884", "#7ad15
 
 ```{r Snail Counts plot}
 (snail_counts_map_figs <- ggplot()+
-    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "darkgrey", fill = "lightgrey")+
      geom_point(plotting_data_shifted, 
               mapping = aes(x = longitude, y = latitude, fill = Turban_Snails),
               shape = 21, size = 3, colour = "black")+
@@ -370,7 +407,7 @@ openness_colours_snails <- c("#440154", "#414487", "#2a788e", "#22a884", "#7ad15
            ylim = c(lat_min + 0.01, lat_max - 0.04)) +
   labs(x = " \nLongitude", y = "Latitude\n ",
        fill = "Turban Snail\nCounts") +
-  theme.figure() +
+  theme.figure.report() +
    scale_fill_gradientn(colours = openness_colours_snails,
                         values = scales::rescale(colour_breaks_snails),
                         limits = c(0, 645))+
@@ -408,7 +445,7 @@ openness_colours <- c("#440154", "#3b528b", "#21918c", "#5ec962", "#fde725")
 
 ```{r Openness values at each site map}
 (site_openness_map <- ggplot()+
-    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "darkgrey", fill = "lightgrey")+
      geom_point(plotting_data_minor_shifted, 
               mapping = aes(x = longitude, y = latitude, fill = norm_openness),
               shape = 21, size = 3, colour = "black")+
@@ -459,7 +496,7 @@ avg_temp_df <- avg_temp_df%>%
 ```{r Making the temperature map}
 (temp_map_23_24 <- ggplot() +
   geom_raster(data = avg_temp_df, aes(x = longitude, y = latitude, fill = avg_temp_c)) +
-   geom_sf(data = VI_base_layer_hi_res_sf, colour = "#424A4E", fill = "lightgrey")+
+   geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "#424A4E", fill = "lightgrey")+
   coord_sf(xlim = c(long_min + 0.029, long_max - 0.032),
            ylim = c(lat_min , lat_max - 0.025)) +
      scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
@@ -501,7 +538,7 @@ dev.off()
 
 ```{r total rec boats within 1.5 km}
 (total_rec_boats_map_2023_test <- ggplot()+
-    geom_sf(data = VI_base_layer_hi_res_sf, colour = "darkgrey", fill = "lightgrey")+
+    geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "darkgrey", fill = "lightgrey")+
     geom_sf(data = site_locations_radius_1.5km, fill = "#E95E48", alpha = 0.3)+
  coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
            ylim = c(lat_min + 0.01, lat_max - 0.04)) +
@@ -559,7 +596,7 @@ dev.off()
             color = "#E95E48", fill = NA, linewidth = 2))
 ```
 
-### Broken group rec baots
+### Broken group rec boats
 
 ```{r Inset view of smaller area with the radii around the sites}
 (broken_group_rec_boats <- ggplot()+
