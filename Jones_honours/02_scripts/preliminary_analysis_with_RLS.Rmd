@@ -948,7 +948,7 @@ urch_all_ratio_RLS_2024 <- RLS_data_2024_clean_updated_lat_long%>%
   mutate(urch_all_ratio = log10((Urchins + 1) / (total_counts + 1)))
 ```
 
-###Urch to all method 2 macrofauna ratio 2024
+### Urch to all method 2 macrofauna ratio 2024
 
 ```{r Making a dataframe of urchin to all method 2 macrofauna raito}
 urch_m2_macro_ratio_RLS_2024 <- RLS_data_2024%>%
@@ -986,7 +986,7 @@ urch_m2_macro_ratio_RLS_2024_final <- urch_m2_macro_ratio_RLS_2024%>%
 
 
 
-##2024 Wave exposure calculations
+## 2024 Wave exposure calculations
 
 ###Calculating the dominant wind direction for calculating the fetch
 
@@ -1509,7 +1509,7 @@ print(map_plot)
 
 
 
-##2024 urch sn ratio plot
+## 2024 urch sn ratio plot
 
 ```{r Making the plot with the urch to sn ratio on the map 2024}
 (urch_sn_ratio_map_2024 <- ggplot()+
@@ -1661,7 +1661,7 @@ urch_m2_macro_ratio_map_2024
 
 dev.off()
 ```
-##Urchin and snail counts plots 2024
+## Urchin and snail counts plots 2024
 
 ###Urchin plots
 ```{r Making the plot with the urch counts on the map 2024}
@@ -1802,7 +1802,7 @@ dev.off()
 
 
 
-##Making plots with the gobies
+## Making plots with the gobies
 
 ###Making a dataframe with the gobies
 ```{r}
@@ -2019,7 +2019,7 @@ dev.off()
   annotation_scale(location = "br"))
 ```
 
-##Working with temperature data
+## Working with temperature data
 
 ###Loading in the temperature data
 ```{r Loading in the temp .nc file downloaded from Copernicus}
@@ -2096,7 +2096,7 @@ avg_temp_check_new_data <- brick(here("./01_raw_data/average_temperature_new_dat
 plot(avg_temp_check_new_data) 
 ```
 
-##Working with the global fishing watch data
+## Working with the global fishing watch data
 ```{r Loading in the global fishing watch data 23-24}
 gfw_data_raw_23_24 <- read_csv(here("./01_raw_data/public-global-fishing-effort-v3.0.csv"))
 
@@ -2224,7 +2224,7 @@ dev.off()
 
 
 
-##Working with the DFO flyover data
+## Working with the DFO flyover data
 
 ###Loading in the data and cleaning it up
 
@@ -2569,7 +2569,7 @@ dev.off()
 ```
 
 
-##Working with urchin size data
+## Working with urchin size data
 
 ###Loading in the data
 
@@ -2811,7 +2811,7 @@ ggplot(test_size_df[-c(10, 24, 25), ], aes(x = Turban_Snails, y = Urchins))+
 ```
 
 
-##Biodiversity analysis
+## Biodiversity analysis
 
 ###Calculating biodiversity at each site
 
@@ -3016,6 +3016,39 @@ ggplot(biodiv_df, aes(y = simpson_index, x = kelp_forest))+
   geom_boxplot()+
   geom_jitter()+
   theme.figure()
+```
+
+
+
+## Working with the crab data from DFO
+
+### Loading in and cleaning the data
+
+```{r Loading in the data}
+crab_data <- read_csv(here("./01_raw_data/crab_prawn_data_DFO/Complete_Dungeness_Crab_Kept_Point_Data_Generalized.csv"))
+```
+```{r Prelim plot of the data}
+ggplot()+
+   geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "darkgrey", fill = "lightgrey")+
+    #geom_sf(data = site_locations_radius_1.5km, fill = "#E95E48", alpha = 0.3)+
+ coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+   geom_point(plotting_data, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 3, colour = "black")+
+  geom_point(data = crab_data%>%
+               filter(Year == 2022), 
+             mapping = aes(x = Longitude, y = Latitude, fill = Dungeness.Crab.Kept))+
+  labs(x = "Longitude", y = "Latitude") +
+  theme.figure.report() +
+   theme(axis.text.y = element_text(angle = 45))+
+ scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br", text_cex = 1.3)
 ```
 
 
