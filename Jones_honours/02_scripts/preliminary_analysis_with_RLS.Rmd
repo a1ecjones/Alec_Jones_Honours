@@ -3037,7 +3037,7 @@ ggplot()+
               mapping = aes(x = longitude, y = latitude),
               shape = 21, size = 3, colour = "black")+
   geom_point(data = crab_data%>%
-               filter(Year == 2022), 
+               filter(Year == 2024), 
              mapping = aes(x = Longitude, y = Latitude, fill = Dungeness.Crab.Kept))+
   labs(x = "Longitude", y = "Latitude") +
   theme.figure.report() +
@@ -3051,6 +3051,74 @@ ggplot()+
   annotation_scale(location = "br", text_cex = 1.3)
 ```
 
+```{r Adding in the crabs caught within 1.5 km}
+crab_catches <- st_as_sf(crab_data, coords = c("Longitude", "Latitude"), crs = 4326)
+crab_catches <- st_transform(crab_catches, crs = 3857)
+
+crab_catches_radius_1.5km <- st_intersection(site_locations_radius_1.5km, crab_catches)
+
+crab_catches_radius_1.5km_summed <- crab_catches_radius_1.5km%>%
+  group_by(site_code, Year)%>%
+  summarise(yearly_crab_catches = sum(Dungeness.Crab.Kept))
+
+crab_catches_all_sites_years_1.5km <- expand.grid(
+  site_code = unique(crab_catches_radius_1.5km$site_code),
+  Year = unique(crab_data$Year))
+
+crab_catches_radius_1.5km_complete <- crab_catches_all_sites_years_1.5km %>%
+  left_join(crab_catches_radius_1.5km_summed, by = c("site_code", "Year")) %>%
+  mutate(yearly_crab_catches = replace_na(yearly_crab_catches, 0))
+
+crab_catches_radius_1.5km_final <- crab_catches_radius_1.5km_complete%>%
+  group_by(site_code)%>%
+  summarise(mean_crab_catches_1.5km = mean(yearly_crab_catches))
+```
+
+```{r Adding in the crabs caught within 1 km}
+crab_catches <- st_as_sf(crab_data, coords = c("Longitude", "Latitude"), crs = 4326)
+crab_catches <- st_transform(crab_catches, crs = 3857)
+
+crab_catches_radius_1km <- st_intersection(site_locations_radius_1km, crab_catches)
+
+crab_catches_radius_1km_summed <- crab_catches_radius_1km%>%
+  group_by(site_code, Year)%>%
+  summarise(yearly_crab_catches = sum(Dungeness.Crab.Kept))
+
+crab_catches_all_sites_years_1km <- expand.grid(
+  site_code = unique(crab_catches_radius_1km$site_code),
+  Year = unique(crab_data$Year))
+
+crab_catches_radius_1km_complete <- crab_catches_all_sites_years_1km %>%
+  left_join(crab_catches_radius_1km_summed, by = c("site_code", "Year")) %>%
+  mutate(yearly_crab_catches = replace_na(yearly_crab_catches, 0))
+
+crab_catches_radius_1km_final <- crab_catches_radius_1km_complete%>%
+  group_by(site_code)%>%
+  summarise(mean_crab_catches_1km = mean(yearly_crab_catches))
+```
+
+```{r Adding in the crabs caught within 2 km}
+crab_catches <- st_as_sf(crab_data, coords = c("Longitude", "Latitude"), crs = 4326)
+crab_catches <- st_transform(crab_catches, crs = 3857)
+
+crab_catches_radius_2km <- st_intersection(site_locations_radius_2km, crab_catches)
+
+crab_catches_radius_2km_summed <- crab_catches_radius_2km%>%
+  group_by(site_code, Year)%>%
+  summarise(yearly_crab_catches = sum(Dungeness.Crab.Kept))
+
+crab_catches_all_sites_years_2km <- expand.grid(
+  site_code = unique(crab_catches_radius_2km$site_code),
+  Year = unique(crab_data$Year))
+
+crab_catches_radius_2km_complete <- crab_catches_all_sites_years_2km %>%
+  left_join(crab_catches_radius_2km_summed, by = c("site_code", "Year")) %>%
+  mutate(yearly_crab_catches = replace_na(yearly_crab_catches, 0))
+
+crab_catches_radius_2km_final <- crab_catches_radius_2km_complete%>%
+  group_by(site_code)%>%
+  summarise(mean_crab_catches_2km = mean(yearly_crab_catches))
+```
 
 ##Making dataframes for use in modelling
 
@@ -4018,6 +4086,8 @@ rec_boats_2km_2023_plot
 dev.off()
 ```
 
+
+### Adding in the crab data to the modelling data set
 
 ###Combining the fishing and environmental data sets
 
