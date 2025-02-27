@@ -3530,7 +3530,7 @@ dev.off()
 
 ####Adding the rec fishing data
 
-#####Adding using a polygon around each site
+##### Adding using a polygon around each site
 
 ```{r Creating a circular radius around each site}
 ##Doing it this way most recent time Jan. 15
@@ -3785,7 +3785,7 @@ urch_sn_ratio_fishing_mod_2024 <- urch_sn_ratio_fishing_mod_2024%>%
 ```
 
 
-#####Making plots of the different radii in different years for the report figures
+##### Making plots of the different radii in different years for the report figures
 
 ######1.5 km
 
@@ -4088,6 +4088,41 @@ dev.off()
 
 
 ### Adding in the crab data to the modelling data set
+
+```{r Adding in the crab data to the modelling data set}
+#This step added each of the data frames with the average crab catches
+# to the fishing modelling dataset. The resulting dataset has a column for avg 
+#crab catches for each radius distance
+urch_sn_ratio_fishing_mod_2024_crab <- env_mod_data%>%
+
+ left_join(crab_catches_radius_1km_final, by = c("site_code"))%>%
+ left_join(crab_catches_radius_1.5km_final, by = c("site_code"))%>%
+  left_join(crab_catches_radius_2km_final, by = c("site_code"))%>%
+  replace(is.na(.), 0)
+```
+
+
+#### Making some preliminary plots of the crab data to see if it is worthwhile
+
+```{r crab catches between protected/non-protected}
+ggplot(urch_sn_ratio_fishing_mod_2024_crab, aes(x = protect_status, y = mean_crab_catches_1.5km))+
+  geom_boxplot()+
+  geom_jitter(height = 0)+
+  theme.figure()
+```
+```{r Crabs vs urchins}
+ggplot(urch_sn_ratio_fishing_mod_2024_crab, aes(x = mean_crab_catches_2km, y = Urchins))+
+  geom_point()+
+  theme.figure()+
+  geom_smooth(method = "lm")
+```
+
+```{r Crabs vs snails}
+ggplot(urch_sn_ratio_fishing_mod_2024_crab, aes(x = mean_crab_catches_2km, y = log(Turban_Snails + 1)))+
+  geom_point()+
+  theme.figure()+
+  geom_smooth(method = "gam")
+```
 
 ###Combining the fishing and environmental data sets
 
