@@ -633,7 +633,7 @@ dev.off()
 
 ## Plot of mean recreational boat counts between protection levels
 
-```{r Boxplot of mean rec boats between protection levels}
+```{r Boxplot of mean rec boats between protection levels 1.5 km}
 (rec_boats_boxplot_1.5km <- ggplot(unique_site_df, aes(x = protect_status,
                                                      y = mean_rec_boat_counts_1.5km,
                                                      fill = protect_status))+
@@ -643,13 +643,53 @@ dev.off()
      scale_fill_manual(values = c("#E95E48", "#355173"))+
   theme.figure.report()+
    theme(legend.position = "none",
-         axis.text.x = element_blank(),
-         axis.title.x = element_blank(),
-         axis.ticks.x = element_blank()))
+     #    axis.text.x = element_blank(),
+         axis.title.y = element_blank()))
+      #   axis.ticks.x = element_blank()))
+```
+
+```{r Boxplot of mean rec boats between protection levels 1.5 km}
+(rec_boats_boxplot_1km <- ggplot(unique_site_df, aes(x = protect_status,
+                                                     y = mean_rec_boat_counts_1km,
+                                                     fill = protect_status))+
+  geom_boxplot(alpha = 0.6, width = 0.15)+
+  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  labs(x = "Protection Status", y = "Mean rec.\nboat counts")+
+     scale_fill_manual(values = c("#E95E48", "#355173"))+
+  theme.figure.report()+
+   theme(legend.position = "none"))
+     #    axis.text.x = element_blank(),
+         #axis.title.y = element_blank()))
+      #   axis.ticks.x = element_blank()))
+```
+
+```{r Boxplot of mean rec boats between protection levels 1.5 km}
+(rec_boats_boxplot_2km <- ggplot(unique_site_df, aes(x = protect_status,
+                                                     y = mean_rec_boat_counts_2km,
+                                                     fill = protect_status))+
+  geom_boxplot(alpha = 0.6, width = 0.4)+
+  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  labs(x = "Protection Status", y = "Mean rec.\nboat counts",
+       fill = "Protection Status")+
+     scale_fill_manual(values = c("#E95E48", "#355173"))+
+  theme.figure.report()+
+   theme(axis.title.y = element_blank()))
+```
+
+```{r}
+rec_boats_overall_boxplots <- rec_boats_boxplot_1km + rec_boats_boxplot_1.5km + rec_boats_boxplot_2km
+
+rec_boats_overall_boxplots
 ```
 
 
 #### Saving the rec boats boxplot
+
+```{r}
+ggsave("rec_boats_boxplot_overall.pdf", plot = rec_boats_overall_boxplots,
+       path = here("./04_plots/report_figures"), width = 180, height = 80, units = "mm")
+```
+
 
 ```{r Saving the rec boats boxplot, fig.width=7.5, fig.height=5.5, include=FALSE}
 png(filename = here("./04_plots/report_figures/rec_boats_boxplot_1.5km.png"), width = 3.5, height = 3.5, 
