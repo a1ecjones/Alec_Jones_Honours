@@ -72,6 +72,11 @@ levels(env_mod_data$region1) <- list(DGB = "Deer group/Bamfield",
                                      BG = "Broken Group",
                                      DIEC = "Deep Imperial Eagle Channel",
                                      SR = "Sarita" )
+
+
+##Adding a column to the env mod data that is the snail to urchin ratio
+env_mod_data <- env_mod_data%>%
+  mutate(sn_urch_ratio = log10((Turban_Snails + 1) / (Urchins + 1)))
 ```
 
 ```{r Creating a factor variable of protection status for the modelling data, include=FALSE}
@@ -2194,3 +2199,227 @@ moran.test(residuals_urch_sn_ratio_protection_open_model_glmm, lw_inverse,
 
 Evidence of autocorrelation with both methods.
 
+
+
+## Snail to Urchin models{.tabset}
+
+### Model 20: Snail urchin ratio model (glm)
+
+```{r Checking variance between protected and non-protected for sn urch ratio, echo=FALSE}
+leveneTest(sn_urch_ratio ~ protect_status, data = env_mod_data)
+```
+Variance is equal between protection status.
+
+```{r Snail ratio protection GLM model}
+sn_urch_ratio_protection_model_glm <- glmmTMB(sn_urch_ratio ~ protect_status, 
+                          data = env_mod_data,
+                          family = gaussian(link = "identity"))
+```
+
+```{r Sn urch ratio protection mod glm output, echo=FALSE}
+#Checking resids
+sn_urch_ratio_protection_model_glm_resids <- simulateResiduals(sn_urch_ratio_protection_model_glm)
+plot(sn_urch_ratio_protection_model_glm_resids)
+
+
+hist(residuals(sn_urch_ratio_protection_model_glm))
+shapiro.test(residuals(sn_urch_ratio_protection_model_glm))
+
+#Looking at model results
+summary(sn_urch_ratio_protection_model_glm)
+```
+
+```{r Plotting the effect of protection status on snail ratio in glm, echo=FALSE}
+pred_sn_urch_ratio_protection_model_glm <- ggpredict(sn_urch_ratio_protection_model_glm, terms = "protect_status")
+
+ggplot(pred_sn_urch_ratio_protection_model_glm, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Log Snail to Urchin ratio", x = "Protection Status")+
+  theme.figure()
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing sn urch ratio model linear residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_sn_urch_ratio_protection_model_glm <- residuals(sn_urch_ratio_protection_model_glm, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_sn_urch_ratio_protection_model_glm, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_sn_urch_ratio_protection_model_glm, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+Only some correlation with the inverse distance method.
+
+
+
+### Model 21: Snail urchin ratio fishing model (glmm)
+```{r Snail ratio protection re GLMM model}
+sn_urch_ratio_protection_model_glmm <- glmmTMB(sn_urch_ratio ~ protect_status +
+                          (1|region1), 
+                          data = env_mod_data,
+                          family = gaussian(link = "identity"))
+```
+
+```{r Snail urchin ratio protection mod re glmm output, echo=FALSE}
+#Checking resids
+sn_urch_ratio_protection_model_glmm_resids <- simulateResiduals(sn_urch_ratio_protection_model_glmm)
+plot(sn_urch_ratio_protection_model_glmm_resids)
+
+#Plot residuals of random effects 
+sn_urch_ratio_protection_model_glmm_ranef_values <- ranef(sn_urch_ratio_protection_model_glmm)$cond$region1
+sn_urch_ratio_protection_model_glmm_ranef_values_numeric <- sn_urch_ratio_protection_model_glmm_ranef_values$`(Intercept)`
+
+hist(residuals(sn_urch_ratio_protection_model_glmm))
+shapiro.test(residuals(sn_urch_ratio_protection_model_glmm))
+
+#Looking at model results
+summary(sn_urch_ratio_protection_model_glmm)
+performance::r2(sn_urch_ratio_protection_model_glmm)
+```
+
+This model is fitting a separate intercept for each level of the random effect.
+
+```{r Plotting the effect of protection status on snail ratio in re glmm, echo=FALSE}
+pred_sn_urch_ratio_protection_model_glmm <- ggpredict(sn_urch_ratio_protection_model_glmm, terms = "protect_status")
+
+ggplot(pred_sn_urch_ratio_protection_model_glmm, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Log Snail to Urchin ratio", x = "Protection Status")+
+  theme.figure()
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing sn urch ratio model linear re residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_sn_urch_ratio_protection_model_glmm <- residuals(sn_urch_ratio_protection_model_glmm, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_sn_urch_ratio_protection_model_glmm, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_sn_urch_ratio_protection_model_glmm, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+No autocorrelation.
+
+
+### Model 22: Snail urchin ratio fishing model with fixed effect (glm)
+
+```{r Snail ratio protection fe GLM model}
+sn_urch_ratio_protection_model_glm_fe <- glmmTMB(sn_urch_ratio ~ protect_status +
+                          region1, 
+                          data = env_mod_data,
+                          family = gaussian(link = "identity"))
+```
+
+```{r Snail urch ratio protection mod fe glm output, echo=FALSE}
+#Checking resids
+sn_urch_ratio_protection_model_glm_fe_resids <- simulateResiduals(sn_urch_ratio_protection_model_glm_fe)
+plot(sn_urch_ratio_protection_model_glm_fe_resids)
+
+hist(residuals(sn_urch_ratio_protection_model_glm_fe))
+shapiro.test(residuals(sn_urch_ratio_protection_model_glm_fe))
+
+#Looking at model results
+summary(sn_urch_ratio_protection_model_glm_fe)
+```
+
+
+```{r Plotting the effect of protection status on snail ratio in fe glm, echo=FALSE}
+pred_sn_urch_ratio_protection_model_glm_fe <- ggpredict(sn_urch_ratio_protection_model_glm_fe, terms = c("protect_status", "region1"))
+
+ggplot(pred_sn_urch_ratio_protection_model_glm_fe, aes(x = group, y = predicted, colour = x))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Log Snail to Urchin ratio", x = "Protection Status")+
+  theme.figure()
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing sn urch ratio model linear fe residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_sn_urch_ratio_protection_model_glm_fe <- residuals(sn_urch_ratio_protection_model_glm_fe, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_sn_urch_ratio_protection_model_glm_fe, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_sn_urch_ratio_protection_model_glm_fe, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+No autocorrelation.
+
+
+##### Testing for the VIF of the model
+```{r Testing for multicollinearity of the predictors snail to urchin}
+#vif(sn_urch_ratio_protection_model_glm_fe)
+
+performance::check_collinearity(sn_urch_ratio_protection_model_glm_fe,
+                   component = c("all"))
+```
+
+Correlation does not seem to be problematic.

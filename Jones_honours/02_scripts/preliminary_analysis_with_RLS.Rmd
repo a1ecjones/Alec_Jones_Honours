@@ -3131,6 +3131,7 @@ crab_catches_radius_2km_final <- crab_catches_radius_2km_complete%>%
            visibility, hour, Urchins, Turban_Snails)%>%
   replace(is.na(.), 0)%>%
   mutate(urch_sn_ratio = log10((Urchins +1) / (Turban_Snails + 1)),
+         sn_urch_ratio = log10((Turban_Snails + 1) / (Urchins + 1)),
          survey_date = dmy(survey_date))
 ```
 
