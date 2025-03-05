@@ -637,8 +637,8 @@ dev.off()
 (rec_boats_boxplot_1.5km <- ggplot(unique_site_df, aes(x = protect_status,
                                                      y = mean_rec_boat_counts_1.5km,
                                                      fill = protect_status))+
-  geom_boxplot(alpha = 0.6, width = 0.15)+
-  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  geom_boxplot(alpha = 0.6, width = 0.4)+
+  geom_jitter(height = 0, width = 0.2, colour = "darkgrey", alpha = 0.5)+
   labs(x = "Protection Status", y = "Mean rec.\nboat counts")+
      scale_fill_manual(values = c("#E95E48", "#355173"))+
   theme.figure.report()+
@@ -652,8 +652,8 @@ dev.off()
 (rec_boats_boxplot_1km <- ggplot(unique_site_df, aes(x = protect_status,
                                                      y = mean_rec_boat_counts_1km,
                                                      fill = protect_status))+
-  geom_boxplot(alpha = 0.6, width = 0.15)+
-  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  geom_boxplot(alpha = 0.6, width = 0.4)+
+  geom_jitter(height = 0, width = 0.2, colour = "darkgrey", alpha = 0.5)+
   labs(x = "Protection Status", y = "Mean rec.\nboat counts")+
      scale_fill_manual(values = c("#E95E48", "#355173"))+
   theme.figure.report()+
@@ -668,7 +668,7 @@ dev.off()
                                                      y = mean_rec_boat_counts_2km,
                                                      fill = protect_status))+
   geom_boxplot(alpha = 0.6, width = 0.4)+
-  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+  geom_jitter(height = 0, width = 0.2, colour = "darkgrey", alpha = 0.5)+
   labs(x = "Protection Status", y = "Mean rec.\nboat counts",
        fill = "Protection Status")+
      scale_fill_manual(values = c("#E95E48", "#355173"))+
