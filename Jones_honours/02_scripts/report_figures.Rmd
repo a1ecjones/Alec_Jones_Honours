@@ -701,7 +701,7 @@ dev.off()
 ```
 
 
-### Plot of effect of openness on snails
+## Plot of effect of openness on snails
 
 #### Non-log plot
 
@@ -761,6 +761,12 @@ png(filename = here("./04_plots/report_figures/pred_snail_openness_plot_log.png"
 pred_snail_openness_plot_log
 
 dev.off()
+```
+
+
+```{r}
+ggsave("pred_snail_openness_plot_log.pdf", plot = pred_snail_openness_plot_log,
+       path = here("./04_plots/report_figures"), width = 85, height = 85, units = "mm")
 ```
 
 ### Boxplot of snails between protection status
