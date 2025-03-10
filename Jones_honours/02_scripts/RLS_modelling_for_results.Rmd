@@ -32,6 +32,7 @@ library(glmmTMB)
 library(emmeans)
 library(conflicted)
 library(performance)
+library(ufs)
 
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
@@ -2447,7 +2448,8 @@ shapiro.test(residuals(snail_counts_region_an))
 leveneTest(log(Turban_Snails + 1) ~ region1, data = env_mod_data)
 #Variances are not equal so will need to use Welch's ANOVA
 
-oneway.test(log(Turban_Snails + 1) ~ region1, data = env_mod_data, var.equal = FALSE)
+snail_counts_region_welch <- oneway(log(Turban_Snails + 1) ~ region1, data = env_mod_data, var.equal = FALSE, posthoc = 'games-howell')
+?oneway.test
 
 ```
 
