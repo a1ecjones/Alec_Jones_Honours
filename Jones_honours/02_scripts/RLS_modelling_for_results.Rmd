@@ -2444,9 +2444,11 @@ AICc(sn_urch_ratio_protection_model_glm,
 ```{r Running an ANOVA and testing for assumptions}
 snail_counts_region_an <- lm(log(Turban_Snails + 1) ~ region1, data = env_mod_data)
 shapiro.test(residuals(snail_counts_region_an))
-summary(snail_counts_region_an)
-
 leveneTest(log(Turban_Snails + 1) ~ region1, data = env_mod_data)
+#Variances are not equal so will need to use Welch's ANOVA
+
+oneway.test(log(Turban_Snails + 1) ~ region1, data = env_mod_data, var.equal = FALSE)
+
 ```
 
 
