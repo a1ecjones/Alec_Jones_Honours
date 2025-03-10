@@ -93246,12 +93246,12 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="1.5714286"
-     inkscape:cx="336.31818"
-     inkscape:cy="240.22727"
+     inkscape:cx="336.63636"
+     inkscape:cy="240.54545"
      inkscape:window-width="1920"
-     inkscape:window-height="1080"
+     inkscape:window-height="1027"
      inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-y="25"
      inkscape:window-maximized="0"
      inkscape:current-layer="g1">
     <inkscape:page
@@ -93269,20 +93269,14 @@
      inkscape:groupmode="layer"
      inkscape:label="1">
     <path
-       id="path1"
-       d="M 14.31,0 H 489.69 V 360 H 14.31 Z"
-       style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:1.16;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
-       transform="matrix(1.3333333,0,0,-1.3333333,0,480)"
-       clip-path="url(#clipPath2)" />
-    <path
        id="path3"
        d="M 105.72,50.33 H 483.71 V 354.02 H 105.72 Z"
        style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
        transform="matrix(1.3333333,0,0,-1.3333333,0,480)"
        clip-path="url(#clipPath4)"
-       inkscape:export-filename="site_map_with_inset.png"
-       inkscape:export-xdpi="300"
-       inkscape:export-ydpi="300" />
+       inkscape:export-filename="../site_map_with_inset.png"
+       inkscape:export-xdpi="600"
+       inkscape:export-ydpi="600" />
     <path
        id="path5"
        d="m 495.8,-38.1 -0.01,0.13 -0.21,-0.01 -0.13,-0.05 -0.01,-0.05 0.01,-0.07 0.16,-0.09 h 0.07 z"
@@ -97487,102 +97481,118 @@
        style="fill:none;stroke:#333333;stroke-width:1.16;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
        transform="matrix(1.3333333,0,0,-1.3333333,0,480)"
        clip-path="url(#clipPath1400)" />
-    <text
-       id="text1400"
-       xml:space="preserve"
-       transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,78.213333,413.69333)"><tspan
-         id="tspan1400"
-         style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">48.80</tspan></text>
-    <text
-       id="text1401"
-       xml:space="preserve"
-       transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,120.68,371.24)"><tspan
-         id="tspan1401"
-         style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">°</tspan></text>
-    <text
-       id="text1402"
-       xml:space="preserve"
-       transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,127.46667,364.45333)"><tspan
-         id="tspan1402"
-         style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">N</tspan></text>
-    <text
-       id="text1403"
-       xml:space="preserve"
-       transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,78.213333,316.81333)"><tspan
-         id="tspan1403"
-         style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">48.85</tspan></text>
-    <text
-       id="text1404"
-       xml:space="preserve"
-       transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,120.68,274.34667)"><tspan
-         id="tspan1404"
-         style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">°</tspan></text>
-    <text
-       id="text1405"
-       xml:space="preserve"
-       transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,127.46667,267.56)"><tspan
-         id="tspan1405"
-         style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">N</tspan></text>
-    <text
-       id="text1406"
-       xml:space="preserve"
-       transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,78.213333,219.92)"><tspan
-         id="tspan1406"
-         style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">48.90</tspan></text>
-    <text
-       id="text1407"
-       xml:space="preserve"
-       transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,120.68,177.46667)"><tspan
-         id="tspan1407"
-         style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">°</tspan></text>
-    <text
-       id="text1408"
-       xml:space="preserve"
-       transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,127.46667,170.68)"><tspan
-         id="tspan1408"
-         style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">N</tspan></text>
-    <text
-       id="text1409"
-       xml:space="preserve"
-       transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,78.213333,123.04)"><tspan
-         id="tspan1409"
-         style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">48.95</tspan></text>
-    <text
-       id="text1410"
-       xml:space="preserve"
-       transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,120.68,80.573333)"><tspan
-         id="tspan1410"
-         style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">°</tspan></text>
-    <text
-       id="text1411"
-       xml:space="preserve"
-       transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,127.46667,73.786667)"><tspan
-         id="tspan1411"
-         style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">N</tspan></text>
+    <g
+       id="g5"
+       transform="matrix(0.95,0,0,0.95,5.1291541,18.864615)">
+      <text
+         id="text1400"
+         xml:space="preserve"
+         transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,78.213333,413.69333)"><tspan
+           id="tspan1400"
+           style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">48.80</tspan></text>
+      <text
+         id="text1401"
+         xml:space="preserve"
+         transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,120.68,371.24)"><tspan
+           id="tspan1401"
+           style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">°</tspan></text>
+      <text
+         id="text1402"
+         xml:space="preserve"
+         transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,127.46667,364.45333)"><tspan
+           id="tspan1402"
+           style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">N</tspan></text>
+    </g>
+    <g
+       id="g4"
+       transform="matrix(0.95,0,0,0.95,5.1291541,14.020282)">
+      <text
+         id="text1403"
+         xml:space="preserve"
+         transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,78.213333,316.81333)"><tspan
+           id="tspan1403"
+           style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">48.85</tspan></text>
+      <text
+         id="text1404"
+         xml:space="preserve"
+         transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,120.68,274.34667)"><tspan
+           id="tspan1404"
+           style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">°</tspan></text>
+      <text
+         id="text1405"
+         xml:space="preserve"
+         transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,127.46667,267.56)"><tspan
+           id="tspan1405"
+           style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">N</tspan></text>
+    </g>
+    <g
+       id="g3"
+       transform="matrix(0.95,0,0,0.95,5.1291541,9.1759487)">
+      <text
+         id="text1406"
+         xml:space="preserve"
+         transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,78.213333,219.92)"><tspan
+           id="tspan1406"
+           style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">48.90</tspan></text>
+      <text
+         id="text1407"
+         xml:space="preserve"
+         transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,120.68,177.46667)"><tspan
+           id="tspan1407"
+           style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">°</tspan></text>
+      <text
+         id="text1408"
+         xml:space="preserve"
+         transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,127.46667,170.68)"><tspan
+           id="tspan1408"
+           style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">N</tspan></text>
+    </g>
+    <g
+       id="g2"
+       transform="matrix(0.95,0,0,0.95,5.1291541,4.3316154)">
+      <text
+         id="text1409"
+         xml:space="preserve"
+         transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,78.213333,123.04)"><tspan
+           id="tspan1409"
+           style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">48.95</tspan></text>
+      <text
+         id="text1410"
+         xml:space="preserve"
+         transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,120.68,80.573333)"><tspan
+           id="tspan1410"
+           style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">°</tspan></text>
+      <text
+         id="text1411"
+         xml:space="preserve"
+         transform="matrix(0.94280904,-0.94280904,0.94280904,0.94280904,127.46667,73.786667)"><tspan
+           id="tspan1411"
+           style="font-variant:normal;font-weight:normal;font-size:18.0029px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">N</tspan></text>
+    </g>
     <path
        id="path1411"
        d="m 102.73,100.3 h 2.99"
@@ -97618,97 +97628,111 @@
        d="m 439.78,47.34 v 2.99"
        style="fill:none;stroke:#333333;stroke-width:1.16;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
        transform="matrix(1.3333333,0,0,-1.3333333,0,480)" />
-    <text
-       id="text1417"
-       xml:space="preserve"
-       transform="matrix(1.3333333,0,0,1.3333333,151.17333,437.29333)"><tspan
-         id="tspan1417"
-         style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">125.35</tspan></text>
-    <text
-       id="text1418"
-       xml:space="preserve"
-       transform="matrix(1.3333333,0,0,1.3333333,224.56,437.29333)"><tspan
-         id="tspan1418"
-         style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">°</tspan></text>
-    <text
-       id="text1419"
-       xml:space="preserve"
-       transform="matrix(1.3333333,0,0,1.3333333,234.16,437.29333)"><tspan
-         id="tspan1419"
-         style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">W</tspan></text>
-    <text
-       id="text1420"
-       xml:space="preserve"
-       transform="matrix(1.3333333,0,0,1.3333333,342.36,437.29333)"><tspan
-         id="tspan1420"
-         style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">125.20</tspan></text>
-    <text
-       id="text1421"
-       xml:space="preserve"
-       transform="matrix(1.3333333,0,0,1.3333333,415.76,437.29333)"><tspan
-         id="tspan1421"
-         style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">°</tspan></text>
-    <text
-       id="text1422"
-       xml:space="preserve"
-       transform="matrix(1.3333333,0,0,1.3333333,425.36,437.29333)"><tspan
-         id="tspan1422"
-         style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">W</tspan></text>
-    <text
-       id="text1423"
-       xml:space="preserve"
-       transform="matrix(1.3333333,0,0,1.3333333,533.54667,437.29333)"><tspan
-         id="tspan1423"
-         style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">125.05</tspan></text>
-    <text
-       id="text1424"
-       xml:space="preserve"
-       transform="matrix(1.3333333,0,0,1.3333333,606.94667,437.29333)"><tspan
-         id="tspan1424"
-         style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">°</tspan></text>
-    <text
-       id="text1425"
-       xml:space="preserve"
-       transform="matrix(1.3333333,0,0,1.3333333,616.54667,437.29333)"><tspan
-         id="tspan1425"
-         style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">W</tspan></text>
+    <g
+       id="g6"
+       transform="matrix(0.95,0,0,0.95,10.248861,21.445721)">
+      <text
+         id="text1417"
+         xml:space="preserve"
+         transform="matrix(1.3333333,0,0,1.3333333,151.17333,437.29333)"><tspan
+           id="tspan1417"
+           style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">125.35</tspan></text>
+      <text
+         id="text1418"
+         xml:space="preserve"
+         transform="matrix(1.3333333,0,0,1.3333333,224.56,437.29333)"><tspan
+           id="tspan1418"
+           style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">°</tspan></text>
+      <text
+         id="text1419"
+         xml:space="preserve"
+         transform="matrix(1.3333333,0,0,1.3333333,234.16,437.29333)"><tspan
+           id="tspan1419"
+           style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">W</tspan></text>
+    </g>
+    <g
+       id="g8"
+       transform="matrix(0.95,0,0,0.95,19.808527,21.445721)">
+      <text
+         id="text1420"
+         xml:space="preserve"
+         transform="matrix(1.3333333,0,0,1.3333333,342.36,437.29333)"><tspan
+           id="tspan1420"
+           style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">125.20</tspan></text>
+      <text
+         id="text1421"
+         xml:space="preserve"
+         transform="matrix(1.3333333,0,0,1.3333333,415.76,437.29333)"><tspan
+           id="tspan1421"
+           style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">°</tspan></text>
+      <text
+         id="text1422"
+         xml:space="preserve"
+         transform="matrix(1.3333333,0,0,1.3333333,425.36,437.29333)"><tspan
+           id="tspan1422"
+           style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">W</tspan></text>
+    </g>
+    <g
+       id="g9"
+       transform="matrix(0.95,0,0,0.95,29.367861,21.445721)">
+      <text
+         id="text1423"
+         xml:space="preserve"
+         transform="matrix(1.3333333,0,0,1.3333333,533.54667,437.29333)"><tspan
+           id="tspan1423"
+           style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">125.05</tspan></text>
+      <text
+         id="text1424"
+         xml:space="preserve"
+         transform="matrix(1.3333333,0,0,1.3333333,606.94667,437.29333)"><tspan
+           id="tspan1424"
+           style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Symbol;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">°</tspan></text>
+      <text
+         id="text1425"
+         xml:space="preserve"
+         transform="matrix(1.3333333,0,0,1.3333333,616.54667,437.29333)"><tspan
+           id="tspan1425"
+           style="font-variant:normal;font-weight:normal;font-size:18px;font-family:Helvetica;writing-mode:lr-tb;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           x="0"
+           y="0">W</tspan></text>
+    </g>
     <text
        id="text1426"
        xml:space="preserve"
-       transform="matrix(1.3333333,0,0,1.3333333,328.52,466.16)"><tspan
+       x="334.8634"
+       y="465.50177"
+       style="font-size:14.44px;stroke-width:1.20334"><tspan
          id="tspan1426"
-         style="font-variant:normal;font-weight:700;font-size:20px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
-         x="0"
-         y="0">Longitude</tspan></text>
+         style="font-variant:normal;font-weight:700;font-size:24.0666px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.20334"
+         x="334.8634"
+         y="465.50177">Longitude</tspan></text>
     <text
        id="text1427"
        xml:space="preserve"
        transform="rotate(-90)"
-       x="-262.28"
-       y="56.200001"
-       style="font-size:16px;stroke-width:1.33333"><tspan
+       x="-257.16296"
+       y="57.281494"
+       style="font-size:14.44px;stroke-width:1.20333"><tspan
          id="tspan1427"
-         style="font-variant:normal;font-weight:700;font-size:26.6667px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.33333"
-         x="-262.28"
-         y="56.200001">Latitude</tspan></text>
+         style="font-variant:normal;font-weight:700;font-size:24.0667px;font-family:Helvetica;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.20333"
+         x="-257.16296"
+         y="57.281494">Latitude</tspan></text>
     <path
        id="path1427"
        d="M 517.76484,366.06909 H 641.40726 V 267.82182 H 517.76484 Z"

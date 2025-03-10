@@ -1528,6 +1528,7 @@ hist(residuals(urchin_fishing_mod_glmm))
 shapiro.test(residuals(urchin_fishing_mod_glmm))
 
 #Looking at model results
+summary(urchin_fishing_mod_glmm)
 model_summary <- summary(urchin_fishing_mod_glmm)
 
 z_values <- model_summary$coefficients$cond[, "z value"]
@@ -2423,3 +2424,83 @@ performance::check_collinearity(sn_urch_ratio_protection_model_glm_fe,
 ```
 
 Correlation does not seem to be problematic.
+
+
+### Comparing the snail to urchin ratio models
+
+```{r AIC of the snail urchin ratio models without openness}
+AICc(sn_urch_ratio_protection_model_glm,
+     sn_urch_ratio_protection_model_glmm)%>%
+    # sn_urch_ratio_protection_model_glm_fe)%>%
+  arrange(AICc)%>%
+  mutate(delta_AICc = AICc - AICc[1])
+```
+
+
+## Testing effect of region on the different variables
+
+### Testing region on snail abundance
+
+```{r Running an ANOVA and testing for assumptions}
+snail_counts_region_an <- lm(log(Turban_Snails + 1) ~ region1, data = env_mod_data)
+shapiro.test(residuals(snail_counts_region_an))
+summary(snail_counts_region_an)
+
+leveneTest(log(Turban_Snails + 1) ~ region1, data = env_mod_data)
+```
+
+
+```{r Testing normality of snail counts between regions}
+#Making data frames with only sites from each region
+turban_snails_SR <- subset(env_mod_data, region1 == "SR")
+turban_snails_DGB <- subset(env_mod_data, region1 == "DGB")
+turban_snails_DIEC <- subset(env_mod_data, region1 == "DIEC")
+turban_snails_BG <- subset(env_mod_data, region1 == "BG")
+
+#testing normality for each subset
+shapiro.test(log(turban_snails_SR$Turban_Snails + 1))
+shapiro.test(log(turban_snails_DIEC$Turban_Snails + 1))
+shapiro.test(log(turban_snails_DGB$Turban_Snails + 1))
+shapiro.test(log(turban_snails_BG$Turban_Snails + 1))
+```
+All are normal with a log transformation
+
+```{r Testing for equal variance of snail counts between regions}
+leveneTest(log(Turban_Snails + 1) ~ region1, data = env_mod_data)
+```
+When log transforming the variance become unequal
+
+
+### Testing region on urchin abundance
+
+```{r Running an ANOVA on urchins and testing for assumptions}
+urchin_counts_region_an <- lm(Urchins ~ region1, data = env_mod_data)
+shapiro.test(residuals(urchin_counts_region_an))
+leveneTest(Urchins ~ region1, data = env_mod_data)
+
+#Looking at output
+anova(urchin_counts_region_an)
+summary(urchin_counts_region_an)
+
+#TUkey Pairwise test
+TukeyHSD(aov(urchin_counts_region_an))
+```
+Assumptions of ANova are met and indicate significant differences
+
+### Testing region on snail urchin ratio
+
+```{r Running an ANOVA on snail urchin ratio and testing for assumptions}
+snail_urchin_ratio_region_an <- lm(sn_urch_ratio ~ region1, data = env_mod_data)
+shapiro.test(residuals(snail_urchin_ratio_region_an))
+leveneTest(sn_urch_ratio ~ region1, data = env_mod_data)
+
+#Looking at output
+anova(snail_urchin_ratio_region_an)
+summary(snail_urchin_ratio_region_an)
+
+#Tukey pairwise test
+TukeyHSD(aov(snail_urchin_ratio_region_an))
+
+```
+
+Assumptions of ANOVA met and indicate significant differences

@@ -673,7 +673,8 @@ dev.off()
        fill = "Protection Status")+
      scale_fill_manual(values = c("#E95E48", "#355173"))+
   theme.figure.report()+
-   theme(axis.title.y = element_blank()))
+   theme(legend.position = "none",
+     axis.title.y = element_blank()))
 ```
 
 ```{r}
@@ -766,21 +767,43 @@ dev.off()
 
 ```{r}
 ggsave("pred_snail_openness_plot_log.pdf", plot = pred_snail_openness_plot_log,
-       path = here("./04_plots/report_figures"), width = 85, height = 85, units = "mm")
+       path = here("./04_plots/report_figures"), width = 100, height = 100, units = "mm")
 ```
 
 ### Boxplot of snails between protection status
 
 ```{r Making a boxplot of snail counts between protection status}
-(snail_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Turban_Snails))+
+##(snail_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Turban_Snails))+
   geom_boxplot(env_mod_data, mapping = aes(fill = protect_status))+
-  geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
+ # geom_jitter(height = 0, width = 0.1, colour = "darkgrey")+
   labs(x = "Protection Status", y = "Red turban snail counts")+
    scale_fill_manual(values = c("#E95E48", "#355173"))+
   add_phylopic(img = snail_picture_img, x = 2.4, y = 580, height = 150)+
   theme.figure.report()+
     theme(legend.position = "none"))
 ```
+
+```{r Making a boxplot of snail counts between protection status}
+(snail_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Turban_Snails))+
+  geom_boxplot(env_mod_data, mapping = aes(fill = protect_status),
+               alpha = 0.6, width = 0.15, position = position_nudge(x = -0.1))+
+  geom_errorbar(pred_snail_fishing_mod_linear_no_op_protect_status, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = x, y = predicted),
+                width = 0.15, position = position_nudge(0.1))+
+   geom_point(pred_snail_fishing_mod_linear_no_op_protect_status, mapping = 
+              aes(x = x, y = predicted, colour = x), size = 4, position = position_nudge(0.1))+
+  labs(x = "Protection Status", y = "Red turban snail counts")+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
+   scale_colour_manual(values = c("#E95E48", "#355173"))+
+  #add_phylopic(img = snail_picture_img, x = 2.3, y = 620, height = 150)+
+  theme.figure.report()+
+    theme(legend.position = "none",
+         # axis.text = element_text(size = 16)))
+          axis.text.x = element_blank(),
+         axis.title.x = element_blank(),
+         axis.ticks.x = element_blank()))
+```
+
 
 ### Boxplot of urchins between protection status
 
@@ -803,7 +826,7 @@ urchin_picture_img <- get_phylopic(uuid = urchin_picture_uuid)
                 width = 0.15, position = position_nudge(0.1))+
    geom_point(pred_urchin_fishing_mod_glmm, mapping = 
               aes(x = x, y = predicted, colour = x), size = 4, position = position_nudge(0.1))+
-  labs(x = "Protection Status", y = "Red sea\nurchin counts")+
+  labs(x = "Protection Status", y = "Red sea urchin counts")+
    scale_fill_manual(values = c("#E95E48", "#355173"))+
    scale_colour_manual(values = c("#E95E48", "#355173"))+
   add_phylopic(img = urchin_picture_img, x = 2.3, y = 620, height = 150)+
@@ -936,7 +959,7 @@ dev.off()
                 width = 0.15, position = position_nudge(0.1))+
    geom_point(pred_urch_sn_ratio_protection_model_glmm, mapping = 
               aes(x = x, y = predicted, colour = x), size = 4, position = position_nudge(0.1))+
-  labs(x = "Protection Status", y = "Log urchin:snail\nratio")+
+  labs(x = "Protection Status", y = "Log urchin:snail ratio")+
    scale_fill_manual(values = c("#E95E48", "#355173"))+
       scale_colour_manual(values = c("#E95E48", "#355173"))+
    add_phylopic(img = urchin_picture_img, x = 2.35, y = 2.1, height = 0.8)+
@@ -956,6 +979,35 @@ png(filename = here("./04_plots/report_figures/urchin_snail_ratio_box_re.png"), 
 urchin_snail_ratio_box_re
 
 dev.off()
+```
+
+###Snail to urchin ratio with original random effect of region
+```{r}
+(snail_urchin_ratio_box_re <- ggplot(env_mod_data, aes(x = protect_status, y = sn_urch_ratio))+
+  geom_boxplot(env_mod_data, mapping = aes(fill = protect_status),
+               alpha = 0.6, width = 0.15, position = position_nudge(x = -0.1))+
+  geom_errorbar(pred_sn_urch_ratio_protection_model_glmm, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = x, y = predicted),
+                width = 0.15, position = position_nudge(0.1))+
+   geom_point(pred_sn_urch_ratio_protection_model_glmm, mapping = 
+              aes(x = x, y = predicted, colour = x), size = 4, position = position_nudge(0.1))+
+  labs(x = "Protection Status", y = "Log snail:urchin\nratio")+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
+      scale_colour_manual(values = c("#E95E48", "#355173"))+
+   add_phylopic(img = urchin_picture_img, x = 2.35, y = 2.1, height = 0.8)+
+   add_phylopic(img = snail_picture_img, x = 2.35, y = 1.2, height = 0.6)+
+  theme.figure.report()+
+    theme(legend.position = "none",
+          axis.text = element_text(size = 16),
+          # axis.text.x = element_blank(),
+        # axis.title.x = element_blank()
+        ))
+```
+
+
+```{r}
+ggsave("snail_urchin_ratio_box_re.pdf", plot = snail_urchin_ratio_box_re,
+       path = here("./04_plots/report_figures"), width = 75, height = 65, units = "mm")
 ```
 
 ### Urchin snail ratio boxplot
@@ -1134,6 +1186,18 @@ png(filename = here("./04_plots/report_figures/patchwork_plot_vert.png"), width 
 patchwork_plot_vert
 
 dev.off()
+```
+
+### Combining the snail, urchin, snail:urchin ratio boxplots
+
+```{r Combining the snail, urchin, snail:urchin ratio boxplots}
+(snail_urchin_sn_urch_box_plot <- (snail_fishing_boxplot)/
+  (urchin_fishing_boxplot)/
+  (snail_urchin_ratio_box_re))
+```
+```{r}
+ggsave("snail_urchin_sn_urch_box_plot.pdf", plot = snail_urchin_sn_urch_box_plot,
+       path = here("./04_plots/report_figures"), width = 100, height = 165, units = "mm")
 ```
 
 ### Plotting the effect of dominant substrate on the urchin counts
