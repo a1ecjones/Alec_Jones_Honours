@@ -166,6 +166,14 @@ baeria_rocks_er <- st_read(here("./01_raw_data/baeria_rocks.kml"))
 ```
 
 
+
+### Loading in the flight track for the DFO surveys
+
+```{r Loading in the DFO flight track for Barkley Sound}
+dfo_flight_track <- st_read(here("./01_raw_data/dfo_new_flight_path.kml"))
+```
+
+
 ### Overall site map
 
 ```{r Overall Barkley Sound Map}
@@ -539,14 +547,16 @@ dev.off()
 ```{r total rec boats within 1.5 km}
 (total_rec_boats_map_2023_test <- ggplot()+
     geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "darkgrey", fill = "lightgrey")+
+   geom_sf(data = dfo_flight_track, colour =  "#355173", size = 3)+
+  geom_point(data = rec_boats_fishing2023_barkley, 
+             mapping = aes(x = Longitude, y = Latitude),
+             size = 0.8, fill = "#070707")+
     geom_sf(data = site_locations_radius_1.5km, fill = "#E95E48", alpha = 0.3)+
- coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
-           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
-   geom_point(plotting_data, 
+    geom_point(plotting_data, 
               mapping = aes(x = longitude, y = latitude),
               shape = 21, size = 3, colour = "black")+
-  geom_point(data = rec_boats_fishing2023, 
-             mapping = aes(x = Longitude, y = Latitude))+
+    coord_sf(xlim = c(long_min + 0.02, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.03)) +
   labs(x = "Longitude", y = "Latitude") +
   theme.figure.report() +
    theme(axis.text.y = element_text(angle = 45))+
@@ -568,6 +578,11 @@ png(filename = here("./04_plots/report_figures/total_rec_boat_map_2023_with_site
 total_rec_boats_map_2023_test
 
 dev.off()
+```
+
+```{r Saving the rec boats plot with dfo flight track}
+ggsave("total_rec_boat_map_2023_1.5km_track.pdf", plot = total_rec_boats_map_2023_test,
+       path = here("./04_plots/report_figures"), width = 160, height = 120, units = "mm")
 ```
 
 ### Total rec boats

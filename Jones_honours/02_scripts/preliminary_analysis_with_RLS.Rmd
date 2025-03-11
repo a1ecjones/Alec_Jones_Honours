@@ -2266,6 +2266,17 @@ rec_boats_fishing2023 <- DFO_data_clean_2023%>%
            `Pin ID`, Longitude, Latitude, rec_boats_fishing, rec_boats_running))
 ```
 
+```{r Making a dataframe with points only in Bamfield}
+shp_xmin <- -125.4
+shp_xmax <- -124.95
+shp_ymin <- 48.7
+shp_ymax <- 49.0
+
+rec_boats_fishing2023_barkley <- rec_boats_fishing2023%>%
+  filter(Latitude >= shp_ymin & Latitude <= shp_ymax & Longitude >= shp_xmin & Longitude <= shp_xmax)
+```
+
+
 ####2022
 ```{r Loading in the data}
 DFO_data_raw_2022 <- read_csv(here("./01_raw_data/DFO_data/Overflight2022_ObservationPoints_20240124_COUNTS.csv"))
