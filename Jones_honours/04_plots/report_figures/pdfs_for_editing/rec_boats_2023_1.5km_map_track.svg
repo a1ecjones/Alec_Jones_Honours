@@ -10018,9 +10018,9 @@
      inkscape:cx="318.01515"
      inkscape:cy="228.50189"
      inkscape:window-width="1920"
-     inkscape:window-height="1052"
+     inkscape:window-height="1080"
      inkscape:window-x="0"
-     inkscape:window-y="28"
+     inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="g1">
     <inkscape:page
@@ -10252,7 +10252,10 @@
        d="m 332.36,55.08 -0.02,0.19 -0.11,0.16 -0.12,0.2 -0.12,0.18 -0.15,0.12 -0.13,0.02 -0.14,-0.08 -0.07,-0.11 -0.03,-0.19 -0.01,-0.22 0.19,-0.15 0.19,-0.16 0.06,-0.03 0.15,-0.04 0.2,-0.01 0.09,0.02 z"
        style="fill:#d3d3d3;fill-opacity:1;fill-rule:evenodd;stroke:#a9a9a9;stroke-width:0.43;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
        transform="matrix(1.3333333,0,0,-1.3333333,0,453.33333)"
-       clip-path="url(#clipPath77)" />
+       clip-path="url(#clipPath77)"
+       inkscape:export-filename="../rec_boats_points_2023_track.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
     <path
        id="path78"
        d="m 311.27,56.63 -0.03,0.12 -0.13,0.13 -0.17,0.05 -0.21,-0.01 -0.04,-0.08 -0.01,-0.07 0.1,-0.12 0.17,-0.11 0.14,-0.02 0.14,0.03 z"
@@ -18811,11 +18814,11 @@
        transform="rotate(-90)"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:21.3333px;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1.33333"
        x="-238.97931"
-       y="42.599998"><tspan
+       y="46.599998"><tspan
          id="tspan2870"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:21.3333px;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.33333"
          x="-238.97931"
-         y="42.599998">Latitude</tspan></text>
+         y="46.599998">Latitude</tspan></text>
     <g
        id="g26662"
        transform="matrix(0.899,0,0,0.899,24.93106,7.1601068)">
@@ -18864,7 +18867,7 @@
          xml:space="preserve"
          x="514.11963"
          y="273.97354"
-         style="font-size:14.384px;white-space:pre;inline-size:86.2926;stroke-width:1.19866"
+         style="font-size:14.384px;white-space:pre;inline-size:86.2926;display:inline;stroke-width:1.19866"
          transform="matrix(0.9025,0,0,0.9025,45.569822,3.675125)"><tspan
            x="514.11963"
            y="273.97354"
@@ -18881,7 +18884,7 @@
          xml:space="preserve"
          x="520.41132"
          y="318.13724"
-         style="font-size:14.384px;white-space:pre;inline-size:92.5932;stroke-width:1.19866"
+         style="font-size:14.384px;white-space:pre;inline-size:92.5932;display:inline;stroke-width:1.19866"
          transform="matrix(0.9025,0,0,0.9025,40.311756,2.0479936)"><tspan
            x="520.41132"
            y="318.13724"
@@ -18898,7 +18901,7 @@
          xml:space="preserve"
          x="520.41132"
          y="318.13724"
-         style="font-size:14.384px;white-space:pre;inline-size:95.058;stroke-width:1.19866"
+         style="font-size:14.384px;white-space:pre;inline-size:95.058;display:inline;stroke-width:1.19866"
          transform="matrix(0.9025,0,0,0.9025,40.846726,43.143669)"><tspan
            x="520.41132"
            y="318.13724"
