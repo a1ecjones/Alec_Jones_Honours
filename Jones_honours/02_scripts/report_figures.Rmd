@@ -69,7 +69,7 @@ writeRaster(average_temperature,
             overwrite = TRUE)
 ```
 
-### Making a theme for all subsequent figures
+## Making a theme for all subsequent figures
 
 ```{r Making theme for all subsequent figures, echo=FALSE}
 theme.figure.report <- function (){
@@ -77,10 +77,10 @@ theme.figure.report <- function (){
   theme(panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
     #axis.line = element_line(colour = "black"),
-    axis.title = element_text(size = 20, face = "bold"),
-    axis.text = element_text(size = 18, face = "plain"),
-    legend.text = element_text(size = 14, face = "plain"),
-    legend.title = element_text(size = 16, face = "bold")) 
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 14, face = "plain"),
+    legend.text = element_text(size = 12, face = "plain"),
+    legend.title = element_text(size = 14, face = "bold")) 
 }
 
 ```
@@ -1242,3 +1242,63 @@ geom_boxplot()
 wilcox.test(norm_openness ~ protect_status, data = env_mod_data)
 ```
 
+
+
+### Plotting the gam output for the turban snail ecology model
+
+```{r Plotting the gam output for the turban snail ecology model}
+plot(ecology_snail_mod_linear, all.terms = TRUE, pages = 1)
+```
+
+```{r}
+plot(ecology_urchin_mod_re, all.terms = TRUE, pages = 1, residuals = TRUE)
+```
+
+```{r Plotting the effect of substrate type on the urchin counts}
+(urchin_substrate_preds_plot <- ggplot(env_mod_data, aes(x = dominant_score, y = Urchins))+
+  geom_boxplot(env_mod_data, mapping = aes(fill = dominant_score),
+               alpha = 0.6, width = 0.15, position = position_nudge(x = -0.1))+
+  geom_errorbar(pred_urchin_dom_score, mapping =
+                  aes(ymin = (adj_estimate - 1.96*std.error), ymax = (adj_estimate + 1.96*std.error), x = term, y = estimate),
+                width = 0.15, position = position_nudge(0.1))+
+   geom_point(pred_urchin_dom_score, mapping = 
+              aes(x = term, y = adj_estimate, colour = term), size = 4, position = position_nudge(0.1))+
+  labs(x = "Dominant seafloor type", y = "Red sea urchin counts")+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
+   scale_colour_manual(values = c("#E95E48", "#355173"))+
+  theme.figure.report()+
+    theme(legend.position = "none"))
+         # axis.text = element_text(size = 16)))
+          #axis.text.x = element_blank(),
+         #axis.title.x = element_blank(),
+        # axis.ticks.x = element_blank()))
+```
+
+
+### Plotting the effect of openness from the gam on urchin counts
+
+```{r Plotting openness vs urchin counts}
+(urchin_openness_plot <- draw(ecology_urchin_mod_re,
+                              select = 2,
+                              residuals = TRUE,
+                              rug = FALSE))
+```
+
+```{r}
+(urchin_openness_plot_final <- urchin_openness_plot+
+  labs(x = "Normalized Openness (scaled)")+
+  theme.figure.report()+
+  theme(title = element_blank()))
+  
+```
+
+### Combining the two urchin gam plots for plotting as one
+
+```{r}
+(urchin_gam_plot <- (urchin_substrate_preds_plot)/(urchin_openness_plot_final))
+```
+
+```{r}
+ggsave("urchin_gam_plot.pdf", plot = urchin_gam_plot,
+       path = here("./04_plots/report_figures"), width = 100, height = 180, units = "mm")
+```

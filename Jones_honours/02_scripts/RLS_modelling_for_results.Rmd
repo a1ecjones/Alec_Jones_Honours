@@ -600,6 +600,23 @@ shapiro.test(ecology_urchin_mod_re$residuals)
 Gaussian looks ok. When adding the random effect of region the openness becomes
 borderline and negative. 
 
+```{r Extracting predictions for the dominant score}
+pred_urchin_dom_score <- tidy(ecology_urchin_mod_re, parametric = TRUE)
+pred_urchin_dom_score
+pred_urchin_dom_score$term <- as.factor(pred_urchin_dom_score$term)
+levels(pred_urchin_dom_score$term) <- c("loose", "solid")
+
+#pulling out intercept to adjust for this when plotting
+dom_substrate_urchin_intercept <- pred_urchin_dom_score%>%
+  filter(term == "loose")%>%
+  pull(estimate)
+
+#adjusting the non-intercept term to include the intercept
+pred_urchin_dom_score <- pred_urchin_dom_score%>%
+  mutate(adj_estimate = ifelse(term != "loose", estimate + dom_substrate_urchin_intercept, estimate))
+```
+
+
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
 ```{r Testing Urchin ecology model region re residuals for spatial correlation, echo=FALSE, warning=FALSE}
