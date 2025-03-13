@@ -1,0 +1,186 @@
+---
+title: "Alec Jones Honours Thesis Code"
+author: "Alec Jones"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+   toc: true
+---
+
+   <script src="hideOutput.js"></script> 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Loading in and cleaning the Reef Life Survey Data from Barkley Sound, BC, Canada, in 2024
+
+## Loading in the 2024 data
+
+```{r Reading in the 2024 RLS data, echo=FALSE}
+RLS_data_2024 <- read_csv(here("./01_raw_data/RLS_CANADA_Bamfield_2024.csv"))
+```
+
+## Cleaning up the data
+
+```{r Cleaning up the dataframe to allow for use in R}
+#Making a list of the variables that I want to convert to factors in the step
+#below
+factor_cols2 <- c("site_code", "site_name", "Code")
+
+#This pipe is taking the original raw dataframe and cleaning it up and storing
+#it as a cleaned dataframed
+RLS_data_2024_clean <- RLS_data_2024%>%
+  #Picking which columns I want to keep
+  select(c(`Site No.`, `Site Name`, Latitude, Longitude, Date, vis, Time, Depth,
+           Method, Block, Code, Species, Total))%>%
+  #Removing columns/rows with N/As
+  na.omit()%>%
+  #Changing all of the species codes to be lowercase as there were some of the
+  #same species with codes differing by one or two capitals
+  mutate(Code = str_to_lower(Code))%>%
+  #Renaming the variables to be easier to code with
+  rename(site_code = `Site No.`,
+         site_name = `Site Name`,
+         latitude = Latitude,
+         longitude = Longitude,
+         survey_date = Date,
+         depth = Depth,
+         visibility = vis,
+         hour = Time,
+         total = Total)%>%
+  #Changing the variables that I specified earlier to be factors
+   mutate_at(factor_cols2, factor)%>%
+  #One point at the Kirby Site had the latitude value for both latitude and
+  #longitude columns so this is fixing that
+   mutate(longitude = if_else(site_code == "BMSC2", -125.19876860, longitude))%>% 
+  #In the dataset there are codes and counts of non-organisms (ex. dec = Debris
+  # cloth). This is removing all the non-organisms from the dataset
+  filter(!Code %in% c("dez", "deg", "dem", "deo", "def", "dew", "dec", "nsf", "snd"))%>%
+  #This is grouping the data down to the species code within each individual
+  #transect
+   group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour, Code)%>%
+  #This is summing all of each species spotted at each transect. Ex. adding up
+  #all red sea urchins at the Wouwer channel site
+  summarise(species_total = sum(total))
+```
+
+## Making a dataframe with the species of interest and ratios of interest
+
+I made a dataframe with the counts of red turban snails and red sea urchins, 
+along wih the log ratios of the two species to each other.
+
+```{r Making dataframe with urchins, snails, and ratio of the two}
+#Starting pipe by taking data from the clean df I made
+ urch_sn_ratio_mod_2024 <- RLS_data_2024_clean%>%
+  #This makes a column for each species with the numbers of each in each
+  #transect (each row)
+  pivot_wider(names_from = Code, values_from = species_total)%>%
+  #Renaming red sea urchin and red turban snail columns
+  mutate(Urchins = mfra,
+         Turban_Snails = pgi)%>%
+  #Selecting only the columns I wanted and getting rid of the other species
+  select(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour, Urchins, Turban_Snails)%>%
+  #If urchins or snails were not counted at a site they were N/A at this stage
+  #so this changes those counts to 0
+  replace(is.na(.), 0)%>%
+  #This calculates the ratios between species and makes a column for each. Date
+  #is also converted to day month year form
+  mutate(urch_sn_ratio = log10((Urchins +1) / (Turban_Snails + 1)),
+         sn_urch_ratio = log10((Turban_Snails + 1) / (Urchins + 1)),
+         survey_date = dmy(survey_date))
+```
+
+
+# Working with the potential predictor variables
+
+For my project I incorporated various different predictor variables, some that I
+obtained from csv files and some that needed to be downloaded from online
+databases.
+
+## Predictor 1: Wave exposure (via metric called Openness)
+
+To get a measure of wave exposure for each of the RLS sites, I used a metric 
+called openness from Hill et al. (2010)(10.3354/meps08815).
+
+### Set up prior to calculating fetch for openness
+
+```{r Making dfs of the unique sites and then just the lat and long, echo=FALSE, include=FALSE}
+#Making a df with just the unique site info
+site_data_2024 <- RLS_data_2024_clean%>%
+  distinct(site_code, site_name, latitude, longitude)
+
+#Making a df with just the unique lat and longs
+site_coords_2024 <- site_data_2024%>%
+  ungroup()%>%
+  select(latitude, longitude)%>%
+  distinct()
+
+#This converts the site coordinates into a sf object and specifies the 
+#coordinate reference system to be the same as the shape file
+site_sp_2024 <- st_as_sf(site_coords_2024, coords = c("longitude", "latitude"), crs = 4326)
+```
+
+```{r Loading in the shapefiles to do the fetch calculations, include=FALSE}
+#This is a high resolution shape file from Hakai. This code loads in the shape
+#file and saves it as the proper shape file object
+VI_base_layer_hi_res <- read_sf(dsn = here("./01_raw_data/hakai_zip"),
+                                stringsAsFactors = F)
+read_s
+VI_base_layer_hi_res_sf <- st_as_sf(VI_base_layer_hi_res)
+
+#specifying the projection to use for the sf
+st_crs(VI_base_layer_hi_res_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
+```
+
+### Calculating the fetch for the sites
+
+```{r Calculating the fetch for the sites}
+#Makes an object of all the bearings to calculate fetch along
+bearings_openness <- seq(7.5, 360, by = 7.5)
+
+#Specifies to use the GEOS engine
+sf::sf_use_s2(FALSE)
+
+#This calculates the fetch for each site along each of the bearings calculated
+#above. Max possible fetch is 650,000 meters. It is using the shape file from 
+#above to know where land is. This will likely take a very long time to run
+#so do not worry.
+fetch_df_2024_openness <- fetch_len_multi(site_sp_2024, bearings = bearings_openness, dmax = 650000, shoreline = VI_base_layer_hi_res_sf, projected = FALSE)
+```
+
+### Turning the raw fetch data into a dataframe with column labels
+
+```{r Turning the raw openness fetch data into a dataframe with column labels}
+#Making an object with all of the site code names listed to be able to make a
+#column of site codes in the fetch df below
+site_code <- c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC13", "BMSC14", "BMSC15", "BMSC16",
+               "BMSC17", "BMSC18", "BMSC19", "BMSC2", "BMSC20", "BMSC21", "BMSC22", "BMSC23", "BMSC24",
+               "BMSC25", "BMSC26", "BMSC27", "BMSC3", "BMSC4", "BMSC5", "BMSC6", "BMSC8", "BMSC9")
+
+#Converting the raw fetch data into a df
+fetch_df_2024_openness <- as.data.frame(fetch_df_2024_openness)
+#Adding a column with the site codes
+fetch_df_2024_openness$site_code <- site_code
+#Adding a column with the site lat
+fetch_df_2024_openness$latitude <- site_coords_2024$latitude
+#Adding a column with the site long
+fetch_df_2024_openness$longitude <- site_coords_2024$longitude
+
+#Reorganizing the order of the columns so that site code, lat, and long are 
+#first
+fetch_df_2024_openness_final <- fetch_df_2024_openness[, c(49, 50, 51, seq(1, 48, by = 1))]
+
+#Converting into long format for further analysis and adding to the RLS data
+fetch_df_2024_openness_long <- fetch_df_2024_openness_final%>%
+  #Makes column with bearing degree and column with corresponding fetch
+  pivot_longer(cols = `7.5`: `360`, 
+               names_to = "degree", 
+               values_to = "fetch", 
+               #Removes the prefix "degree" from the values going into the 
+               #degree column
+               names_prefix = "degree")
+```
+
