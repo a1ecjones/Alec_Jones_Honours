@@ -596,6 +596,7 @@ gam.check(ecology_urchin_mod_re, rep = 500)
 plot(ecology_urchin_mod_re, all.terms = TRUE)
 summary(ecology_urchin_mod_re)
 shapiro.test(ecology_urchin_mod_re$residuals)
+variance_comp(ecology_urchin_mod_re)
 ```
 Gaussian looks ok. When adding the random effect of region the openness becomes
 borderline and negative. 
@@ -1551,7 +1552,9 @@ model_summary <- summary(urchin_fishing_mod_glmm)
 
 z_values <- model_summary$coefficients$cond[, "z value"]
 
+#Looking at some of the variance metrics for the model
 performance::r2(urchin_fishing_mod_glmm)
+performance::icc(urchin_fishing_mod_glmm)
 ```
 Residuals look ok for just using a gaussian distribution. Seeing a non-significant
 negative effect of protection status on red sea urchins. That is, there are less
@@ -2317,6 +2320,9 @@ shapiro.test(residuals(sn_urch_ratio_protection_model_glmm))
 #Looking at model results
 summary(sn_urch_ratio_protection_model_glmm)
 performance::r2(sn_urch_ratio_protection_model_glmm)
+
+#Checking for significance of random effect
+performance::icc(sn_urch_ratio_protection_model_glmm)
 ```
 
 This model is fitting a separate intercept for each level of the random effect.
