@@ -77,7 +77,9 @@ levels(env_mod_data$region1) <- list(DGB = "Deer group/Bamfield",
 
 ##Adding a column to the env mod data that is the snail to urchin ratio
 env_mod_data <- env_mod_data%>%
-  mutate(sn_urch_ratio = log10((Turban_Snails + 1) / (Urchins + 1)))
+  mutate(sn_urch_ratio = log10((Turban_Snails + 1) / (Urchins + 1)),
+         urchin_dens = (Urchins / 100),
+         snail_dens = (Turban_Snails / 100))
 ```
 
 ```{r Creating a factor variable of protection status for the modelling data, include=FALSE}
@@ -102,7 +104,7 @@ levels(env_mod_data$protect_status_park) <- c("No Protection", "Protected")
 
 
 #Reordering so easier to see which sites are protected in the DF
-env_mod_data <- env_mod_data[, c(seq(1, 11, by = 1), 44, 45, seq(12, 43, by = 1))]
+env_mod_data <- env_mod_data[, c(seq(1, 11, by = 1), 46, 47, seq(12, 45, by = 1))]
 
 
 #Will need to confirm which areas were kelp forests based on the photos or
@@ -216,7 +218,7 @@ the model (being removed by select).
 #### Model 2: Ecology model on the snail counts with temperature, openness, and bottom type (linear openness)
 
 ```{r Turban snail ecology/environmental model linear}
-ecology_snail_mod_linear <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+ecology_snail_mod_linear <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
                                norm_openness_scale+
                            dominant_score,
                              data = env_mod_data,
@@ -511,7 +513,7 @@ worse.
 #### Model 5: Ecology model on the urchin counts with temperature, openness, and bottom type
 
 ```{r Urchin ecology/environmental model}
-ecology_urchin_mod <- gam(Urchins ~ s(sst_scale)+
+ecology_urchin_mod <- gam(urchin_dens ~ s(sst_scale)+
                                s(norm_openness_scale)+
                            dominant_score,
                              data = env_mod_data,
@@ -580,7 +582,7 @@ double penalty.
 #### Model 6: Ecology model on the urchin counts with temperature, openness, and bottom type (random effect of region)
 
 ```{r Urchin ecology/environmental model region re}
-ecology_urchin_mod_re <- gam(Urchins ~ s(sst_scale)+
+ecology_urchin_mod_re <- gam(urchin_dens ~ s(sst_scale)+
                                s(norm_openness_scale)+
                            dominant_score+
                                 s(region1, bs = "re"),
@@ -615,6 +617,42 @@ dom_substrate_urchin_intercept <- pred_urchin_dom_score%>%
 #adjusting the non-intercept term to include the intercept
 pred_urchin_dom_score <- pred_urchin_dom_score%>%
   mutate(adj_estimate = ifelse(term != "loose", estimate + dom_substrate_urchin_intercept, estimate))
+```
+
+```{r Trying to predict the urchin counts from openness}
+urchin_ecology_data_for_openness <- data.frame(
+  dominant_score = factor("loose", levels = levels(env_mod_data$dominant_score)),
+  sst_scale = mean(env_mod_data$sst_scale),
+  norm_openness_scale = seq(min(env_mod_data$norm_openness_scale), max(env_mod_data$norm_openness_scale), length.out = 100),
+  region1 = factor("DGB", levels = levels(env_mod_data$region1))
+)
+
+#getting mean and sd for norm_openness
+norm_openness_mean <- mean(env_mod_data$norm_openness)
+norm_openness_sd <- sd(env_mod_data$norm_openness)
+
+#predicting the data
+predicted_openness_effect_urchin <- predict(ecology_urchin_mod_re, newdata = urchin_ecology_data_for_openness, se.fit = TRUE)
+urchin_ecology_data_for_openness$fit <- predicted_openness_effect_urchin$fit
+urchin_ecology_data_for_openness$upper <- predicted_openness_effect_urchin$fit + 1.96 * predicted_openness_effect_urchin$se.fit
+urchin_ecology_data_for_openness$lower <- predicted_openness_effect_urchin$fit - 1.96 * predicted_openness_effect_urchin$se.fit
+urchin_ecology_data_for_openness$norm_openness_original <- urchin_ecology_data_for_openness$norm_openness_scale * norm_openness_sd + norm_openness_mean
+```
+
+```{r predicting urchin density based on dominant seafloor}
+urchin_ecology_data_for_seafloor <- data.frame(
+  dominant_score = levels(env_mod_data$dominant_score),
+  sst_scale = mean(env_mod_data$sst_scale),
+  norm_openness_scale = mean(env_mod_data$norm_openness_scale),
+  region1 = factor("DGB", levels = levels(env_mod_data$region1))
+)
+
+
+#predicting the data
+predicted_sf_effect_urchin <- predict(ecology_urchin_mod_re, newdata = urchin_ecology_data_for_seafloor, se.fit = TRUE)
+urchin_ecology_data_for_seafloor$fit <- predicted_sf_effect_urchin$fit
+urchin_ecology_data_for_seafloor$upper <- predicted_sf_effect_urchin$fit + 1.96 * predicted_sf_effect_urchin$se.fit
+urchin_ecology_data_for_seafloor$lower <- predicted_sf_effect_urchin$fit - 1.96 * predicted_sf_effect_urchin$se.fit
 ```
 
 
@@ -666,7 +704,7 @@ Temp and region are basically fully concurve.
 #### Model 7: Ecology model on the urchin counts with temperature, openness, and bottom type (fixed effect of region)
 
 ```{r Urchin ecology/environmental model region fe}
-ecology_urchin_mod_fe <- gam(Urchins ~ s(sst_scale)+
+ecology_urchin_mod_fe <- gam(urchin_dens ~ s(sst_scale)+
                                s(norm_openness_scale)+
                            dominant_score+
                                 region1,
@@ -757,6 +795,7 @@ the model with no random effect. When comparing with ML, the model with the
 fixed effect is much better than the model without the fixed effect. In both 
 the model with the fixed effect is better than the model with the random effect.
 
+When repeating with urchin density and REML the fixed and random are basically the same.
 
 ## Fishing models{.tabset}
 
@@ -920,9 +959,13 @@ Since the data do not all fit the assumptions of normality or equal variances we
 will need to use wilcoxon rank sum tests to compare.
 
 ```{r Wilcoxon rank sum tests of mean rec boat counts between protected and non-protected sites}
-wilcox.test(mean_rec_boat_counts_1km ~ protect_status, data = unique_site_df, alternative = "t")
-wilcox.test(mean_rec_boat_counts_1.5km ~ protect_status, data = unique_site_df, alternative = "t")
-wilcox.test(mean_rec_boat_counts_2km ~ protect_status, data = unique_site_df, alternative = "t")
+wilcox_1km <- wilcox.test(mean_rec_boat_counts_1km ~ protect_status, data = unique_site_df, alternative = "t")
+wilcox_1.5km <- wilcox.test(mean_rec_boat_counts_1.5km ~ protect_status, data = unique_site_df, alternative = "t")
+wilcox_2km <- wilcox.test(mean_rec_boat_counts_2km ~ protect_status, data = unique_site_df, alternative = "t")
+
+print(wilcox_1km)
+print(wilcox_1.5km)
+print(wilcox_2km)
 ```
 All of the wilcoxon rank sum tests indicate that there is a highly significant
 difference in the number of rec fishing boats between protected and non-protected
@@ -1179,21 +1222,21 @@ in the data and both AICc and ANOVA prefer the model without the random effect.
 #### Model 10: Fishing model on the snail counts with just protection (glm)
 
 ```{r Testing the snail counts for equal variance among protection levels}
-leveneTest(log(Turban_Snails + 1) ~ protect_status, data = env_mod_data)
+leveneTest(snail_dens ~ protect_status, data = env_mod_data)
+#normal is good
+leveneTest(log(snail_dens + 0.01) ~ protect_status, data = env_mod_data)
 #Log transformed is not equal variance so will try with square root transform
 
-leveneTest(sqrt(Turban_Snails) ~ protect_status, data = env_mod_data)
+leveneTest(sqrt(snail_dens) ~ protect_status, data = env_mod_data)
 #There is equal variance with the square rooted values
 ```
 
 
 ```{r Snail count fishing model with protection linear}
-snail_fishing_mod_linear_no_op <- glmmTMB(sqrt(Turban_Snails) ~
+snail_fishing_mod_linear_no_op <- glmmTMB(sqrt(snail_dens) ~
                                       protect_status,
                                     data = env_mod_data,
                                     family = gaussian(link = "identity"))
-
-
 ```
 
 ```{r Snail count fishing model with protection linear output, echo=FALSE}
@@ -1226,7 +1269,7 @@ pred_snail_fishing_mod_linear_no_op_protect_status <- ggpredict(snail_fishing_mo
 ggplot(pred_snail_fishing_mod_linear_no_op_protect_status, aes(x = x, y = predicted))+
   geom_point()+
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
-  labs(y = "Predicted Turban Snail Counts", x = "Protection Status")+
+  labs(y = "Predicted Turban Snail Density (n/m2)", x = "Protection Status")+
   theme.figure()
 
 #Using emmeans to represent the protection status
@@ -1270,7 +1313,7 @@ No autocorrelation.
 #### Model 11: Fishing model on the snail counts with protection and a random effect (glmm)
 
 ```{r Snail count fishing model with protection linear re}
-snail_fishing_mod_linear_no_op_re <- glmmTMB(sqrt(Turban_Snails) ~
+snail_fishing_mod_linear_no_op_re <- glmmTMB(sqrt(snail_dens) ~
                                       protect_status + (1|region1),
                                     data = env_mod_data,
                                     family = gaussian(link = "identity"))
@@ -1533,7 +1576,7 @@ Seeing some autocorrelation in the inverse method but not the neighbour method.
 
 
 ```{r Urchin fishing model glmm}
-urchin_fishing_mod_glmm <- glmmTMB(Urchins ~ protect_status + (1|region1),
+urchin_fishing_mod_glmm <- glmmTMB(urchin_dens ~ protect_status + (1|region1),
                                family = gaussian(link = "identity"),
                                    data = env_mod_data)
 ```

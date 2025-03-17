@@ -250,12 +250,12 @@ dev.off()
    geom_sf(data = baeria_rocks_er, fill = "blue", colour = "blue", alpha = 0.2)+
      geom_point(plotting_data_minor_shifted, 
               mapping = aes(x = longitude, y = latitude, fill = protect_status,
-                            shape = protect_status), size = 3)+
-   scale_shape_manual(values = c(24, 21))+
+                            shape = region1), size = 3)+
+   scale_shape_manual(values = c(24, 21, 22, 23))+
    scale_fill_manual(values = c("#F46864", "#1CB8BC"))+
        coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
            ylim = c(lat_min + 0.01, lat_max - 0.04)) +
-  labs(x = "Longitude", y = "Latitude", shape = "Protection\nStatus",
+  labs(x = "Longitude", y = "Latitude", shape = "Region",
        fill = "Protection\nStatus") +
   theme.figure.report() +
  #  theme(legend.position.inside = c(0.8, 0.1),
@@ -301,12 +301,17 @@ dev.off()
 ####Saving the site map with inset
 
 ```{r Saving the overall site map, fig.width=7.5, fig.height=5.5, include=FALSE}
-p(filename = here("./04_plots/report_figures/site_map_with_inset.pdf"), width = 6, height = 4.5, 
+#p(filename = here("./04_plots/report_figures/site_map_with_inset.pdf"), width = 6, height = 4.5, 
     units = "in", pointsize = 15, res = 600)
 
 site_map_w_inset
 
 dev.off()
+```
+
+```{r Saving the site map}
+ggsave("site_map_with_inset_regions.pdf", plot = site_map_w_inset,
+       path = here("./04_plots/report_figures"), width = 165, height = 130, units = "mm")
 ```
 
 ## Urchin Ratio map
@@ -517,7 +522,9 @@ avg_temp_df <- avg_temp_df%>%
   labs(x = "Longitude",
        y = "Latitude",
        fill = "Mean SST (ºC)") +
-  theme(#legend.position = "none",
+  theme(legend.position = "inside",
+        axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16),
         axis.text.y = element_text(angle = 45))+
   annotation_scale(location = "br", text_cex = 1.3)+
    annotation_north_arrow(
@@ -526,6 +533,10 @@ avg_temp_df <- avg_temp_df%>%
     style = north_arrow_fancy_orienteering))
 ```
 
+```{r Saving the site map}
+ggsave("temp_map_23_24.pdf", plot = temp_map_23_24,
+       path = here("./04_plots/report_figures"), width = 165, height = 130, units = "mm")
+```
 
 #### Saving the temperature map
 
@@ -717,7 +728,7 @@ dev.off()
 ```
 
 
-## Plot of effect of openness on snails
+### Plot of effect of openness on snails
 
 #### Non-log plot
 
@@ -732,15 +743,16 @@ snail_picture_img <- get_phylopic(uuid = snail_picture_uuid)
 ```
 
 ```{r Making a plot of the effect of openness on snails}
-(pred_snail_openness_plot <- ggplot(env_mod_data, aes(x = norm_openness, y = Turban_Snails))+
+(pred_snail_openness_plot <- ggplot(env_mod_data, aes(x = norm_openness, y = snail_dens))+
   geom_point()+
-  geom_line(data = snail_op_pred_data, aes(
-                                           y = exp(predicted_snails) - 1))+
-  geom_ribbon(data = snail_op_pred_data,
-              aes(ymin = exp(predicted_snails - 1.96 * 0.2691) - 1,
-                  ymax = exp(predicted_snails + 1.96 * 0.2691) - 1),
-              alpha = 0.5, fill = "#8EBAD2")+
-  add_phylopic(img = snail_picture_img, x = 0.9, y = 550, height = 150)+
+  #geom_line(data = snail_op_pred_data, aes(
+                                         #  y = exp(predicted_snails) - 1))+
+   geom_smooth(method = "gam")+
+ # geom_ribbon(data = snail_op_pred_data,
+             # aes(ymin = exp(predicted_snails - 1.96 * 0.2691) - 1,
+               #   ymax = exp(predicted_snails + 1.96 * 0.2691) - 1),
+             # alpha = 0.5, fill = "#8EBAD2")+
+#  add_phylopic(img = snail_picture_img, x = 0.9, y = 550, height = 150)+
   labs(x = "Normalized Openness", y = "Red turban snail counts")+
   theme.figure.report())
 ```
@@ -760,11 +772,10 @@ dev.off()
 #### Log plot
 
 ```{r Making a plot of the effect of openness on log snails}
-(pred_snail_openness_plot_log <- ggplot(env_mod_data, aes(x = norm_openness, y = log(Turban_Snails + 1)))+
+(pred_snail_openness_plot_log <- ggplot(env_mod_data, aes(x = norm_openness, y = log(snail_dens + 0.01)))+
   geom_point()+
   geom_smooth(method = "lm", colour = "#637683", fill = "#8EBAD2")+
-  add_phylopic(img = snail_picture_img, x = 0.9, y = 5.5, height = 2)+
-  labs(x = "Normalized Openness", y = "Log red turban snail counts")+
+  labs(x = "Normalized Openness", y = "Snail density (log(n/m2 + 0.01))")+
   theme.figure.report())
 ```
 
@@ -819,6 +830,27 @@ ggsave("pred_snail_openness_plot_log.pdf", plot = pred_snail_openness_plot_log,
          axis.ticks.x = element_blank()))
 ```
 
+```{r Making a boxplot of snail counts between protection status}
+(snail_fishing_boxplot_new_style <- ggplot(env_mod_data, aes(x = protect_status, y = snail_dens))+
+  geom_boxplot(env_mod_data, mapping = aes(x = protect_status, y = snail_dens),
+               alpha = 0.6, width = 0.5, colour = "grey", outlier.shape = NA)+
+  geom_errorbar(pred_snail_fishing_mod_linear_no_op_protect_status, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = x, y = predicted),
+                width = 0.15, linewidth = 1.2)+
+   geom_point(pred_snail_fishing_mod_linear_no_op_protect_status, mapping = 
+              aes(x = x, y = predicted, colour = x), size = 4)+
+  labs(x = "Protection Status", y = expression(Snail~density~(n/m^2)))+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
+   scale_colour_manual(values = c("#E95E48", "#355173"))+
+  coord_cartesian(ylim = c(0, 3.8))+
+  #add_phylopic(img = snail_picture_img, x = 2.3, y = 620, height = 150)+
+  theme.figure.report()+
+    theme(legend.position = "none",
+         # axis.text = element_text(size = 16)))
+          axis.text.x = element_blank(),
+         axis.title.x = element_blank(),
+         axis.ticks.x = element_blank()))
+```
 
 ### Boxplot of urchins between protection status
 
@@ -833,7 +865,7 @@ urchin_picture_img <- get_phylopic(uuid = urchin_picture_uuid)
 
 
 ```{r Making a boxplot of urchin counts between protection status}
-(urchin_fishing_boxplot <- ggplot(env_mod_data, aes(x = protect_status, y = Urchins))+
+(urchin_fishing_boxplot_original_style <- ggplot(env_mod_data, aes(x = protect_status, y = urchin_dens))+
   geom_boxplot(env_mod_data, mapping = aes(fill = protect_status),
                alpha = 0.6, width = 0.15, position = position_nudge(x = -0.1))+
   geom_errorbar(pred_urchin_fishing_mod_glmm, mapping =
@@ -841,10 +873,29 @@ urchin_picture_img <- get_phylopic(uuid = urchin_picture_uuid)
                 width = 0.15, position = position_nudge(0.1))+
    geom_point(pred_urchin_fishing_mod_glmm, mapping = 
               aes(x = x, y = predicted, colour = x), size = 4, position = position_nudge(0.1))+
-  labs(x = "Protection Status", y = "Red sea urchin counts")+
+  labs(x = "Protection Status", y = expression(Urchin~density~(n/m^2)))+
    scale_fill_manual(values = c("#E95E48", "#355173"))+
    scale_colour_manual(values = c("#E95E48", "#355173"))+
-  add_phylopic(img = urchin_picture_img, x = 2.3, y = 620, height = 150)+
+  theme.figure.report()+
+    theme(legend.position = "none",
+          axis.text = element_text(size = 16),
+          axis.text.x = element_blank(),
+         axis.title.x = element_blank(),
+         axis.ticks.x = element_blank()))
+```
+
+```{r Making a boxplot of urchin counts between protection status}
+(urchin_fishing_boxplot_new_style <- ggplot(env_mod_data, aes(x = protect_status, y = urchin_dens))+
+  geom_boxplot(env_mod_data, mapping = aes(x = protect_status, y = urchin_dens),
+               alpha = 0.6, width = 0.5, colour = "grey")+
+  geom_errorbar(pred_urchin_fishing_mod_glmm, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = x, y = predicted),
+                width = 0.15, linewidth = 1.2)+
+   geom_point(pred_urchin_fishing_mod_glmm, mapping = 
+              aes(x = x, y = predicted, colour = x), size = 4)+
+  labs(x = "Protection Status", y = expression(Urchin~density~(n/m^2)))+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
+   scale_colour_manual(values = c("#E95E48", "#355173"))+
   theme.figure.report()+
     theme(legend.position = "none",
           axis.text = element_text(size = 16),
@@ -855,10 +906,10 @@ urchin_picture_img <- get_phylopic(uuid = urchin_picture_uuid)
 
 
 ```{r Saving the urchin fishing boxplot}
-png(filename = here("./04_plots/report_figures/urchin_fishing_boxplot.png"), width = 3.5, height = 3.5, 
+png(filename = here("./04_plots/report_figures/urchin_fishing_boxplot_new_style.png"), width = 3.5, height = 3.5, 
     units = "in", pointsize = 15, res = 600)
 
-urchin_fishing_boxplot
+urchin_fishing_boxplot_new_style
 
 dev.off()
 ```
@@ -1023,6 +1074,26 @@ dev.off()
 ```{r}
 ggsave("snail_urchin_ratio_box_re.pdf", plot = snail_urchin_ratio_box_re,
        path = here("./04_plots/report_figures"), width = 75, height = 65, units = "mm")
+```
+
+```{r}
+(snail_urchin_ratio_box_re_new_style <- ggplot(env_mod_data, aes(x = protect_status, y = sn_urch_ratio))+
+  geom_boxplot(env_mod_data, mapping = aes(x = protect_status, y = sn_urch_ratio),
+               alpha = 0.6, width = 0.5, colour = "grey")+
+  geom_errorbar(pred_sn_urch_ratio_protection_model_glmm, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = x, y = predicted),
+                width = 0.15, linewidth = 1.2)+
+   geom_point(pred_sn_urch_ratio_protection_model_glmm, mapping = 
+              aes(x = x, y = predicted, colour = x), size = 4)+
+  labs(x = "Protection Status", y = "Log snail:urchin\nratio")+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
+      scale_colour_manual(values = c("#E95E48", "#355173"))+
+  theme.figure.report()+
+    theme(legend.position = "none",
+          axis.text = element_text(size = 16),
+          # axis.text.x = element_blank(),
+        # axis.title.x = element_blank()
+        ))
 ```
 
 ### Urchin snail ratio boxplot
@@ -1206,7 +1277,7 @@ dev.off()
 ### Combining the snail, urchin, snail:urchin ratio boxplots
 
 ```{r Combining the snail, urchin, snail:urchin ratio boxplots}
-(snail_urchin_sn_urch_box_plot <- (snail_fishing_boxplot)/
+(snail_urchin_sn_urch_box_plot <- (snail_fishing_boxplot_)/
   (urchin_fishing_boxplot)/
   (snail_urchin_ratio_box_re))
 ```
@@ -1243,6 +1314,17 @@ wilcox.test(norm_openness ~ protect_status, data = env_mod_data)
 ```
 
 
+
+```{r Combining the snail, urchin, snail:urchin ratio boxplots new style}
+(snail_urchin_sn_urch_box_plot_new_style <- (snail_fishing_boxplot_new_style)/
+  (urchin_fishing_boxplot_new_style)/
+  (snail_urchin_ratio_box_re_new_style))
+```
+
+```{r}
+ggsave("snail_urchin_sn_urch_box_plot_new_style.pdf", plot = snail_urchin_sn_urch_box_plot_new_style,
+       path = here("./04_plots/report_figures"), width = 100, height = 185, units = "mm")
+```
 
 ### Plotting the gam output for the turban snail ecology model
 
@@ -1300,5 +1382,41 @@ plot(ecology_urchin_mod_re, all.terms = TRUE, pages = 1, residuals = TRUE)
 
 ```{r}
 ggsave("urchin_gam_plot.pdf", plot = urchin_gam_plot,
+       path = here("./04_plots/report_figures"), width = 100, height = 180, units = "mm")
+```
+
+### Proper gam plotting for the urchins
+
+```{r Plotting the predicted urchin density from seafloor type}
+(predicted_urch_dens_dom_score <- ggplot(urchin_ecology_data_for_seafloor, aes(x = dominant_score, y = fit))+
+  geom_boxplot(data = env_mod_data, mapping = aes(x = dominant_score, y = urchin_dens),
+                alpha = 0.6, width = 0.5, colour = "grey")+
+    geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.15, linewidth = 1.2)+
+  geom_point(aes(colour = dominant_score), size = 4)+
+   scale_colour_manual(values = c("#EAB964", "#5E666F"))+
+  labs(x = "Dominant seafloor type", y = "Urchin density (n/m2)")+
+  theme.figure.report()+
+   theme(legend.position = "none"))
+```
+
+```{r Plotting the predicted urchin density from openness}
+(predicted_openness_effect_urchin <- ggplot(env_mod_data, aes(x = norm_openness, y = urchin_dens))+
+  geom_line(data = urchin_ecology_data_for_openness, 
+            mapping = aes(x = norm_openness_original, y = fit), colour = "black", linewidth = 1.25)+
+  geom_ribbon(data = urchin_ecology_data_for_openness, 
+            mapping = aes(x = norm_openness_original, y = fit, ymin = lower, ymax = upper), alpha = 0.5, fill = "#E95E48")+
+  geom_point()+
+  labs(x = "Normalized openness", y = "Urchin density (n/m2)")+
+  theme.figure.report())
+```
+
+
+```{r}
+(urchin_gam_plot_updated <- (predicted_urch_dens_dom_score)/(predicted_openness_effect_urchin))
+```
+
+
+```{r}
+ggsave("urchin_gam_plot_updated.pdf", plot = urchin_gam_plot_updated,
        path = here("./04_plots/report_figures"), width = 100, height = 180, units = "mm")
 ```

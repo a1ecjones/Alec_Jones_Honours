@@ -3160,11 +3160,16 @@ coordinates(site_points_df) <- ~longitude+latitude
 proj4string(site_points_df) <- crs(average_temperature)
 
 sst_values <- raster::extract(average_temperature, site_points_df) - 273.15
+sst_values_new <- raster::extract(average_temperature_new_data, site_points_df) -273.15 
 ```
 
 
 ```{r Adding the sst values to the urch sn ratio df}
 urch_sn_ratio_mod_2024$sst <- sst_values
+env_mod_data_test <- env_mod_data
+
+env_mod_data_test$sst_new <- sst_values_new
+env_mod_data_test$sst_new_scale <- scale(env_mod_data_test$sst_new)
 ```
 
 
