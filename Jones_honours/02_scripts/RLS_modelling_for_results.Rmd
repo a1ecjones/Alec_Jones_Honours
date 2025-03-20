@@ -104,8 +104,9 @@ levels(env_mod_data$protect_status_park) <- c("No Protection", "Protected")
 
 
 #Reordering so easier to see which sites are protected in the DF
+########This needs to be fixed for the final markdown
 env_mod_data <- env_mod_data[, c(seq(1, 11, by = 1), 46, 47, seq(12, 45, by = 1))]
-
+env_mod_data <- env_mod_data[, c(seq(1, 10, by = 1), 46, seq(11, 45), 47 )]
 
 #Will need to confirm which areas were kelp forests based on the photos or
 #talking with Jasmin but likely will just be hosie and raymond

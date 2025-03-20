@@ -779,6 +779,7 @@ dev.off()
   theme.figure.report())
 ```
 
+
 ##### Saving the snail openness plot
 
 ```{r Saving the snail openness plot}
