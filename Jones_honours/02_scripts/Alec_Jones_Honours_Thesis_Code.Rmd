@@ -137,7 +137,7 @@ st_crs(VI_base_layer_hi_res_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
 
 ### Calculating the fetch for the sites
 
-```{r Calculating the fetch for the sites}
+```{r Calculating the fetch for the sites, eval=FALSE}
 #Makes an object of all the bearings to calculate fetch along
 bearings_openness <- seq(7.5, 360, by = 7.5)
 
@@ -148,8 +148,23 @@ sf::sf_use_s2(FALSE)
 #above. Max possible fetch is 650,000 meters. It is using the shape file from 
 #above to know where land is. This will likely take a very long time to run
 #so do not worry.
-fetch_df_2024_openness <- fetch_len_multi(site_sp_2024, bearings = bearings_openness, dmax = 650000, shoreline = VI_base_layer_hi_res_sf, projected = FALSE)
+fetch_df_2024_openness <- fetch_len_multi(site_sp_2024,
+                                          bearings = bearings_openness, 
+                                          dmax = 650000, 
+                                          shoreline = VI_base_layer_hi_res_sf, 
+                                          projected = FALSE)
+
+#Saving the fetch data to a .csv so that the fetch function does not need to be
+#run
+write_csv(here("./01_raw_data/fetch_df_2024_openness.csv"))
 ```
+
+### Downloading the fetch data that is already saved
+
+```{r}
+fetch_df_2024_openness <- read_csv(here("./01_raw_data/fetch_df_2024_openness.csv"))
+```
+
 
 ### Turning the raw fetch data into a dataframe with column labels
 
@@ -184,3 +199,166 @@ fetch_df_2024_openness_long <- fetch_df_2024_openness_final%>%
                names_prefix = "degree")
 ```
 
+
+## Predictor 2: Mean SST
+
+To get a measure of temperature I downloaded daily satellite sst data from the 
+Copernicus Marine product for the year before the sampling in Barkley Sound 
+occurred.
+
+### Loading in the temperature data and calculating the average SST
+
+```{r Loading in the temp .nc file downloaded from Copernicus, include=FALSE}
+#Loading in the data
+temp_2023_2024 <- brick(here("./01_raw_data/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2_1730223986748.nc"))
+
+#Setting the coordinate system for the temperature data
+crs(temp_2023_2024) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+```
+
+```{r Calculating the average temperature for each pixel, echo=TRUE, results='hide'}
+average_temperature <- calc(temp_2023_2024, fun = mean, na.rm = TRUE)
+
+writeRaster(average_temperature, 
+            here("./01_raw_data/average_temperature.nc"), 
+            format = "CDF", 
+            overwrite = TRUE)
+```
+
+
+## Predictor 3: Protection from fishing status
+
+In order to use the site protection status as a predictor, we needed to find
+support for the fact that there was in fact a difference in the human impacts
+between protected and unprotected sites.
+
+To do this we used DFO flyover survey data that included the positions of where
+recreational fishing boats were located in Barkley Sound. 
+
+We used the DFO flyover counts of recreational boats actively fishing to 
+calculate the annual mean number of recreational boats fishing within a given 
+radius of each site to support the site protection status classifications and 
+show that human impacts were higher for unprotected sites. To calculate the 
+annual mean number of recreational boats fishing within a given radius of each 
+site, we constructed circular polygons around each site (radii = 1 km, 1.5 km, 
+2 km) using R (R Core Team, 2024). We merged these polygons with the DFO 
+recreational boat counts to extract how many boats were spotted within the 
+radius in each year. To get the annual mean, we averaged these counts across 
+the three years of data from DFO (2021, 2022, 2023). We omitted aerial surveys 
+where parts of Barkley Sound were obscured by fog.
+
+### Loading in the DFO survey data
+
+#### Loading in the 2023 data
+
+```{r Loading in the data}
+DFO_data_raw_2023 <- read_csv(here("./01_raw_data/DFO_data/Overflight2023_ObservationPoints_20241024.csv"))
+
+#Makes list of the variables that need to be converted to factors below
+dfo_factors <- c("Day Type", "Creel Subarea")
+
+#takes the raw data and cleans it up
+rec_boats_fishing2023 <- DFO_data_raw_2023%>%
+  #converts the variables specified above to factors
+  mutate_at(dfo_factors, factor)%>%
+  #renaming the columns to make them easier to code with
+  rename(rec_boats_fishing = `1. Rec Boat Fishing`,
+         rec_boats_running = `2. Rec Boats Running`,
+         comm_vessel_fishing = `3. Commercial Vessel Fishing`,
+         comm_vessel_not_fishing = `4. Commercial Vessel Not Fishing`,
+         small_comm_vessel = `5. Small Commercial Vessel`,
+         large_comm_vessel = `6. Large Commercial Vessel`,
+         whale_watching = `7.  Whale Watching Boat`,
+         orcas = `8. Orcas`,
+         whales = `9. Whales`,
+         sea_state = `10. Sea State`)%>%
+  #Replacing the cells that have "Null" with 0 and converting the count columns
+  #to numeric
+  mutate(across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
+                  "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
+                  "whale_watching", "orcas", "whales"), ~ ifelse(. == "<Null>", 0, .)),
+         across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
+                  "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
+                  "whale_watching", "orcas", "whales"), as.numeric))%>%
+  ##This code will remove the dates of the flights that had fog
+  filter(!Date %in% c("2023-06-23", "2023-07-16", "2023-07-31", "2023-08-06", "2023-08-28",
+                      "2023-08-29", "2023-09-09", "2023-09-15"))%>%
+  #Selecting only the rows where recreational boats were fishing
+  filter(rec_boats_fishing != 0)%>%
+  #selecting all of the columns that are needed for further analysis
+    select(c(UniqueID, `Filename/FlightID`, Year, Month, Day, Date, `Critical Period`, `Day Type`, `Creel Subarea`, GMA, PFMA, 
+           `Pin ID`, Longitude, Latitude, rec_boats_fishing, rec_boats_running))
+```
+
+
+#### Loading in the 2022 data
+
+```{r Loading in the data}
+DFO_data_raw_2022 <- read_csv(here("./01_raw_data/DFO_data/Overflight2022_ObservationPoints_20240124_COUNTS.csv"))
+
+#dfo_factors <- c("Day Type", "Creel Subarea")
+
+rec_boats_fishing2022 <- DFO_data_raw_2022%>%
+  mutate_at(dfo_factors, factor)%>%
+  rename(rec_boats_fishing = `1. Rec Boat Fishing`,
+         rec_boats_running = `2. Rec Boats Running`,
+         comm_vessel_fishing = `3. Commercial Vessel Fishing`,
+         comm_vessel_not_fishing = `4. Commercial Vessel Not Fishing`,
+         small_comm_vessel = `5. Small Commercial Vessel`,
+         large_comm_vessel = `6. Large Commercial Vessel`,
+         whale_watching = `7.  Whale Watching Boat`,
+         orcas = `8. Orcas`,
+         whales = `9. Whales`,
+         sea_state = `10. Sea State`)%>%
+  mutate(across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
+                  "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
+                  "whale_watching", "orcas", "whales"), ~ ifelse(. == "<Null>", 0, .)),
+         across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
+                  "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
+                  "whale_watching", "orcas", "whales"), as.numeric))%>%
+   ##This code will remove the dates of the flights that had fog
+  filter(!Date %in% c("2022-06-18", "2022-07-31", "2022-08-24", "2022-06-04"))%>%
+    filter(rec_boats_fishing != 0)%>%
+  #selecting all of the columns that are needed for further analysis
+    select(c(UniqueID, `Filename/FlightID`, Year, Month, Day, Date, `Critical Period`, `Day Type`, `Creel Subarea`, GMA, PFMA, 
+           `Pin ID`, Longitude, Latitude, rec_boats_fishing, rec_boats_running))
+```
+
+
+#### Loading in the 2021 data
+
+```{r Loading in the data}
+DFO_data_raw_2021 <- read_csv(here("./01_raw_data/DFO_data/Overflight2021_ObservationPoints_20240321_counts.csv"))
+
+#dfo_factors <- c("Day Type", "Creel Subarea")
+
+rec_boats_fishing2021 <- DFO_data_raw_2021%>%
+  mutate_at(dfo_factors, factor)%>%
+  rename(rec_boats_fishing = `1. Rec Boat Fishing`,
+         rec_boats_running = `2. Rec Boats Running`,
+         comm_vessel_fishing = `3. Commercial Vessel Fishing`,
+         comm_vessel_not_fishing = `4. Commercial Vessel Not Fishing`,
+         small_comm_vessel = `5. Small Commercial Vessel`,
+         large_comm_vessel = `6. Large Commercial Vessel`,
+         whale_watching = `7.  Whale Watching Boat`,
+         orcas = `8. Orcas`,
+         whales = `9. Whales`,
+         sea_state = `10. Sea State`)%>%
+  mutate(across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
+                  "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
+                  "whale_watching", "orcas", "whales"), ~ ifelse(. == "<Null>", 0, .)),
+         across(c("rec_boats_fishing", "rec_boats_running", "comm_vessel_fishing", 
+                  "comm_vessel_not_fishing", "small_comm_vessel", "large_comm_vessel",
+                  "whale_watching", "orcas", "whales"), as.numeric))%>%
+   ##This code will remove the dates of the flights that had fog
+  filter(!Date %in% c("2021-07-31", "2021-07-19", "2021-07-20", "2021-07-24"))%>%
+   filter(rec_boats_fishing != 0)%>%
+  select(c(UniqueID, `Filename/FlightID`, Year, Month, Day, Date, `Critical Period`, `Day Type`, `Creel Subarea`, GMA, PFMA, 
+           `Pin ID`, Longitude, Latitude, rec_boats_fishing, rec_boats_running))
+```
+
+
+#### Combining the three years of data into one data frame
+```{r Combining the three years of data by row}
+rec_boats_fishing_total <- rbind(rec_boats_fishing2021, rec_boats_fishing2022, rec_boats_fishing2023)
+```

@@ -2042,7 +2042,7 @@ plot(avg_temp_check)
 ```
 
 
-###Plotting the temp data onto the barkley sound map
+### Plotting the temp data onto the barkley sound map
 ```{r Converting the raster to a data frame so ggplot can use it}
 avg_temp_df <- as.data.frame(average_temperature, xy = TRUE, na.rm = TRUE)
 colnames(avg_temp_df) <- c("longitude", "latitude", "average_temp")
