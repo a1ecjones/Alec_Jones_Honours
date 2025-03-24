@@ -29,7 +29,7 @@ RLS_data_2024 <- read_csv(here("./01_raw_data/RLS_CANADA_Bamfield_2024.csv"))
 factor_cols2 <- c("site_code", "site_name", "Code")
 
 #This pipe is taking the original raw dataframe and cleaning it up and storing
-#it as a cleaned dataframed
+#it as a cleaned dataframe
 RLS_data_2024_clean <- RLS_data_2024%>%
   #Picking which columns I want to keep
   select(c(`Site No.`, `Site Name`, Latitude, Longitude, Date, vis, Time, Depth,
@@ -133,6 +133,27 @@ VI_base_layer_hi_res_sf <- st_as_sf(VI_base_layer_hi_res)
 
 #specifying the projection to use for the sf
 st_crs(VI_base_layer_hi_res_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
+```
+
+```{r Subsetting the shape file for making plots later}
+#This subsets the shape file to only be of Barkley Sound to make plotting more
+#efficient
+
+#This makes coordinate limits to subset the shapefile
+shp_xmin <- -125.4
+shp_xmax <- -124.95
+shp_ymin <- 48.7
+shp_ymax <- 49.0
+
+#This makes a bounding of the coordinates that I just made
+bbox <- st_bbox(c(xmin = shp_xmin, ymin = shp_ymin, xmax = shp_xmax, ymax = shp_ymax))
+
+#This converts the boundary box to an SFC object
+bbox_sf <- st_as_sfc(bbox)
+
+#This crops the shape file to the area of the bounding box
+VI_base_layer_hi_res_sf_subset <- st_crop(VI_base_layer_hi_res_sf, bbox_sf)
+plot(VI_base_layer_hi_res_sf_subset)
 ```
 
 ### Calculating the fetch for the sites
@@ -361,4 +382,310 @@ rec_boats_fishing2021 <- DFO_data_raw_2021%>%
 #### Combining the three years of data into one data frame
 ```{r Combining the three years of data by row}
 rec_boats_fishing_total <- rbind(rec_boats_fishing2021, rec_boats_fishing2022, rec_boats_fishing2023)
+```
+
+
+#### Making a preliminary plot to see if it worked
+
+```{r Seting the ranges for the maps}
+#first need to specify the range of the map
+lat_min = min(env_mod_data$latitude) - 0.05
+lat_max = max(env_mod_data$latitude) + 0.05
+
+long_min = min(env_mod_data$longitude) - 0.05
+long_max = max(env_mod_data$longitude) + 0.05
+```
+
+
+```{r Plotting the 2023 rec boats as a test, echo=TRUE}
+ ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "darkgrey", fill = "lightgrey")+
+    coord_sf(xlim = c(long_min, long_max),
+           ylim = c(lat_min, lat_max)) +
+    geom_point(data = rec_boats_fishing2023,
+             mapping = aes(x = Longitude, y = Latitude, color = rec_boats_fishing),
+             size = 1.5,) +
+    scale_colour_gradient(low = "blue", high = "red")+
+   geom_point(data = rec_boats_fishing2023,
+             mapping = aes(x = Longitude, y = Latitude, colour = rec_boats_fishing), 
+              shape = 1, size = 1.5, colour = "black") +
+      geom_point(data = env_mod_data,
+             mapping = aes(x = longitude, y = latitude), 
+              shape = 21, size = 3, colour = "black", fill = "black")+
+  labs(title = "2023", x = " \nLongitude", y = "Latitude\n ", colour = "# of Rec Fishing\nBoats Observed") +
+  theme.figure() +
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br")
+```
+
+
+
+# Adding the predictors to a dataframe for modelling
+
+## Adding the temperature data
+
+```{r Extracting temperature data from the raster}
+#This pipe makes a df with the lat and long of all of the different sites
+site_points_df <- urch_sn_ratio_mod_2024%>%
+   ungroup()%>%
+  select(longitude, latitude)
+ 
+#This sets the long and lat as coordinates
+coordinates(site_points_df) <- ~longitude+latitude
+
+#This sets the projection of the site locations to be on the same projection
+#as the average temperature raster
+proj4string(site_points_df) <- crs(average_temperature)
+
+#This extracts the average temperature for where each site is located and then 
+#subtracts the constant to convert from Kelvin to celsius
+sst_values <- raster::extract(average_temperature, site_points_df) - 273.15
+
+#Makes a column with the sst values in the modelling df
+urch_sn_ratio_mod_2024$sst <- sst_values
+```
+
+
+## Adding the photoquadrat data
+
+One of the predictors that I used was the dominant seafloor type of each
+transect. I did this by using photoquadrats and stored the data from my 
+analysis in an Excel sheet. I saved this as a .csv and simply loaded this into 
+R to use in the models.
+
+### Loading in the photoquadrat data
+
+```{r Loading in the photoquadrat data}
+pq_data <- read_csv(here("./01_raw_data/pq_data.csv"))
+
+#This specifies the only columns that I wanted for analysis abd 
+pq_data_final <- pq_data%>%
+  select(c(site_code, depth, dominant_score, secondary_score))%>%
+  #There were multiple rows for each site corresponding to each photoquadrat 
+  #so this made just one row for each site
+  distinct(site_code, depth, .keep_all = TRUE)
+
+#This merges the photoquadrat data with the modelling data based on the specific
+#transects. The all.x specifies a left join.
+urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, pq_data_final, by = c("site_code", "depth"),
+                                all.x = TRUE)
+```
+
+## Adding the openness data
+
+```{r Summing the fetch vectors for each site then dividing by the largest openness value}
+#Calculates the openness of each site
+openness <- fetch_df_2024_openness_long%>%
+  #grouping by each site
+  group_by(site_code, latitude, longitude)%>%
+  #adding up all of the fetch vectors for each site
+  summarise(openness = sum(fetch))
+  
+#identifying the largest openness score within the dataset
+max_openness <- max(openness$openness)
+
+#Making a column of normalized openness by dividing by the max observed openness
+openness <- openness%>%
+mutate(norm_openness = openness / max_openness)
+
+#Merging the modelling df with the openness df by each site
+urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, openness, by = c("site_code", "latitude", "longitude"))
+```
+
+## Adding the recreational fishing boat data
+
+To add the recreational fishin boat data we first calculated the mean number of
+recreational fishing boats fishing within various radii of each RLS site. We did
+this by making circular polygons around each RLS site and then merging those 
+with the rec boat points and counting how many were in each circle each year, 
+and then averaging across the three years of data.
+
+### Calculating the mean recreational boats fishing within each radius
+
+```{r Creating a circular radius around each site}
+#Taking the site locations from the model
+site_locations <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "latitude"), crs = 4326)
+
+#Picking only the unique site locations as some sites have multiple transects
+#with the same coordinates
+site_locations_u <- site_locations%>%
+  distinct(site_code, geometry)
+
+#Changing the projection to handle meter distances better
+site_locations_u_proj_m <- st_transform(site_locations_u, crs = 3857)
+#Making circles with the different radii around each site
+site_locations_radius_1km <- st_buffer(x = site_locations_u_proj_m, dist = 1000)
+site_locations_radius_1.5km <- st_buffer(x = site_locations_u_proj_m, dist = 1500)
+site_locations_radius_2km <- st_buffer(x = site_locations_u_proj_m, dist = 2000)
+```
+
+```{r Finding the overlapping points for each site}
+#making a data frame with the coordinates of all the recreational fishing boats
+rec_boats_fishing_total_points <- st_as_sf(rec_boats_fishing_total, coords = c("Longitude", "Latitude"), crs = 4326)
+#Converting the CRS so it matches the other parts being used
+rec_boats_fishing_total_points <- st_transform(rec_boats_fishing_total_points, crs = 3857)
+
+
+#Finding the fishing boats that are within the given radius and making a new df
+#with this info
+rec_fishing_boat_total_radius_1km <- st_intersection(site_locations_radius_1km, rec_boats_fishing_total_points)
+
+rec_fishing_boat_total_radius_1.5km <- st_intersection(site_locations_radius_1.5km, rec_boats_fishing_total_points)
+
+rec_fishing_boat_total_radius_2km <- st_intersection(site_locations_radius_2km, rec_boats_fishing_total_points)
+```
+
+```{r Making dataframes with boat counts summed for each year at each site}
+#Here I took the data frames with the counts and points of boats within the
+#radii of the sites and I summed the number of boats counted around a site
+#within each year. For example, I added all of the boats around Eagle bay in
+#2021
+
+rec_fishing_boat_total_radius_1km_summed <- rec_fishing_boat_total_radius_1km%>%
+  #Grouping by each site in each year
+  group_by(site_code, Year)%>%
+  #adding up the number of boats around a site in each year
+  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
+
+rec_fishing_boat_total_radius_1.5km_summed <- rec_fishing_boat_total_radius_1.5km%>%
+  group_by(site_code, Year)%>%
+  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
+
+rec_fishing_boat_total_radius_2km_summed <- rec_fishing_boat_total_radius_2km%>%
+  group_by(site_code, Year)%>%
+  summarise(yearly_rec_boats_fishing = sum(rec_boats_fishing))
+```
+
+```{r Making a total dataframe for each so that years with no boats have a 0 counts}
+#For some sites that had boats counted in one particular year at a given radius
+#did not have counts in all years. This step made data frames with a list of all
+#of the sites that had at least some counts at the given radius in one of the 
+#years and then made a row for each of the three years for that site.
+
+#Makes a row for all three years for sites that had a least one boat counted
+#in one of the years
+all_sites_years_1km <- expand.grid(
+  site_code = unique(rec_fishing_boat_total_radius_1km$site_code),
+  Year = unique(rec_fishing_boat_total_radius_1km$Year))
+
+all_sites_years_1.5km <- expand.grid(
+  site_code = unique(rec_fishing_boat_total_radius_1.5km$site_code),
+  Year = unique(rec_fishing_boat_total_radius_1.5km$Year))
+
+all_sites_years_2km <- expand.grid(
+  site_code = unique(rec_fishing_boat_total_radius_2km$site_code),
+  Year = unique(rec_fishing_boat_total_radius_2km$Year))
+```
+
+```{r Merging the all years df with the rec boat count sums}
+#This step merged the summed boat counts at each site with the dataframe that
+# had all three years listed so that there was a row with 0 for the sites which
+#did not have any counts in a particular year. This was necessary for making the
+#average calculation accurate.
+
+rec_fishing_boat_total_radius_1km_complete <- all_sites_years_1km %>%
+  #Joins the rec fishing boat counts within radius to the df with all the years
+  #for each site by site and year
+  left_join(rec_fishing_boat_total_radius_1km_summed, by = c("site_code", "Year")) %>%
+  #replaces the rows that have NAs with 0
+  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
+
+rec_fishing_boat_total_radius_1.5km_complete <- all_sites_years_1.5km %>%
+  left_join(rec_fishing_boat_total_radius_1.5km_summed, by = c("site_code", "Year")) %>%
+  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
+
+rec_fishing_boat_total_radius_2km_complete <- all_sites_years_2km %>%
+  left_join(rec_fishing_boat_total_radius_2km_summed, by = c("site_code", "Year")) %>%
+  mutate(yearly_rec_boats_fishing = replace_na(yearly_rec_boats_fishing, 0))
+```
+
+```{r Making the final dataframe with the average boat counts per year for each site}
+#This was the final step to average the recreational boat counts at each site 
+#across the three years of data
+
+
+rec_fishing_boat_total_radius_1km_final <- rec_fishing_boat_total_radius_1km_complete%>%
+  #groups by each site
+  group_by(site_code)%>%
+  #makes a new column with the mean number of boats counted within each sites 
+  #radius
+  summarise(mean_rec_boat_counts_1km = mean(yearly_rec_boats_fishing))
+
+rec_fishing_boat_total_radius_1.5km_final <- rec_fishing_boat_total_radius_1.5km_complete%>%
+  group_by(site_code)%>%
+  summarise(mean_rec_boat_counts_1.5km = mean(yearly_rec_boats_fishing))
+
+rec_fishing_boat_total_radius_2km_final <- rec_fishing_boat_total_radius_2km_complete%>%
+  group_by(site_code)%>%
+  summarise(mean_rec_boat_counts_2km = mean(yearly_rec_boats_fishing))
+```
+
+
+### Adding the mean rec boat counts to the modelling data frame
+
+```{r Adding the avg counts to the modelling dataset}
+#This step added each of the data frames with the average rec boat counts
+# to the modelling dataset. The resulting dataset has a column for avg 
+#rec boat counts for each radius distance
+urch_sn_ratio_mod_2024 <- urch_sn_ratio_mod_2024%>%
+ left_join(rec_fishing_boat_total_radius_1km_final, by = c("site_code"))%>%
+ left_join(rec_fishing_boat_total_radius_1.5km_final, by = c("site_code"))%>%
+  left_join(rec_fishing_boat_total_radius_2km_final, by = c("site_code"))%>%
+  replace(is.na(.), 0)
+```
+
+
+## Adding the region classifications for use as a random/fixed effect
+
+In order to use region as a potential random or fixed effect during modelling
+I made region classifications for the sites depending on which Island group/area
+they were in. I made a few different region classifications, but ultimately we
+went with the region1 classification because it made the most logical sense.
+
+```{r Making a region column}
+urch_sn_ratio_mod_2024 <- urch_sn_ratio_mod_2024%>%
+  #makes a column for the region and then depending if the site code is
+  #specified it puts the given region names below
+  mutate(region1 = case_when(
+    site_code %in% c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC19", "BMSC2", "BMSC20", 
+                     "BMSC21", "BMSC22", "BMSC23", "BMSC25", "BMSC3", "BMSC4", "BMSC5", "BMSC9") ~ "Deer group/Bamfield",
+   site_code %in% c("BMSC13", "BMSC14", "BMSC15", "BMSC16", "BMSC17", "BMSC18") ~ "Broken Group", 
+    site_code %in% c("BMSC24", "BMSC6", "BMSC8") ~ "Deep Imperial Eagle Channel",
+    site_code %in% c("BMSC26", "BMSC27") ~ "Sarita"
+  ))%>%
+   mutate(region2 = case_when(
+    site_code %in% c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC19", "BMSC2", "BMSC20",
+                     "BMSC3",  "BMSC5") ~ "Deer group",
+    site_code %in% c("BMSC21", "BMSC22", "BMSC23", "BMSC25", "BMSC4", "BMSC9") ~ "Bamfield",
+   site_code %in% c("BMSC13", "BMSC14", "BMSC15", "BMSC16", "BMSC17", "BMSC18") ~ "Broken Group", 
+    site_code %in% c("BMSC24", "BMSC6", "BMSC8") ~ "Deep Imperial Eagle Channel",
+    site_code %in% c("BMSC26", "BMSC27") ~ "Sarita"
+  ))%>%
+   mutate(region3 = case_when(
+     site_code%in% c("BMSC19", "BMSC2", "BMSC20", "BMSC3", "BMSC24", "BMSC6", "BMSC8") ~ "Imperial Eagle",
+    site_code %in% c("BMSC1", "BMSC10", "BMSC11", "BMSC12", 
+                     "BMSC21", "BMSC22", "BMSC23", "BMSC25", "BMSC26", "BMSC27",
+                     "BMSC4", "BMSC5", "BMSC9") ~ "Trevor Channel",
+   site_code %in% c("BMSC13", "BMSC14", "BMSC15", "BMSC16", "BMSC17", "BMSC18") ~ "Broken Group", 
+  ))%>%
+  mutate(region4 = case_when(
+    site_code %in% c("BMSC21", "BMSC22", "BMSC23", "BMSC25", "BMSC4", "BMSC9", "BMSC26", "BMSC27") ~ "Bamfield",
+    site_code %in% c("BMSC13", "BMSC14", "BMSC15", "BMSC16", "BMSC17", "BMSC18") ~ "Broken Group",
+    site_code %in% c("BMSC24", "BMSC6", "BMSC8") ~ "Deep Imperial Eagle Channel",
+    site_code %in% c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC19", "BMSC2", "BMSC20",
+                     "BMSC3",  "BMSC5") ~ "Deer group"
+  ))
+```
+
+
+## Writing the modelling data frame to a .csv for future use
+```{r Writing the modelling df}
+#The most recent version of this has the total boat counts added at the three radii
+#Jan. 21
+write_csv(urch_sn_ratio_mod_2024,
+          here("./03_clean_data/urchin_snail_modelling_data.csv"))
 ```

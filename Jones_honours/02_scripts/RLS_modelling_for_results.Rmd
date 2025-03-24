@@ -129,6 +129,17 @@ theme.figure <- function (){
 
 ```
 
+```{r Summary stats for the snail and urchin densities}
+summ_stats <- env_mod_data%>%
+  summarise(mean_urchin_dens = mean(urchin_dens),
+            st_dev_urchin_dens = sd(urchin_dens),
+            mean_snail_dens = mean(snail_dens),
+            st_dev_snail_dens = sd(snail_dens),
+            mean_sn_urch_ratio = mean(sn_urch_ratio),
+            st_dev_sn_urch_ratio = sd(sn_urch_ratio))
+```
+
+
 # Modelling{.tabset}
 
 #### Testing the association of the categorical variables with chi-square test

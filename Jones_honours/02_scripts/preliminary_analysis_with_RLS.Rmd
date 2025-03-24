@@ -3556,7 +3556,9 @@ site_locations <- st_as_sf(urch_sn_ratio_mod_2024, coords = c("longitude", "lati
 site_locations_u <- site_locations%>%
   distinct(site_code, geometry)
 
+#Changing the projection to handle meter distances better
 site_locations_u_proj_m <- st_transform(site_locations_u, crs = 3857)
+#Making circles with the different radii around each site
 site_locations_radius_500m <- st_buffer(x = site_locations_u_proj_m, dist = 500) #Can change the radius with dist to be based on effects of rec fishers
 site_locations_radius_1km <- st_buffer(x = site_locations_u_proj_m, dist = 1000)
 site_locations_radius_1.5km <- st_buffer(x = site_locations_u_proj_m, dist = 1500)
