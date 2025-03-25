@@ -3373,7 +3373,7 @@ urch_sn_ratio_fishing_mod_2024 <- RLS_data_2024_clean%>%
 ```
 
 
-####Adding the GFW data
+#### Adding the GFW data
 
 Combining the gfw polygons with the RLS site points. Makes a column with app fishing hours
 for each site in that year.
@@ -3545,7 +3545,7 @@ app_fishing_hours_23_24_plot
 dev.off()
 ```
 
-####Adding the rec fishing data
+#### Adding the rec fishing data
 
 ##### Adding using a polygon around each site
 
@@ -4143,7 +4143,7 @@ ggplot(urch_sn_ratio_fishing_mod_2024_crab, aes(x = mean_crab_catches_2km, y = l
   geom_smooth(method = "gam")
 ```
 
-###Combining the fishing and environmental data sets
+### Combining the fishing and environmental data sets
 
 ```{r Adding the fishing data into the environmental modelling data}
 urch_sn_ratio_mod_2024 <- urch_sn_ratio_mod_2024%>%

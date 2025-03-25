@@ -90,6 +90,8 @@ along wih the log ratios of the two species to each other.
   #is also converted to day month year form
   mutate(urch_sn_ratio = log10((Urchins +1) / (Turban_Snails + 1)),
          sn_urch_ratio = log10((Turban_Snails + 1) / (Urchins + 1)),
+         urchin_dens = (Urchins / 100),
+         snail_dens = (Turban_Snails / 100),
          survey_date = dmy(survey_date))
 ```
 
@@ -689,3 +691,301 @@ urch_sn_ratio_mod_2024 <- urch_sn_ratio_mod_2024%>%
 write_csv(urch_sn_ratio_mod_2024,
           here("./03_clean_data/urchin_snail_modelling_data.csv"))
 ```
+
+
+# Doing modelling for the project
+
+## Loading in the modelling data and cleaning it up
+
+```{r Loading in the data, include=FALSE}
+env_mod_data <- read_csv(here("./03_clean_data/urchin_snail_modelling_data.csv"))
+```
+
+
+```{r Cleaning up the data, include=FALSE}
+#As the temp and openness data are on different scales we scaled them so as not
+#to have the different scales influence the results
+#These made columns with the scaled data
+env_mod_data$sst_scale <- scale(env_mod_data$sst)
+env_mod_data$openness_scale <- scale(env_mod_data$openness)
+env_mod_data$norm_openness_scale <- scale(env_mod_data$norm_openness)
+
+#We also tried some modelling with the recreational boats so made scaled columns
+#for them as well
+env_mod_data$mean_rec_boat_counts_1km_scale <- scale(env_mod_data$mean_rec_boat_counts_1km)
+env_mod_data$mean_rec_boat_counts_1.5km_scale <- scale(env_mod_data$mean_rec_boat_counts_1.5km)
+env_mod_data$mean_rec_boat_counts_2km_scale <- scale(env_mod_data$mean_rec_boat_counts_2km)
+
+#making dominant seafloor score a factor
+env_mod_data$dominant_score <- as.factor(env_mod_data$dominant_score)
+#same for site code
+env_mod_data$site_code <- as.factor(env_mod_data$site_code)
+#tried using the different species as predictors for each other so made scaled
+#columns of each
+env_mod_data$Urchins_scale <- scale(env_mod_data$Urchins)
+env_mod_data$Turban_Snails_scale <- scale(env_mod_data$Turban_Snails)
+
+#Renaming the levels of the seafloor type to loose and solid
+levels(env_mod_data$dominant_score) <- list(loose = "3", solid = "4")
+
+#Making the region columns factors, first by making an object with their names
+#and then using lapply to do it to all of them at once
+regions <- c("region1", "region2", "region3", "region4")
+env_mod_data[regions] <- lapply(env_mod_data[regions], factor)
+
+## Reordering the factor levels of region1 so that Deer group bamfield is the
+#intercept and renaming for plotting
+levels(env_mod_data$region1) <- list(DGB = "Deer group/Bamfield",
+                                     BG = "Broken Group",
+                                     DIEC = "Deep Imperial Eagle Channel",
+                                     SR = "Sarita" )
+```
+
+
+```{r Creating a factor variable of protection status for the modelling data, include=FALSE}
+#Making an object with the protection status of the sites coded as 0 for not
+#protected and 1 for protected from fishing
+protect_status <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 
+                    0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
+
+#Making protect status into a column in the DF and as a factor
+  env_mod_data$protect_status <- as.factor(protect_status)
+  #Changing the levels to No Protection and Protection instead of 0 and 1
+levels(env_mod_data$protect_status) <- c("No Protection", "Protected")
+
+#Reordering so easier to see which sites are protected in the DF
+########This needs to be fixed for the final markdown
+env_mod_data <- env_mod_data[, c(seq(1, 11, by = 1), 46, 47, seq(12, 45, by = 1))]
+env_mod_data <- env_mod_data[, c(seq(1, 10, by = 1), 46, seq(11, 45), 47 )]
+```
+
+
+## Exploratory plots of the data
+Making some exploratory plots of the predictors against the response variables
+(urchin dens, snail dens, snail to urchin ratio).
+
+```{r Making theme for all subsequent figures, echo=FALSE}
+theme.figure <- function (){
+  theme_bw(base_size = 12) +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    #axis.line = element_line(colour = "black"),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12, face = "plain"),
+    legend.text = element_text(size = 10, face = "plain"),
+    legend.title = element_text(size = 14, face = "bold")) 
+}
+
+```
+
+
+### The EVs against the snail density
+
+```{r snail dens against substrate score, echo=FALSE}
+ggplot(env_mod_data, aes(x = dominant_score, y = snail_dens, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r snail dens against openness,echo=FALSE}
+ggplot(env_mod_data, aes(x = norm_openness, y = snail_dens, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r snail dens against sst, echo=FALSE}
+ggplot(env_mod_data, aes(x = sst, y = snail_dens, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r snail dens against mean rec boat counts 1.5km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1.5km, y = snail_dens, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r snail dens against mean rec boat counts 1km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1km, y = snail_dens, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r snail dens against mean rec boat counts 2km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_2km, y = snail_dens, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+### The EVs against the urchin density
+
+```{r urchin dens against substrate score, echo=FALSE}
+ggplot(env_mod_data, aes(x = dominant_score, y = urchin_dens, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r urchin dens against openness,echo=FALSE}
+ggplot(env_mod_data, aes(x = norm_openness, y = urchin_dens, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r urchin dens against sst, echo=FALSE}
+ggplot(env_mod_data, aes(x = sst, y = urchin_dens, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r urchin dens against mean rec boat counts 1.5km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1.5km, y = urchin_dens, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r urchin dens against mean rec boat counts 1km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1km, y = urchin_dens, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r urchin dens against mean rec boat counts 2km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_2km, y = urchin_dens, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+### The EVs against the snail to urchin ratio
+```{r ratio against substrate score, echo=FALSE}
+ggplot(env_mod_data, aes(x = dominant_score, y = sn_urch_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against openness,echo=FALSE}
+ggplot(env_mod_data, aes(x = norm_openness, y = sn_urch_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against sst, echo=FALSE}
+ggplot(env_mod_data, aes(x = sst, y = sn_urch_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against mean rec boat counts 1.5km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1.5km, y = sn_urch_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against mean rec boat counts 1km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_1km, y = sn_urch_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+```{r ratio against mean rec boat counts 2km, echo=FALSE}
+ggplot(env_mod_data, aes(x = mean_rec_boat_counts_2km, y = sn_urch_ratio, colour = region1))+
+  geom_point()+
+  theme.figure()
+```
+
+
+
+## Ecological models
+
+The first set of models that we tried were generalized additive models to test
+the ecological predictors on the densities of each species to see what is 
+driving their populations.
+
+### Red Turban Snail Ecology models
+
+We started with the turban snail models. 
+
+#### Model 1: Ecology model on the snail density with temperature, openness, and bottom type
+
+```{r Turban snail ecology/environmental model}
+#We initially tested this model with the untransformed snail density, but the 
+#residuals were not good. We could not use Poisson or Negative binomial as there
+#were decimals. We tried Gamma with adding a small constant to get rid of the 0s
+#but this did not work well. Also tried Tweedie and scat but again did not look 
+#good. At this point we decided to log transform
+#the snail density. We needed to add a constant to the density because there
+#were some zeroes so we instead of adding 1, we added 0.01 because the snail
+#densities were the snail counts divided by 100.
+ecology_snail_mod <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score,
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                         #we picked REML for smoothing parameter estimation as
+                         #this is considered to be one of the best methods
+                             method = "REML",
+                         #we set select to TRUE meaning that the model can fully
+                         #penalize smooth terms to zero effect if that is what 
+                         #is suggested
+                             select = TRUE)
+```
+
+```{r Turban snail ecology/environmental model output, echo=FALSE}
+#This gives some summary output about the fitting of the smooth and how many edf
+#are used. It also gives residual plots to look at the fit.
+gam.check(ecology_snail_mod)
+
+#this does a statistical test of the normality of the residuals
+shapiro.test(ecology_snail_mod$residuals)
+
+#This plots all of the partial effects plots so you can see the relationship
+#with each of the variables
+plot(ecology_snail_mod, all.terms = TRUE)
+
+#This gives the summary of the model
+summary(ecology_snail_mod)
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Turban snail ecology model residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_ecology_snail_mod <- residuals(ecology_snail_mod, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ecology_snail_mod, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_ecology_snail_mod, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+No autocorrelation for both methods when using a two sided test.
+
+##### Testing the model for concurvity
+<div class="fold o"> 
+```{r Testing turban snail ecology model for concurvity, echo=FALSE}
+concurvity(ecology_snail_mod, full = FALSE)
+concurvity(ecology_snail_mod, full = TRUE)
+```
+</div>
+
+Temperature and openness seem to be somewhat concurve. Temp having no impact on
+the model (being removed by select).
