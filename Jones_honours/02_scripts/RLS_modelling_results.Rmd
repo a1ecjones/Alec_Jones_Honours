@@ -5773,3 +5773,12 @@ moran.test(residuals_urch_sn_ratio_protection_model_glmm, lw_inverse,
 ```
 </div>
 No autocorrelation.
+
+
+
+
+```{r}
+env_mod_data_latest_test <- env_mod_data%>%
+  select(site_code, depth, snail_dens, urchin_dens, sn_urch_ratio, protect_status)
+```
+

@@ -227,6 +227,24 @@ Temperature and openness seem to be somewhat concurve. Temp having no impact on
 the model (being removed by select).
 
 
+
+
+
+
+
+```{r}
+snail_protected <- env_mod_data%>%
+  subset(protect_status == "Protected")
+snail_unprotected <- env_mod_data%>%
+  subset(protect_status == "No Protection")
+
+hist(snail_protected$snail_dens)
+hist(snail_unprotected$snail_dens)
+```
+
+
+
+
 #### Model 2: Ecology model on the snail counts with temperature, openness, and bottom type (linear openness)
 
 ```{r Turban snail ecology/environmental model linear}
