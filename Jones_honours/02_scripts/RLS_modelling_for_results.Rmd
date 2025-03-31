@@ -522,7 +522,8 @@ Temp and para are highly concurve.
 #### Comparing Turban snail ecology models
 
 ```{r AIC of Turban snail ecology models}
-AICc(ecology_snail_mod_linear,
+AICc(ecology_snail_mod,
+    ecology_snail_mod_linear,
     ecology_snail_mod_linear_re,
     ecology_snail_mod_linear_fe)%>%
   arrange(AICc)%>%
@@ -2604,3 +2605,44 @@ TukeyHSD(aov(snail_urchin_ratio_region_an))
 ```
 
 Assumptions of ANOVA met and indicate significant differences
+
+
+
+## Getting summary stats on the snail to urchin ratio
+
+```{r}
+env_mod_data_MPA_only <- env_mod_data%>%
+  subset(protect_status == "Protected")
+
+MPA_sn_urch_mean <- mean(env_mod_data_MPA_only$sn_urch_ratio)
+
+MPA_sn_urch_sd <- sd(env_mod_data_MPA_only$sn_urch_ratio)
+
+env_mod_data_unprotected_only <- env_mod_data%>%
+  subset(protect_status == "No Protection")
+
+unprotect_sn_urch_mean <- mean(env_mod_data_unprotected_only$sn_urch_ratio)
+
+unprotect_sn_urch_sd <- sd(env_mod_data_unprotected_only$sn_urch_ratio)
+
+
+#Calculating the fold difference between MPAs and non-MPAs
+exp(MPA_sn_urch_mean - unprotect_sn_urch_mean)
+```
+
+# Summary stats on urchin density
+
+```{r}
+env_mod_data_kelp_only <- env_mod_data%>%
+  filter(site_code == "BMSC15" | site_code == "BMSC26")
+
+kelp_urchin_mean <- mean(env_mod_data_kelp_only$urchin_dens)
+kelp_urchin_sd <- sd(env_mod_data_kelp_only$urchin_dens)
+
+env_mod_data_no_kelp <- env_mod_data%>%
+  filter(site_code != "BMSC15" , site_code != "BMSC26")
+
+no_kelp_urchin_mean <- mean(env_mod_data_no_kelp$urchin_dens)
+no_kelp_urchin_sd <- sd(env_mod_data_no_kelp$urchin_dens)
+```
+
