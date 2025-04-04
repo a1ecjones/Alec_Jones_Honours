@@ -163,7 +163,7 @@ leveneTest(Urchins ~ region1, data = env_mod_data)
 #### Model 1: Ecology model on the snail counts with temperature, openness, and bottom type
 
 ```{r Turban snail ecology/environmental model}
-ecology_snail_mod <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
+ecology_snail_mod <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
                                s(norm_openness_scale)+
                            dominant_score,
                                 # s(region1, bs = "re"), #Random effect of region does not have an impact on the snails
@@ -177,6 +177,14 @@ ecology_snail_mod <- gam(log(Turban_Snails + 1) ~ s(sst_scale)+
 gam.check(ecology_snail_mod)
 plot(ecology_snail_mod, all.terms = TRUE)
 summary(ecology_snail_mod)
+```
+
+
+```{r}
+p_values <- gam_summary$p.table[, 4]  # Column 4 contains p-values
+
+# Print with more significant figures
+format(p_values, scientific = TRUE, digits = 8)
 ```
 
 Initially did this model with openness as a smooth term but fitting produced a linear effect of openness so re fit model with linear openness.
@@ -635,10 +643,13 @@ Gaussian looks ok. When adding the random effect of region the openness becomes
 borderline and negative. 
 
 ```{r Extracting predictions for the dominant score}
-pred_urchin_dom_score <- tidy(ecology_urchin_mod_re, parametric = TRUE)
-pred_urchin_dom_score
-pred_urchin_dom_score$term <- as.factor(pred_urchin_dom_score$term)
-levels(pred_urchin_dom_score$term) <- c("loose", "solid")
+
+####DID NOT USE THIS ONE FOR PLOTS
+
+#pred_urchin_dom_score <- tidy(ecology_urchin_mod_re, parametric = TRUE)
+#pred_urchin_dom_score
+#pred_urchin_dom_score$term <- as.factor(pred_urchin_dom_score$term)
+#levels(pred_urchin_dom_score$term) <- c("loose", "solid")
 
 #pulling out intercept to adjust for this when plotting
 dom_substrate_urchin_intercept <- pred_urchin_dom_score%>%
@@ -1636,7 +1647,7 @@ red sea urchins in protected sites.
 
 
 ```{r Plotting the effect of protection status on urchin counts glmm, echo=FALSE}
-pred_urchin_fishing_mod_glmm <- ggpredict(urchin_fishing_mod_glmm, terms = c("protect_status", "region1"))
+pred_urchin_fishing_mod_glmm <- ggpredict(urchin_fishing_mod_glmm, terms = c("protect_status"))
 
 ggplot(pred_urchin_fishing_mod_glmm, aes(x = x, y = predicted))+
   geom_point()+
@@ -2409,6 +2420,19 @@ ggplot(pred_sn_urch_ratio_protection_model_glmm, aes(x = x, y = predicted))+
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
   labs(y = "Predicted Log Snail to Urchin ratio", x = "Protection Status")+
   theme.figure()
+
+
+#predicting the data another way
+sn_urch_ratio_mpa_data <- data.frame(
+  protect_status = levels(env_mod_data$protect_status),
+  region1 = factor("BG", levels = levels(env_mod_data$region1))
+)
+
+
+predicted_mpa_effect_sn_urch <- predict(sn_urch_ratio_protection_model_glmm, newdata = sn_urch_ratio_mpa_data, se.fit = TRUE)
+sn_urch_ratio_mpa_data$fit <- predicted_mpa_effect_sn_urch$fit
+sn_urch_ratio_mpa_data$upper <- predicted_mpa_effect_sn_urch$fit + 1.96 * predicted_mpa_effect_sn_urch$se.fit
+sn_urch_ratio_mpa_data$lower <- predicted_mpa_effect_sn_urch$fit - 1.96 * predicted_mpa_effect_sn_urch$se.fit
 ```
 
 ##### Testing the residuals for autocorrelation
@@ -2615,19 +2639,26 @@ env_mod_data_MPA_only <- env_mod_data%>%
   subset(protect_status == "Protected")
 
 MPA_sn_urch_mean <- mean(env_mod_data_MPA_only$sn_urch_ratio)
-
 MPA_sn_urch_sd <- sd(env_mod_data_MPA_only$sn_urch_ratio)
+MPA_sn_urch_se <- MPA_sn_urch_sd/(sqrt(10))
 
 env_mod_data_unprotected_only <- env_mod_data%>%
   subset(protect_status == "No Protection")
 
 unprotect_sn_urch_mean <- mean(env_mod_data_unprotected_only$sn_urch_ratio)
-
 unprotect_sn_urch_sd <- sd(env_mod_data_unprotected_only$sn_urch_ratio)
+unprotect_sn_urch_se <- unprotect_sn_urch_sd/(sqrt(25))
 
+
+overall_sn_urch_mean <- mean(env_mod_data$sn_urch_ratio)
+overall_sn_urch_sd <- sd(env_mod_data$sn_urch_ratio)
+overall_sn_urch_se <- overall_sn_urch_sd/(sqrt(35))
 
 #Calculating the fold difference between MPAs and non-MPAs
 exp(MPA_sn_urch_mean - unprotect_sn_urch_mean)
+
+
+10^(MPA_sn_urch_mean - unprotect_sn_urch_mean)
 ```
 
 # Summary stats on urchin density
@@ -2638,11 +2669,52 @@ env_mod_data_kelp_only <- env_mod_data%>%
 
 kelp_urchin_mean <- mean(env_mod_data_kelp_only$urchin_dens)
 kelp_urchin_sd <- sd(env_mod_data_kelp_only$urchin_dens)
+kelp_urchin_se <- kelp_urchin_sd/(sqrt(3))
 
 env_mod_data_no_kelp <- env_mod_data%>%
   filter(site_code != "BMSC15" , site_code != "BMSC26")
 
 no_kelp_urchin_mean <- mean(env_mod_data_no_kelp$urchin_dens)
 no_kelp_urchin_sd <- sd(env_mod_data_no_kelp$urchin_dens)
+no_kelp_urchin_se <- no_kelp_urchin_sd/(sqrt(32))
+
+
+overall_urchin_mean <- mean(env_mod_data$urchin_dens)
+overall_urchin_sd <- sd(env_mod_data$urchin_dens)
+overall_urchin_se <- overall_urchin_sd/(sqrt(35))
+
+
+
+MPA_urchin_dens_mean <- mean(env_mod_data_MPA_only$urchin_dens)
+MPA_urchin_dens_sd <- sd(env_mod_data_MPA_only$urchin_dens)
+MPA_urchin_dens_se <- MPA_urchin_dens_sd/(sqrt(10))
+
+
+no_MPA_urchin_dens_mean <- mean(env_mod_data_unprotected_only$urchin_dens)
+no_MPA_urchin_dens_sd <- sd(env_mod_data_unprotected_only$urchin_dens)
+no_MPA_urchin_dens_se <- no_MPA_urchin_dens_sd/(sqrt(25))
+```
+
+# Summary stats on snail density
+```{r}
+overall_snail_mean <- mean(env_mod_data$snail_dens)
+overall_snail_sd <- sd(env_mod_data$snail_dens)
+overall_snail_se <- overall_snail_sd/(sqrt(35))
+
+MPA_sn_dens_mean <- mean(env_mod_data_MPA_only$snail_dens)
+MPA_sn_dens_sd <- sd(env_mod_data_MPA_only$snail_dens)
+MPA_sn_dens_se <- MPA_sn_dens_sd/(sqrt(10))
+
+no_MPA_sn_dens_mean <- mean(env_mod_data_unprotected_only$snail_dens)
+no_MPA_sn_dens_sd <- sd(env_mod_data_unprotected_only$snail_dens)
+no_MPA_sn_dens_se <- no_MPA_sn_dens_sd/(sqrt(25))
+
+kelp_snail_mean <- mean(env_mod_data_kelp_only$snail_dens)
+kelp_snail_sd <- sd(env_mod_data_kelp_only$snail_dens)
+kelp_snail_se <- kelp_snail_sd/(sqrt(3))
+
+no_kelp_snail_mean <- mean(env_mod_data_no_kelp$snail_dens)
+no_kelp_snail_sd <- sd(env_mod_data_no_kelp$snail_dens)
+no_kelp_snail_se <- no_kelp_snail_sd/(sqrt(32))
 ```
 

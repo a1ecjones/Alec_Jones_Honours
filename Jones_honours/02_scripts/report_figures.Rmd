@@ -1103,6 +1103,26 @@ ggsave("snail_urchin_ratio_box_re.pdf", plot = snail_urchin_ratio_box_re,
         ))
 ```
 
+
+```{r}
+(snail_urchin_ratio_box_re_new_style <- ggplot(env_mod_data, aes(x = protect_status, y = sn_urch_ratio))+
+  geom_boxplot(env_mod_data, mapping = aes(x = protect_status, y = sn_urch_ratio),
+               alpha = 0.6, width = 0.5, colour = "grey")+
+  geom_errorbar(sn_urch_ratio_mpa_data, mapping =
+                  aes(ymin = lower, ymax = upper, x = protect_status, y = fit),
+                width = 0.15, linewidth = 1.2)+
+   geom_point(sn_urch_ratio_mpa_data, mapping = 
+              aes(x = protect_status, y = fit, colour = protect_status), size = 4)+
+  labs(x = "Protection Status", y = "Log snail:urchin\nratio")+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
+      scale_colour_manual(values = c("#E95E48", "#355173"))+
+  theme.figure.report()+
+    theme(legend.position = "none",
+          axis.text = element_text(size = 16),
+          # axis.text.x = element_blank(),
+        # axis.title.x = element_blank()
+        ))
+```
 ### Urchin snail ratio boxplot
 
 
@@ -1407,6 +1427,7 @@ ggsave("urchin_gam_plot.pdf", plot = urchin_gam_plot,
   theme.figure.report()+
    theme(legend.position = "none"))
 ```
+
 
 ```{r Plotting the predicted urchin density from openness}
 (predicted_openness_effect_urchin <- ggplot(env_mod_data, aes(x = norm_openness, y = urchin_dens))+
