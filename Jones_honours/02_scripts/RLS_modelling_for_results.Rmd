@@ -91,6 +91,9 @@ env_mod_data <- env_mod_data%>%
 protect_status <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 
                     0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
 
+test_protect_status <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
+
 protect_status_park <- c(0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0)
 
 #kelp_forest <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
@@ -99,14 +102,17 @@ protect_status_park <- c(0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0
   env_mod_data$protect_status <- as.factor(protect_status)
 levels(env_mod_data$protect_status) <- c("No Protection", "Protected")
 
+  env_mod_data$test_protect_status <- as.factor(test_protect_status)
+levels(env_mod_data$test_protect_status) <- c("No Protection", "Protected")
+
 env_mod_data$protect_status_park <- as.factor(protect_status_park)
 levels(env_mod_data$protect_status_park) <- c("No Protection", "Protected")
 
 
 #Reordering so easier to see which sites are protected in the DF
 ########This needs to be fixed for the final markdown
-env_mod_data <- env_mod_data[, c(seq(1, 11, by = 1), 46, 47, seq(12, 45, by = 1))]
-env_mod_data <- env_mod_data[, c(seq(1, 10, by = 1), 46, seq(11, 45), 47 )]
+#env_mod_data <- env_mod_data[, c(seq(1, 11, by = 1), 46, 47, seq(12, 45, by = 1))]
+#env_mod_data <- env_mod_data[, c(seq(1, 10, by = 1), 46, seq(11, 45), 47 )]
 
 #Will need to confirm which areas were kelp forests based on the photos or
 #talking with Jasmin but likely will just be hosie and raymond
@@ -140,6 +146,17 @@ summ_stats <- env_mod_data%>%
 ```
 
 
+```{r}
+test_env_mod_data <- env_mod_data%>%
+  filter(site_name != "Hosie South")
+
+test_env_mod_data <- test_env_mod_data%>%
+  mutate(test_norm_openness = openness / 31200000)
+
+test_env_mod_data$test_norm_openness_scale <- scale(test_env_mod_data$test_norm_openness)
+```
+
+
 # Modelling{.tabset}
 
 #### Testing the association of the categorical variables with chi-square test
@@ -164,10 +181,10 @@ leveneTest(Urchins ~ region1, data = env_mod_data)
 
 ```{r Turban snail ecology/environmental model}
 ecology_snail_mod <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
-                               s(norm_openness_scale)+
+                               s(test_norm_openness_scale)+
                            dominant_score,
                                 # s(region1, bs = "re"), #Random effect of region does not have an impact on the snails
-                             data = env_mod_data,
+                             data = test_env_mod_data,
                              family = gaussian(link = "identity"),
                              method = "REML",
                              select = TRUE)
@@ -624,7 +641,8 @@ double penalty.
 ecology_urchin_mod_re <- gam(urchin_dens ~ s(sst_scale)+
                                s(norm_openness_scale)+
                            dominant_score+
-                                s(region1, bs = "re"),
+                             s(latitude, longitude, bs = "gp", k = 10),
+                                #s(region1, bs = "re"),
                              data = env_mod_data,
                              family = gaussian(link = "identity"),
                              method = "REML",
@@ -688,7 +706,6 @@ urchin_ecology_data_for_seafloor <- data.frame(
   norm_openness_scale = mean(env_mod_data$norm_openness_scale),
   region1 = factor("DGB", levels = levels(env_mod_data$region1))
 )
-
 
 #predicting the data
 predicted_sf_effect_urchin <- predict(ecology_urchin_mod_re, newdata = urchin_ecology_data_for_seafloor, se.fit = TRUE)
@@ -1318,6 +1335,17 @@ ggplot(pred_snail_fishing_mod_linear_no_op_protect_status, aes(x = x, y = predic
 #plot(emmeans(snail_fishing_mod_linear, ~ protect_status, comparisons = TRUE))
 ```
 
+```{r Fixing the standard errors}
+pred_snail_fishing_mod_linear_no_op_protect_status <- pred_snail_fishing_mod_linear_no_op_protect_status%>%
+  mutate(correct_se = (std.error ^ 2))%>%
+  na.omit()
+
+pred_snail_fishing_mod_linear_no_op_protect_status$lower <- pred_snail_fishing_mod_linear_no_op_protect_status$predicted - 1.96 * pred_snail_fishing_mod_linear_no_op_protect_status$correct_se
+
+pred_snail_fishing_mod_linear_no_op_protect_status$upper <- pred_snail_fishing_mod_linear_no_op_protect_status$predicted + 1.96 * pred_snail_fishing_mod_linear_no_op_protect_status$correct_se
+```
+
+
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
@@ -1644,6 +1672,10 @@ performance::icc(urchin_fishing_mod_glmm)
 Residuals look ok for just using a gaussian distribution. Seeing a non-significant
 negative effect of protection status on red sea urchins. That is, there are less
 red sea urchins in protected sites.
+
+```{r}
+coef(urchin_fishing_mod_glmm)
+```
 
 
 ```{r Plotting the effect of protection status on urchin counts glmm, echo=FALSE}
@@ -2416,16 +2448,18 @@ This model is fitting a separate intercept for each level of the random effect.
 pred_sn_urch_ratio_protection_model_glmm <- ggpredict(sn_urch_ratio_protection_model_glmm, terms = "protect_status")
 
 ggplot(pred_sn_urch_ratio_protection_model_glmm, aes(x = x, y = predicted))+
+   geom_boxplot(data = env_mod_data, aes(x = protect_status, y = sn_urch_ratio))+
   geom_point()+
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+
   labs(y = "Predicted Log Snail to Urchin ratio", x = "Protection Status")+
   theme.figure()
 
 
-#predicting the data another way
+#predicting the data another way---Did not do this for the thesis figures#############
 sn_urch_ratio_mpa_data <- data.frame(
   protect_status = levels(env_mod_data$protect_status),
-  region1 = factor("BG", levels = levels(env_mod_data$region1))
+  region1 = factor("DGB", levels = levels(env_mod_data$region1))
 )
 
 

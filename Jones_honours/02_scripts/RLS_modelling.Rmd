@@ -401,7 +401,7 @@ plot(env_mod_no_temp_resid)
 ```{r Building the gam with the spatial autocorrelation term}
 ####This is likely overfitting the model and just saying that a smooth of lat and long explains the variation in urch ratio
 
-env_mod_sp_gp <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness_scale) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
+env_mod_sp_gp <- gam(urchin_dens ~ s(sst_scale) + s(norm_openness_scale) + dominant_score + s(latitude, longitude, bs = "gp", k = 10),
                   data = env_mod_data, 
                   family = gaussian(link = "identity"),
                   method = 'REML',
@@ -410,6 +410,7 @@ env_mod_sp_gp <- gam(urch_sn_ratio ~ s(sst_scale) + s(norm_openness_scale) + dom
 set.seed(10)
 gam.check(env_mod_sp_gp, rep = 500)
 plot(env_mod_sp_gp)
+summary(env_mod_sp_gp)
 ```
 
 ```{r DHARMa for model fit}

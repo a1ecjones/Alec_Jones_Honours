@@ -1067,8 +1067,8 @@ dev.off()
   labs(x = "Protection Status", y = "Log snail:urchin\nratio")+
    scale_fill_manual(values = c("#E95E48", "#355173"))+
       scale_colour_manual(values = c("#E95E48", "#355173"))+
-   add_phylopic(img = urchin_picture_img, x = 2.35, y = 2.1, height = 0.8)+
-   add_phylopic(img = snail_picture_img, x = 2.35, y = 1.2, height = 0.6)+
+ #  add_phylopic(img = urchin_picture_img, x = 2.35, y = 2.1, height = 0.8)+
+ #  add_phylopic(img = snail_picture_img, x = 2.35, y = 1.2, height = 0.6)+
   theme.figure.report()+
     theme(legend.position = "none",
           axis.text = element_text(size = 16),
@@ -1105,7 +1105,7 @@ ggsave("snail_urchin_ratio_box_re.pdf", plot = snail_urchin_ratio_box_re,
 
 
 ```{r}
-(snail_urchin_ratio_box_re_new_style <- ggplot(env_mod_data, aes(x = protect_status, y = sn_urch_ratio))+
+#(snail_urchin_ratio_box_re_new_style <- ggplot(env_mod_data, aes(x = protect_status, y = sn_urch_ratio))+
   geom_boxplot(env_mod_data, mapping = aes(x = protect_status, y = sn_urch_ratio),
                alpha = 0.6, width = 0.5, colour = "grey")+
   geom_errorbar(sn_urch_ratio_mpa_data, mapping =
@@ -1325,6 +1325,8 @@ ggsave("snail_urchin_sn_urch_box_plot.pdf", plot = snail_urchin_sn_urch_box_plot
   theme.figure.report()+
      theme(legend.position = "none"))
 ```
+
+
 ```{r Saving the urchin counts dom score}
 png(filename = here("./04_plots/report_figures/dominant_substrate_boxplot.png"), width = 4, height = 4, 
     units = "in", pointsize = 15, res = 600)
