@@ -867,6 +867,63 @@ RLS_data_2024_clean <- RLS_data_2024%>%
   summarise(species_total = sum(total))
 ```
 
+```{r Test with predators included}
+factor_cols2 <- c("site_code", "site_name", "Code")
+
+RLS_data_2024_clean_test_with_preds <- RLS_data_2024%>%
+  select(c(`Site No.`, `Site Name`, Latitude, Longitude, Date, vis, Time, Depth,
+           Method, Block, Code, Species, Total))%>%
+  na.omit()%>%
+  mutate(Code = str_to_lower(Code))%>%
+  rename(site_code = `Site No.`,
+         site_name = `Site Name`,
+         latitude = Latitude,
+         longitude = Longitude,
+         survey_date = Date,
+         depth = Depth,
+         visibility = vis,
+         hour = Time,
+         total = Total)%>%
+   mutate_at(factor_cols2, factor)%>%
+   mutate(longitude = if_else(site_code == "BMSC2", -125.19876860, longitude))%>% # one point at kirby had the lat for both lat and long
+  filter(!Code %in% c("dez", "deg", "dem", "deo", "def", "dew", "dec", "nsf", "snd"))%>%
+  filter(Code %in% c("aoc", "sat", "sau", "scar", "sca", "sch", "sdi", "sfl", "sma", "sme", "smi", "smy", "sne", "phe", "edo", "phek", "pher"))%>%
+   group_by(site_code, site_name, latitude, longitude, survey_date, depth, 
+           visibility, hour, Code)%>%
+  summarise(species_total = sum(total))
+
+
+RLS_data_2024_pred_site_totals <- RLS_data_2024_clean_test_with_preds%>%
+  group_by(site_code, site_name, depth)%>%
+  summarise(total_preds = sum(species_total))
+
+ env_mod_data_pred_test <- env_mod_data%>%
+   left_join(RLS_data_2024_pred_site_totals, by = c("site_code", "site_name", "depth"))
+```
+ 
+```{r}
+ (pred_boxplot <- ggplot(env_mod_data_pred_test, aes(x = protect_status, y = total_preds))+
+   geom_boxplot()+
+   labs(x = "Protection Status", y = "Total predator count")+
+   theme.figure.report())
+```
+```{r Saving the predator plot}
+ggsave("predatory_fish_box_plot.pdf", plot = pred_boxplot,
+       path = here("./04_plots/report_figures"), width = 165, height = 130, units = "mm")
+```
+
+```{r}
+predator_lm <- lm(total_preds ~ protect_status, data = env_mod_data_pred_test)
+
+summary(predator_lm)
+
+
+wilcox.test(total_preds ~ protect_status, data = env_mod_data_pred_test, alternative = "two.sided")
+```
+
+
+
+
 ```{r Making a data frame with different lat/longs for transects at same sites}
 RLS_data_2024_clean_updated_lat_long <- RLS_data_2024_clean%>%
    mutate(latitude = if_else(site_code == "BMSC1" & depth == 6.5, 48.8290000, latitude))%>%

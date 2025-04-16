@@ -181,10 +181,10 @@ leveneTest(Urchins ~ region1, data = env_mod_data)
 
 ```{r Turban snail ecology/environmental model}
 ecology_snail_mod <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
-                               s(test_norm_openness_scale)+
+                               s(norm_openness_scale)+
                            dominant_score,
                                 # s(region1, bs = "re"), #Random effect of region does not have an impact on the snails
-                             data = test_env_mod_data,
+                             data = env_mod_data,
                              family = gaussian(link = "identity"),
                              method = "REML",
                              select = TRUE)
@@ -2750,5 +2750,21 @@ kelp_snail_se <- kelp_snail_sd/(sqrt(3))
 no_kelp_snail_mean <- mean(env_mod_data_no_kelp$snail_dens)
 no_kelp_snail_sd <- sd(env_mod_data_no_kelp$snail_dens)
 no_kelp_snail_se <- no_kelp_snail_sd/(sqrt(32))
+```
+
+
+
+## Test Global models
+
+```{r}
+snail_global_mod <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score+
+                          protect_status,
+                               
+                             data = env_mod_data,
+                             family = gaussian(link = "identity"),
+                             method = "REML",
+                             select = TRUE)
 ```
 

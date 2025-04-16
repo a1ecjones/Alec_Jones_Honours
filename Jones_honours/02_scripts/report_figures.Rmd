@@ -146,7 +146,7 @@ bbox_low <- st_bbox(c(xmin = shp_xmin_low, ymin = shp_ymin_low, xmax = shp_xmax_
 
 bbox_low_sf <- st_as_sfc(bbox_low)
 
-VI_base_layer_sf_subset <- st_crop(VI_base_layer_hi_res_sf, bbox_low_sf)
+VI_base_layer_sf_subset <- st_crop(VI_base_layer_sf, bbox_low_sf)
 plot(VI_base_layer_sf_subset)
 ```
 
@@ -204,12 +204,14 @@ dfo_flight_track <- st_read(here("./01_raw_data/dfo_new_flight_path.kml"))
   geom_sf() +
   coord_sf(ylim = c(48.3, 50.8), xlim = c(-128.2, -123.2)) +
   theme.figure.report() +
-  geom_rect(xmin = long_min, xmax = long_max, ymin = lat_min, ymax = lat_max,
-            color = "red", fill = NA, linewidth = 1) +
-  labs(x = "Longitude", y = "Latitude") +
-    theme(axis.text = element_blank(),
-          axis.ticks = element_blank(),
-          axis.title = element_blank()))
+  #geom_rect(xmin = long_min, xmax = long_max, ymin = lat_min, ymax = lat_max,
+           # color = "red", fill = NA, linewidth = 1) +
+  labs(x = "Longitude", y = "Latitude"))
+```
+
+```{r Saving the van isl map}
+ggsave("van_isl_map.pdf", plot = van_isl_map,
+       path = here("./04_plots/report_figures"), width = 165, height = 130, units = "mm")
 ```
 
 ####Saving the van isl map
