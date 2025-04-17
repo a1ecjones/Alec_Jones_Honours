@@ -2761,10 +2761,83 @@ snail_global_mod <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
                                s(norm_openness_scale)+
                            dominant_score+
                           protect_status,
-                               
                              data = env_mod_data,
                              family = gaussian(link = "identity"),
                              method = "REML",
                              select = TRUE)
+```
+
+```{r Turban snail ecology/environmental model output, echo=FALSE}
+gam.check(snail_global_mod)
+plot(snail_global_mod, all.terms = TRUE)
+summary(snail_global_mod)
+```
+
+
+```{r}
+urchin_global_mod <- gam(urchin_dens ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score+
+                          protect_status,
+                             data = env_mod_data,
+                             family = tw(),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Turban snail ecology/environmental model output, echo=FALSE}
+gam.check(urchin_global_mod)
+plot(urchin_global_mod, all.terms = TRUE)
+summary(urchin_global_mod)
+```
+
+
+```{r}
+ratio_global_mod <- gam(sn_urch_ratio ~ s(sst_scale)+
+                               s(norm_openness_scale)+
+                           dominant_score+
+                          protect_status+
+                          s(region1, bs = "re"),
+                             data = env_mod_data,
+                             family = gaussian(),
+                             method = "REML",
+                             select = TRUE)
+```
+
+```{r Turban snail ecology/environmental model output, echo=FALSE}
+gam.check(ratio_global_mod)
+plot(ratio_global_mod, all.terms = TRUE)
+summary(ratio_global_mod)
+```
+
+
+```{r}
+#extract residuals from model
+residuals_ratio_global <- residuals(ratio_global_mod, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_ratio_global, lw,
+           alternative = "two.sided")
+
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_ratio_global, lw_inverse,
+           alternative = "two.sided")
 ```
 
