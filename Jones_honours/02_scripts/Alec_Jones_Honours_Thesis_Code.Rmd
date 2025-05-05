@@ -38,7 +38,7 @@ library(ggrepel)
 library(cowplot)
 library(sp)
 library(raster)
-library(rphylopic)
+library(waver)
 #library(patchwork)
 
 conflict_prefer("select", "dplyr")
@@ -167,9 +167,9 @@ VI_base_layer_hi_res_sf <- st_as_sf(VI_base_layer_hi_res)
 
 #specifying the projection to use for the sf
 st_crs(VI_base_layer_hi_res_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
-```
 
-```{r Subsetting the shape file for making plots later}
+
+
 #This subsets the shape file to only be of Barkley Sound to make plotting more
 #efficient
 
@@ -187,7 +187,7 @@ bbox_sf <- st_as_sfc(bbox)
 
 #This crops the shape file to the area of the bounding box
 VI_base_layer_hi_res_sf_subset <- st_crop(VI_base_layer_hi_res_sf, bbox_sf)
-plot(VI_base_layer_hi_res_sf_subset)
+#plot(VI_base_layer_hi_res_sf_subset)
 ```
 
 ### Calculating the fetch for the sites
@@ -203,23 +203,27 @@ sf::sf_use_s2(FALSE)
 #above. Max possible fetch is 650,000 meters. It is using the shape file from 
 #above to know where land is. This will likely take a very long time to run
 #so do not worry.
-fetch_df_2024_openness <- fetch_len_multi(site_sp_2024,
-                                          bearings = bearings_openness, 
-                                          dmax = 650000, 
-                                          shoreline = VI_base_layer_hi_res_sf, 
-                                          projected = FALSE)
+#I have ## this code out because it takes way too long to run. There is code in
+#the chunk below that will load in the data from a .csv that has already been
+#made by running the fetch_len_multi function
+
+#fetch_df_2024_openness <- fetch_len_multi(site_sp_2024,
+                                        #  bearings = bearings_openness, 
+                                        #  dmax = 650000, 
+                                        #  shoreline = VI_base_layer_hi_res_sf, 
+                                         # projected = FALSE)
 
 #Converting the raw fetch data into a df
-fetch_df_2024_openness <- as.data.frame(fetch_df_2024_openness)
+#fetch_df_2024_openness <- as.data.frame(fetch_df_2024_openness)
 
 #Saving the fetch data to a .csv so that the fetch function does not need to be
 #run
-write_csv(fetch_df_2024_openness, here("./01_raw_data/fetch_df_2024_openness.csv"))
+#write_csv(fetch_df_2024_openness, here("./01_raw_data/fetch_df_2024_openness.csv"))
 ```
 
 ### Downloading the fetch data that is already saved
 
-```{r Loading in the pre calculated fetch data}
+```{r Loading in the pre calculated fetch data, echo=FALSE}
 fetch_df_2024_openness <- read_csv(here("./01_raw_data/fetch_df_2024_openness.csv"))
 ```
 
@@ -796,7 +800,7 @@ protect_status <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
 levels(env_mod_data_hon$protect_status) <- c("No Protection", "Protected")
 
 #Reordering so easier to see which sites are protected in the DF
-env_mod_data_hon <- env_mod_data_hon[, c(seq(1, 8, by = 1), 33, seq(9, 32, by = 1))]
+env_mod_data_hon <- env_mod_data_hon[, c(seq(1, 8, by = 1), 35, seq(9, 34, by = 1))]
 ```
 
 
@@ -939,7 +943,9 @@ We started with the turban snail models.
 #residuals were not good. We could not use Poisson or Negative binomial as there
 #were decimals. We tried Gamma with adding a small constant to get rid of the 0s
 #but this did not work well. Also tried Tweedie and scat but again did not look 
-#good. At this point we decided to log transform
+#good. At this point we decided to log transform in order to maximize model fit
+#potentially at the expense of interpretability and with the drawbacks of the
+#asymmetrical error structure on the untransformed scale.
 #the snail density. We needed to add a constant to the density because there
 #were some zeroes so we instead of adding 1, we added 0.01 because the snail
 #densities were the snail counts divided by 100.
@@ -1054,6 +1060,10 @@ the model (being removed by select).
 
 #### Model 2: Ecology model on the snail counts with temperature, openness, and bottom type (linear openness)
 
+After initially seeing that the effect of openness was linear on the snail counts I tried doing another model
+with the openness explicitly modelled as a linear term so that I got a slope for the effect. In the end I ended
+up just going with the first model with the openness fit as a smooth term.
+
 ```{r Turban snail ecology/environmental model linear}
 #As the openness in the previous model was shown to be linearly related we
 #redid the model with it fitted as a linear predictor
@@ -1121,9 +1131,11 @@ Concurvity seems to be improved when having openness as a linear term.
 ```{r Turban snail ecology/environmental model linear re}
 #To see if a random effect of region was important to add we tried a model with
 #this included
-ecology_snail_mod_linear_re <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
-                               norm_openness_scale +
+ecology_snail_mod_re <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
+                               s(norm_openness_scale) +
                            dominant_score+
+                             #By fitting the random effect in this form it is 
+                             #fit as a random intercept effect
                                 s(region1, bs = "re"),
                              data = env_mod_data_hon,
                              family = gaussian(link = "identity"),
@@ -1132,10 +1144,10 @@ ecology_snail_mod_linear_re <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
 ```
 
 ```{r Turban snail ecology/environmental model linear re output, echo=FALSE}
-gam.check(ecology_snail_mod_linear_re)
-shapiro.test(ecology_snail_mod_linear_re$residuals)
-plot(ecology_snail_mod_linear_re, all.terms = TRUE)
-summary(ecology_snail_mod_linear_re)
+gam.check(ecology_snail_mod_re)
+shapiro.test(ecology_snail_mod_re$residuals)
+plot(ecology_snail_mod_re, all.terms = TRUE)
+summary(ecology_snail_mod_re)
 ```
 
 
@@ -1143,7 +1155,7 @@ summary(ecology_snail_mod_linear_re)
 <div class="fold o"> 
 ```{r Testing Turban snail ecology model linear re residuals for spatial correlation, echo=FALSE, warning=FALSE}
 
-residuals_ecology_snail_mod_linear_re <- residuals(ecology_snail_mod_linear_re, type = "response")
+residuals_ecology_snail_mod_re <- residuals(ecology_snail_mod_re, type = "response")
 
 
 coords_for_auto_test <- st_as_sf(env_mod_data_hon, coords = c("longitude", "latitude"), crs = 4326)
@@ -1157,7 +1169,7 @@ nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
 lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
-moran.test(residuals_ecology_snail_mod_linear_re, lw,
+moran.test(residuals_ecology_snail_mod_re, lw,
            alternative = "two.sided")
 
 
@@ -1165,7 +1177,7 @@ dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_ecology_snail_mod_linear_re, lw_inverse,
+moran.test(residuals_ecology_snail_mod_re, lw_inverse,
            alternative = "two.sided")
 ```
 </div>
@@ -1175,8 +1187,8 @@ No autocorrelation for both methods when using a two sided test.
 ##### Testing the model for concurvity
 <div class="fold o"> 
 ```{r Testing turban snail ecology model linear re for concurvity, echo=FALSE}
-concurvity(ecology_snail_mod_linear_re, full = FALSE)
-concurvity(ecology_snail_mod_linear_re, full = TRUE)
+concurvity(ecology_snail_mod_re, full = FALSE)
+concurvity(ecology_snail_mod_re, full = TRUE)
 ```
 </div>
 
@@ -1188,8 +1200,8 @@ Random effect of region is highly concurve.
 ```{r Turban snail ecology/environmental model linear FE}
 #We were also curious to look at region as a fixed effect so we tried a model 
 #with this included
-ecology_snail_mod_linear_fe <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
-                               norm_openness_scale +
+ecology_snail_mod_fe <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
+                               s(norm_openness_scale) +
                            dominant_score+
                                 region1,
                              data = env_mod_data_hon,
@@ -1199,19 +1211,18 @@ ecology_snail_mod_linear_fe <- gam(log(snail_dens + 0.01) ~ s(sst_scale)+
 ```
 
 ```{r Turban snail ecology/environmental model linear fe output, echo=FALSE}
-gam.check(ecology_snail_mod_linear_fe)
-shapiro.test(ecology_snail_mod_linear_fe$residuals)
-plot(ecology_snail_mod_linear_fe, all.terms = TRUE)
-summary(ecology_snail_mod_linear_fe)
+gam.check(ecology_snail_mod_fe)
+shapiro.test(ecology_snail_mod_fe$residuals)
+plot(ecology_snail_mod_fe, all.terms = TRUE)
+summary(ecology_snail_mod_fe)
 ```
-Results showing the same trends with normalized openness included as a linear term.
 Region as a fixed effect does not seem to be significant.
 
 ##### Testing the residuals for autocorrelation
 <div class="fold o"> 
-```{r Testing Turban snail ecology model linear fe residuals for spatial correlation, echo=FALSE, warning=FALSE}
+```{r Testing Turban snail ecology model fe residuals for spatial correlation, echo=FALSE, warning=FALSE}
 
-residuals_ecology_snail_mod_linear_fe <- residuals(ecology_snail_mod_linear_fe, type = "response")
+residuals_ecology_snail_mod_fe <- residuals(ecology_snail_mod_fe, type = "response")
 
 
 coords_for_auto_test <- st_as_sf(env_mod_data_hon, coords = c("longitude", "latitude"), crs = 4326)
@@ -1226,7 +1237,7 @@ lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
 
 
 
-moran.test(residuals_ecology_snail_mod_linear_fe, lw,
+moran.test(residuals_ecology_snail_mod_fe, lw,
            alternative = "two.sided")
 
 
@@ -1234,18 +1245,18 @@ dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
 inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
 diag(inverse_dist_matrix) <- 0
 lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
-moran.test(residuals_ecology_snail_mod_linear_fe, lw_inverse,
+moran.test(residuals_ecology_snail_mod_fe, lw_inverse,
            alternative = "two.sided")
 ```
 </div>
 
-Slight autocorrelation for inverse distance method
+No autocorrelation.
 
 ##### Testing the model for concurvity
 <div class="fold o"> 
 ```{r Testing turban snail ecology model linear fe for concurvity, echo=FALSE}
-concurvity(ecology_snail_mod_linear_fe, full = FALSE)
-concurvity(ecology_snail_mod_linear_fe, full = TRUE)
+concurvity(ecology_snail_mod_fe, full = FALSE)
+concurvity(ecology_snail_mod_fe, full = TRUE)
 ```
 </div>
 
@@ -1259,9 +1270,10 @@ Temp and para are highly concurve.
 #AIC analysis. Specifically AIC corrected as our sample size was low.
 
 #This runs the AIC on the different models
-AICc(ecology_snail_mod_linear,
-    ecology_snail_mod_linear_re,
-    ecology_snail_mod_linear_fe)%>%
+AICc(ecology_snail_mod,
+  ecology_snail_mod_linear,
+    ecology_snail_mod_re,
+    ecology_snail_mod_fe)%>%
   #This arranges by the smallest AICc
   arrange(AICc)%>%
   #This makes a column of the delta AIC for ease of comparison
@@ -1276,6 +1288,10 @@ pick the more parsimonius model without the random effect.
 Also, having region as a fixed effect makes the AIC much worse.
 Trying with both methods (REML and ML) the model with the fixed effect is much
 worse.
+
+For simplicity and because I did not know that the effect of openness would be
+linear prior to fitting the original model I just went with the original model
+over the one with openness fit as a linear term.
 
 
 ### Red sea urchin Ecology models
@@ -1513,4 +1529,1547 @@ model has slightly lower df.
 When repeating with urchin density and REML the fixed and random are basically 
 the same.
 
+We decided to go with the random effect model as using region as a random effect
+made more sense from a theoretical perspective.
 
+
+## Fishing models
+
+### Confirming the validity of protection status with DFO flyover data
+
+For the protection status categories, I have grouped them as sites that 
+experience at least a ban on fishing for part of the year as protected and all
+others as non-protected. This means that the sites that are in the Broken group
+but are not within the RCA are counted as not protected.
+
+In order to confirm/support our assumptions of which sites are protected,
+I used the DFO flyover data to compare the numbers of boats around the 
+different sites.
+
+Based on the boxplots below it seems evident that the protected sites selected
+are experiencing less fishing pressure and less overall human/boat pressure. 
+
+Ultimately, the comparison of fishing boat activity between protected and 
+unprotected sites was used to support the idea of simply using a factor 
+predictor of protection status as a predictor in anthropogenic models for these
+species.
+
+#### Boxplots of rec boat counts between protection levels
+
+```{r Boxplots of the rec boats at the three distances between protection levels, echo=FALSE}
+ggplot(env_mod_data_hon, aes(x = protect_status, y = mean_rec_boat_counts_1km))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+
+ggplot(env_mod_data_hon, aes(x = protect_status, y = mean_rec_boat_counts_1.5km))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+
+ggplot(env_mod_data_hon, aes(x = protect_status, y = mean_rec_boat_counts_2km))+
+  geom_boxplot()+
+  geom_jitter()+
+  theme.figure()
+```
+
+#### Comparing the rec boat counts between sites in the broken group that have been labelled as protected or non-protected
+
+To make sure that the effect of protection works to reduce boat counts within one region
+we looked at only the sites within the Broken Group islands.
+
+```{r Comparing the rec boat counts between sites in the broken group that have been labelled as protected or non-protected, echo=FALSE}
+ggplot(env_mod_data_hon[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_rec_boat_counts_1km))+
+  geom_boxplot()+
+  geom_point()+
+  theme.figure()
+
+ggplot(env_mod_data_hon[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_rec_boat_counts_1.5km))+
+  geom_boxplot()+
+  geom_point()+
+  theme.figure()
+
+ggplot(env_mod_data_hon[c(8, 9, 10, 11, 12, 13),], aes(x = protect_status, y = mean_rec_boat_counts_2km))+
+  geom_boxplot()+
+  geom_point()+
+  theme.figure()
+```
+
+The trend is clear even just for sites within the Broken Group.
+
+
+#### Testing the differences in rec boat counts between protected and non-protected with stats
+
+After seeing the clear trend of fewer boats on average around protected sites,
+we wanted to use stats to actually see if there was a significant difference
+between protected and unprotected sites.
+
+##### Checking for assumptions of linear models
+
+```{r Making a subset df with only one observation for each site}
+#This chunk is making a df that has one row for each site, with the 
+#corresponding mean number of rec boats fishing at the three radii tested
+unique_site_df <- env_mod_data_hon%>%
+  #This removes the existing groupings within the df
+  ungroup()%>%
+  #selecting the columns we want
+  select(site_code, protect_status,mean_rec_boat_counts_1km, mean_rec_boat_counts_1.5km, mean_rec_boat_counts_2km, region1)%>%
+  #this makes it so that there is only one row for each site as some sites had 
+  #two transects
+  distinct()
+```
+
+
+```{r Testing the variance between protection status}
+#In order to run stats tests on the boat counts we need to make sure the data
+#meets the assumptions of linear models. Here we use a levene's test to see
+#if there is equal variance between protected and unprotected sites. We do this
+#for each of the three radii.
+
+leveneTest(mean_rec_boat_counts_1km ~ protect_status, data = unique_site_df)
+leveneTest(mean_rec_boat_counts_1.5km ~ protect_status, data = unique_site_df)
+leveneTest(mean_rec_boat_counts_2km ~ protect_status, data = unique_site_df)
+```
+Equal variance for 1km, but not for 1.5km or 2km.
+
+```{r Normality of rec boat counts within protected sites}
+#The second assumption that we tested for was normality of the data. This chunk
+#makes a df that contains only sites within the protected areas to test for 
+#normality within this group.
+
+#Making data frame with only sites that are protected
+rec_boat_protected <- subset(unique_site_df, protect_status == "Protected")
+
+#Using shapiro wilks test to see if the mean rec boat counts are normal
+shapiro.test(rec_boat_protected$mean_rec_boat_counts_1km)
+#using histogram to look at normality visually
+hist(rec_boat_protected$mean_rec_boat_counts_1km)
+
+shapiro.test(rec_boat_protected$mean_rec_boat_counts_1.5km)
+hist(rec_boat_protected$mean_rec_boat_counts_1.5km)
+
+shapiro.test(rec_boat_protected$mean_rec_boat_counts_2km)
+hist(rec_boat_protected$mean_rec_boat_counts_2km)
+```
+Only the 1.5 km boat counts are normal
+
+```{r Normality of rec boat counts within non-protected sites}
+#This chunk follows the same steps as the previous one however it is for the 
+#unprotected sites.
+
+#Making data frame with only sites that are non-protected
+rec_boat_non_protected <- subset(unique_site_df, protect_status == "No Protection")
+
+shapiro.test(rec_boat_non_protected$mean_rec_boat_counts_1km)
+hist(rec_boat_non_protected$mean_rec_boat_counts_1km)
+
+shapiro.test(rec_boat_non_protected$mean_rec_boat_counts_1.5km)
+hist(rec_boat_non_protected$mean_rec_boat_counts_1.5km)
+
+shapiro.test(rec_boat_non_protected$mean_rec_boat_counts_2km)
+hist(rec_boat_non_protected$mean_rec_boat_counts_2km)
+```
+2km is normal but the others are not.
+
+Because we have not met the assumptions of normality or homoscedasticity for 
+all of our groups we are not able to use linear models. Instead we used 
+Wilcoxon Rank sum tests.
+
+##### Wilcoxon rank sum tests of the mean recreational boat counts
+
+```{r Wilcoxon rank sum tests of mean rec boat counts between protected and non-protected sites}
+#These lines of code run a separate wilcoxon rank sum test for each of the three
+#radii that we looked at. Since alternative was set to "t" it is a two tailed
+#test
+wilcox_1km <- wilcox.test(mean_rec_boat_counts_1km ~ protect_status, data = unique_site_df, alternative = "t")
+wilcox_1.5km <- wilcox.test(mean_rec_boat_counts_1.5km ~ protect_status, data = unique_site_df, alternative = "t")
+wilcox_2km <- wilcox.test(mean_rec_boat_counts_2km ~ protect_status, data = unique_site_df, alternative = "t")
+
+print(wilcox_1km)
+print(wilcox_1.5km)
+print(wilcox_2km)
+```
+All of the wilcoxon rank sum tests indicate that there is a highly significant
+difference in the number of rec fishing boats between protected and non-protected
+sites. Based on the boxplots we can say that there are significantly more rec
+boats at unprotected sites than protected sites.
+
+### Red Turban snail fishing models{.tabset}
+
+After exploring the impacts of environmental drivers of the red turban snails,
+we wanted to look into whether the protection from fishing would have any 
+impacts on this species.Given the results of the mean rec boat comparison
+between protected and unprotected sites we decided that simply using a predictor
+of protection status would be a useful measure of fishing activity.
+
+#### Plotting counts of snails between protected and unprotected
+
+```{r Plotting counts of snails between protected and unprotected, echo=FALSE}
+ggplot(env_mod_data_hon, aes(x = protect_status, y = Turban_Snails))+
+  geom_boxplot()+
+  geom_jitter(height = 0)+
+  labs(x = "Protection Status", y = "Turban Snail counts")+
+  theme.figure()
+```
+
+Seeing a weak trend of more snails in the protected sites when compared to the non-
+protected sites. We now wanted to explore this statistically.
+
+#### Model 8: Fishing model on the snail counts (glm)
+
+
+```{r Snail count fishing model with protection linear}
+#This chunk is fitting an lm on the snail density with the predictor of 
+#protection status. We ended up squareroot transforming the snail density
+#after initial testing as the fit of the residuals for the untransformed density
+#was poor for all the distributions we tried. We first tried a log 
+#transformation similar to the ecological model but this broke the assumption
+#of homoscedasticity. Ultimately, the squareroot transformation with a gaussian
+#family produced the best fit.
+
+snail_fishing_mod <- glmmTMB(sqrt(snail_dens) ~
+                                      protect_status,
+                                    data = env_mod_data_hon,
+                                    family = gaussian(link = "identity"))
+```
+
+```{r Snail count fishing model with protection linear output, echo=FALSE}
+#This uses the DHARMa package to simulate the residuals from the model and test
+#for any problems in the model fit.
+snail_fishing_mod_resids <- simulateResiduals(snail_fishing_mod)
+plot(snail_fishing_mod_resids)
+
+#This made a histogram of the model residuals to look for normality
+hist(residuals(snail_fishing_mod))
+#Shaprio test for normality of residuals
+shapiro.test(residuals(snail_fishing_mod))
+
+#Looking at the model summary
+summary(snail_fishing_mod)
+
+#Getting an r2 value for the model
+performance::r2(snail_fishing_mod)
+```
+
+
+```{r Plotting the linear snail fishing model with protection, echo=FALSE}
+#This predicts values for mean snail density with standard errors and CIs for 
+#each level of the predictor and saves as a df
+pred_snail_fishing_mod <- ggpredict(snail_fishing_mod, terms = "protect_status")
+
+#This is plotting the predicted values to visualize the model
+ggplot(pred_snail_fishing_mod, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Turban Snail Density (n/m2)", x = "Protection Status")+
+  theme.figure()
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Turban snail fishing model residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_snail_fishing_mod <- residuals(snail_fishing_mod, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data_hon, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_snail_fishing_mod, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_snail_fishing_mod, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+No autocorrelation.
+
+
+#### Model 9: Fishing model on the snail counts with protection and a random effect (glmm)
+
+Similar to the previous models, we wanted to explore if adding a random effect
+of region would explain a substantial amount of the variation so we tested that
+in this model.
+
+```{r Snail count fishing model with protection linear re}
+snail_fishing_mod_re <- glmmTMB(sqrt(snail_dens) ~
+                                      protect_status +
+                                  #This fits a random intercept effect
+                                  (1|region1),
+                                    data = env_mod_data_hon,
+                                    family = gaussian(link = "identity"))
+```
+
+```{r Snail count fishing model re output, echo=FALSE}
+#This chunk is similar to the previous model's
+snail_fishing_mod_re_resids <- simulateResiduals(snail_fishing_mod_re)
+plot(snail_fishing_mod_re_resids)
+
+hist(residuals(snail_fishing_mod_re))
+shapiro.test(residuals(snail_fishing_mod_re))
+
+#Looking at model results
+summary(snail_fishing_mod_re)
+```
+
+
+```{r Plotting the linear snail fishing model with protection re, echo=FALSE}
+#As I have not specified for the predict function to predict the random effects
+#it is predicting over the average of all the random effect levels.
+pred_snail_fishing_mod_re <- ggpredict(snail_fishing_mod_re, terms = "protect_status")
+
+ggplot(pred_snail_fishing_mod_re, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Turban Snail Counts", x = "Protection Status")+
+  theme.figure()
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Turban snail fishing model re residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_snail_fishing_mod_re <- residuals(snail_fishing_mod_re, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data_hon, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_snail_fishing_mod_re, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_snail_fishing_mod_re, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+No autocorrelation.
+
+#### Model 10: Fishing model on the snail counts with a fixed effect of region (glm)
+
+Again, we wanted to see what a fixed effect of region would do instead of the
+random effect.
+
+```{r Snail count fishing model with protection linear fe}
+snail_fishing_mod_fe <- glmmTMB(sqrt(Turban_Snails) ~
+                                      protect_status + 
+                                  region1,
+                                    data = env_mod_data_hon,
+                                    family = gaussian(link = "identity"))
+```
+
+```{r Snail count fishing model with protection linear fe output, echo=FALSE}
+#Checking resids
+snail_fishing_mod_fe_resids <- simulateResiduals(snail_fishing_mod_fe)
+plot(snail_fishing_mod_fe_resids)
+
+hist(residuals(snail_fishing_mod_fe))
+shapiro.test(residuals(snail_fishing_mod_fe))
+
+#Looking at model results
+summary(snail_fishing_mod_fe)
+```
+Residuals not normal for this one and not looking great.
+
+```{r Plotting the linear snail fishing model with protection fe, echo=FALSE}
+#Again this is just looking at the overall effect of protection across regions
+pred_snail_fishing_mod_fe <- ggpredict(snail_fishing_mod_fe, terms = "protect_status")
+
+ggplot(pred_snail_fishing_mod_fe, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Turban Snail Counts", x = "Protection Status")+
+  theme.figure()
+```
+
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Turban snail fishing model linear no openness fe residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_snail_fishing_mod_fe <- residuals(snail_fishing_mod_fe, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data_hon, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_snail_fishing_mod_fe, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_snail_fishing_mod_fe, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+No autocorrelation.
+
+#### Comparing Turban Snail fishing models
+
+```{r AIC of the Turban snail fishing models}
+AICc(snail_fishing_mod, 
+    snail_fishing_mod_re,
+    snail_fishing_mod_fe)%>%
+  arrange(AICc)%>%
+  mutate(delta_AICc = AICc - AICc[1])
+```
+
+AIC indicates that the simpler model without region as a random or fixed effect
+is the best model.
+
+
+### Red Sea Urchin fishing models
+
+#### Plot of urchin counts between protection status
+
+```{r Plot of number of urchins between protected and non-protected sites}
+ggplot(env_mod_data_hon, aes(x = protect_status, y = Urchins))+
+  geom_boxplot()+
+  geom_jitter()+
+  labs(x = "Protection Status", y = "Red Sea urchin counts")+
+  theme.figure()
+```
+
+
+#### Model 11: Fishing model on the urchin counts (glm)
+
+```{r Checking variance between protected and non-protected for urchins, echo=FALSE}
+leveneTest(Urchins ~ protect_status, data = env_mod_data_hon)
+```
+Equal variance between protected and non-protected sites so assumption of 
+homogeneity of variance is met.
+
+
+```{r Urchin fishing model glm}
+urchin_fishing_mod_glm <- glmmTMB(urchin_dens ~ protect_status,
+                               family = gaussian(link = "identity"),
+                                   data = env_mod_data_hon)
+```
+
+```{r Urchin fishing mod glm output, echo=FALSE}
+#Checking resids
+urchin_fishing_mod_glm_resids <- simulateResiduals(urchin_fishing_mod_glm)
+plot(urchin_fishing_mod_glm_resids)
+
+hist(residuals(urchin_fishing_mod_glm))
+shapiro.test(residuals(urchin_fishing_mod_glm))
+
+#Looking at model results
+summary(urchin_fishing_mod_glm)
+```
+Residuals look ok for just using a gaussian distribution. Seeing a non-significant
+negative effect of protection status on red sea urchins. That is, there is a 
+trend of less red sea urchins in protected sites.
+
+```{r Plotting the effect of protection status on urchin counts, echo=FALSE}
+pred_urchin_fishing_mod_glm <- ggpredict(urchin_fishing_mod_glm, terms = "protect_status")
+
+ggplot(pred_urchin_fishing_mod_glm, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(x = "Protection Status", y = "Predicted Urchin Counts")+
+  theme.figure()
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin fishing model glm residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_urchin_fishing_mod_glm <- residuals(urchin_fishing_mod_glm, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data_hon, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 325)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_urchin_fishing_mod_glm, lw,
+           alternative = "two.sided")
+
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_urchin_fishing_mod_glm, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+Seeing some autocorrelation in the inverse method but not the neighbour method.
+
+
+#### Model 12: Fishing model on the urchin counts with random effect (glmm)
+
+Similar to the previous sets of models we wanted to try the urchin fishing
+models with a random effect of region as well.
+
+```{r Urchin fishing model glmm}
+urchin_fishing_mod_glmm <- glmmTMB(urchin_dens ~ protect_status + (1|region1),
+                               family = gaussian(link = "identity"),
+                                   data = env_mod_data_hon)
+```
+
+```{r Urchin fishing mod glmm output, echo=FALSE}
+#Checking resids
+urchin_fishing_mod_glmm_resids <- simulateResiduals(urchin_fishing_mod_glmm)
+plot(urchin_fishing_mod_glmm_resids)
+
+hist(residuals(urchin_fishing_mod_glmm))
+shapiro.test(residuals(urchin_fishing_mod_glmm))
+
+#Looking at model results
+summary(urchin_fishing_mod_glmm)
+
+#Looking at some of the variance metrics for the model
+performance::r2(urchin_fishing_mod_glmm)
+#This returns the adjusted and unadjusted intraclass correlation coefficients
+#of the model
+performance::icc(urchin_fishing_mod_glmm)
+
+#Identifying the different intercepts of the random effect of region
+coef(urchin_fishing_mod_glmm)
+```
+Residuals look ok for just using a gaussian distribution. Seeing a non-significant
+negative effect of protection status on red sea urchins. That is, there are less
+red sea urchins in protected sites.
+
+
+
+```{r Plotting the effect of protection status on urchin counts glmm, echo=FALSE}
+#This is predicting over all of the levels of the random effect
+pred_urchin_fishing_mod_glmm <- ggpredict(urchin_fishing_mod_glmm, terms = c("protect_status"))
+
+ggplot(pred_urchin_fishing_mod_glmm, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(x = "Protection Status", y = "Predicted Urchin Counts")+
+  theme.figure()
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin fishing model glmm residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_urchin_fishing_mod_glmm <- residuals(urchin_fishing_mod_glmm, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data_hon, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_urchin_fishing_mod_glmm, lw,
+           alternative = "two.sided")
+
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_urchin_fishing_mod_glmm, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+No autocorrelation with random effect included.
+
+#### Model 13: Fishing model on the urchin counts with fixed effect (glm)
+
+Investigating the impacts of including region as a fixed effect
+
+```{r Urchin fishing model fe glm}
+urchin_fishing_mod_glm_fe <- glmmTMB(urchin_dens ~ protect_status + region1,
+                               family = gaussian(link = "identity"),
+                                   data = env_mod_data_hon)
+```
+
+
+```{r Urchin fishing mod fe glm output, echo=FALSE}
+#Checking resids
+urchin_fishing_mod_glm_fe_resids <- simulateResiduals(urchin_fishing_mod_glm_fe)
+plot(urchin_fishing_mod_glm_fe_resids)
+
+hist(residuals(urchin_fishing_mod_glm_fe))
+shapiro.test(residuals(urchin_fishing_mod_glm_fe))
+
+#Looking at model results
+summary(urchin_fishing_mod_glm_fe)
+performance::r2(urchin_fishing_mod_glm_fe)
+```
+Residuals look ok for just using a gaussian distribution. Seeing a non-significant
+negative effect of protection status on red sea urchins. That is, there are less
+red sea urchins in protected sites. Main effects that are evident is regional 
+effect with broken group and sarita having lower urchins than bamfield.
+
+
+```{r Plotting the effect of protection status on urchin counts glm fe, echo=FALSE}
+#This is predicting across both the protection status and between regions to 
+#visualize the effects these predictors are having
+pred_urchin_fishing_mod_glm_fe <- ggpredict(urchin_fishing_mod_glm_fe, terms = c("protect_status", "region1"))
+
+
+ggplot(pred_urchin_fishing_mod_glm_fe, aes(x = group, y = predicted, colour = x))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(x = "Protection Status", y = "Predicted Urchin Counts")+
+  theme.figure()
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing Urchin fishing model fe glm residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_urchin_fishing_mod_glm_fe <- residuals(urchin_fishing_mod_glm_fe, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data_hon, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_urchin_fishing_mod_glm_fe, lw,
+           alternative = "two.sided")
+
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_urchin_fishing_mod_glm_fe, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+No autocorrelation with fixed effect included.
+
+##### Testing the model for VIF stuff
+
+```{r Checking the collinearity of the model}
+#Used this function to test for collinearity in the model because there was 
+#an issue with the vif function
+performance::check_collinearity(urchin_fishing_mod_glm_fe,
+                   component = c("all"))
+```
+
+#### Comparing urchin fishing models
+
+```{r AIC of the urchin fishing models}
+AICc(urchin_fishing_mod_glm,
+    urchin_fishing_mod_glmm, 
+    urchin_fishing_mod_glm_fe)%>%
+  arrange(AICc)%>%
+  mutate(delta_AICc = AICc - AICc[1])
+```
+
+Model with the random effect included has slightly worse AIC, but it is within
+2 points even with an additional degree of freedom. The random effect model also
+eliminates the autocorrelation. 
+Model without the region included is the best based on AIC.
+Because the model with the random effect is within 2 AIC units and it eliminates
+the problem of spatial autocorrelation we went with this model.
+
+
+## Snail to Urchin models{.tabset}
+
+The relative densities of red turban snails and red sea urchins were assessed as a potential metric indicating the health of rocky reef ecosystems in coastal, temperate waters. The relative densities of these species can provide an estimate of reef health as higher densities of urchins are damaging (Breen & Mann, 1976), while turban snail densities give an estimate of the local kelp productivity (Shears & Babcock, 2003), which could balance out the effects of high urchin densities (Harrold & Reed, 1985). To use this metric, we calculated the log ratio of the number of red turban snails to the number of red sea urchins counted along a transect (Equation 1). The log ratio centers the metric around zero, with positive numbers indicating relatively greater snail density and negative numbers indicating relatively greater urchin density. Additionally, the log ratio means that an equivalent difference in the species’ densities in either direction results in the same ratio magnitude. As there were zero counts for each species at some sites, we added one to the count of each species (Equation 1) to ensure that all values were positive and non-zero. By having the ratio be snails to urchins, higher values indicated a healthier site.
+
+We then modelled the differences in this metric between protected and unprotected sites to see if the protected sites were effective at making sites healthier.
+
+### Model 14: Snail urchin ratio fishing model (glm)
+
+
+```{r Checking variance between protected and non-protected for sn urch ratio, echo=FALSE}
+leveneTest(sn_urch_ratio ~ protect_status, data = env_mod_data_hon)
+```
+Variance is equal between protection status.
+
+```{r Snail ratio protection GLM model}
+sn_urch_ratio_protection_model_glm <- glmmTMB(sn_urch_ratio ~ protect_status, 
+                          data = env_mod_data_hon,
+                          family = gaussian(link = "identity"))
+```
+
+```{r Sn urch ratio protection mod glm output, echo=FALSE}
+#Checking resids
+sn_urch_ratio_protection_model_glm_resids <- simulateResiduals(sn_urch_ratio_protection_model_glm)
+plot(sn_urch_ratio_protection_model_glm_resids)
+
+
+hist(residuals(sn_urch_ratio_protection_model_glm))
+shapiro.test(residuals(sn_urch_ratio_protection_model_glm))
+
+#Looking at model results
+summary(sn_urch_ratio_protection_model_glm)
+performance::r2(sn_urch_ratio_protection_model_glm)
+```
+
+```{r Plotting the effect of protection status on snail ratio in glm, echo=FALSE}
+pred_sn_urch_ratio_protection_model_glm <- ggpredict(sn_urch_ratio_protection_model_glm, terms = "protect_status")
+
+ggplot(pred_sn_urch_ratio_protection_model_glm, aes(x = x, y = predicted))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Log Snail to Urchin ratio", x = "Protection Status")+
+  theme.figure()
+```
+
+Seeing a strong positive effect of protection
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing sn urch ratio model linear residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_sn_urch_ratio_protection_model_glm <- residuals(sn_urch_ratio_protection_model_glm, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data_hon, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_sn_urch_ratio_protection_model_glm, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_sn_urch_ratio_protection_model_glm, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+Some correlation with the inverse distance method.
+
+
+### Model 15: Snail urchin ratio fishing model (glmm)
+
+```{r Snail ratio protection re GLMM model}
+sn_urch_ratio_protection_model_glmm <- glmmTMB(sn_urch_ratio ~ protect_status +
+                          (1|region1), 
+                          data = env_mod_data_hon,
+                          family = gaussian(link = "identity"))
+```
+
+```{r Snail urchin ratio protection mod re glmm output, echo=FALSE}
+#Checking resids
+sn_urch_ratio_protection_model_glmm_resids <- simulateResiduals(sn_urch_ratio_protection_model_glmm)
+plot(sn_urch_ratio_protection_model_glmm_resids)
+
+hist(residuals(sn_urch_ratio_protection_model_glmm))
+shapiro.test(residuals(sn_urch_ratio_protection_model_glmm))
+
+#Looking at model results
+summary(sn_urch_ratio_protection_model_glmm)
+performance::r2(sn_urch_ratio_protection_model_glmm)
+
+#Checking for significance of random effect
+performance::icc(sn_urch_ratio_protection_model_glmm)
+```
+
+Also seeing a significant positive effect of protection with region included as a random effect.
+
+```{r Plotting the effect of protection status on snail ratio in re glmm, echo=FALSE}
+#Predicting across all levels of the random effects
+pred_sn_urch_ratio_protection_model_glmm <- ggpredict(sn_urch_ratio_protection_model_glmm, terms = "protect_status")
+
+ggplot(pred_sn_urch_ratio_protection_model_glmm, aes(x = x, y = predicted))+
+   geom_boxplot(data = env_mod_data_hon, aes(x = protect_status, y = sn_urch_ratio))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Log Snail to Urchin ratio", x = "Protection Status")+
+  theme.figure()
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing sn urch ratio model linear re residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_sn_urch_ratio_protection_model_glmm <- residuals(sn_urch_ratio_protection_model_glmm, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data_hon, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_sn_urch_ratio_protection_model_glmm, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_sn_urch_ratio_protection_model_glmm, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+No autocorrelation.
+
+### Model 16: Snail urchin ratio fishing model with fixed effect (glm)
+
+```{r Snail ratio protection fe GLM model}
+sn_urch_ratio_protection_model_glm_fe <- glmmTMB(sn_urch_ratio ~ protect_status +
+                          region1, 
+                          data = env_mod_data_hon,
+                          family = gaussian(link = "identity"))
+```
+
+```{r Snail urch ratio protection mod fe glm output, echo=FALSE}
+#Checking resids
+sn_urch_ratio_protection_model_glm_fe_resids <- simulateResiduals(sn_urch_ratio_protection_model_glm_fe)
+plot(sn_urch_ratio_protection_model_glm_fe_resids)
+
+hist(residuals(sn_urch_ratio_protection_model_glm_fe))
+shapiro.test(residuals(sn_urch_ratio_protection_model_glm_fe))
+
+#Looking at model results
+summary(sn_urch_ratio_protection_model_glm_fe)
+performance::r2(sn_urch_ratio_protection_model_glm_fe)
+```
+
+Effect of protection status is no longer significant but the trend is in the same direction, Sarita is significantly lower than Deer Group bamfield
+
+```{r Plotting the effect of protection status on snail ratio in fe glm, echo=FALSE}
+pred_sn_urch_ratio_protection_model_glm_fe <- ggpredict(sn_urch_ratio_protection_model_glm_fe, terms = c("protect_status", "region1"))
+
+ggplot(pred_sn_urch_ratio_protection_model_glm_fe, aes(x = group, y = predicted, colour = x))+
+  geom_point()+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3)+
+  labs(y = "Predicted Log Snail to Urchin ratio", x = "Protection Status")+
+  theme.figure()
+```
+
+##### Testing the residuals for autocorrelation
+<div class="fold o"> 
+```{r Testing sn urch ratio model linear fe residuals for spatial correlation, echo=FALSE, warning=FALSE}
+#extract residuals from model
+residuals_sn_urch_ratio_protection_model_glm_fe <- residuals(sn_urch_ratio_protection_model_glm_fe, type = "pearson")
+
+#creating the spatial weights matrix
+coords_for_auto_test <- st_as_sf(env_mod_data_hon, coords = c("longitude", "latitude"), crs = 4326)
+coords_for_auto_test_projected <- st_transform(coords_for_auto_test, crs = 3857)
+extracted_coords_for_auto_test_projected <- st_coordinates(coords_for_auto_test_projected)
+
+
+nb <- dnearneigh(extracted_coords_for_auto_test_projected, d1 = 0, d2 = 10)
+#picked 10 m for distance so that it includes the transects at same sites
+
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+##Testing the residuals with Moran's I test and weight matrix
+moran.test(residuals_sn_urch_ratio_protection_model_glm_fe, lw,
+           alternative = "two.sided")
+
+#Testing the residuals with inverse distance matrix as well to confirm
+dist_matrix <- as.matrix(dist(extracted_coords_for_auto_test_projected))
+inverse_dist_matrix <- 1 / (dist_matrix + 0.001)
+diag(inverse_dist_matrix) <- 0
+lw_inverse <- mat2listw(inverse_dist_matrix, style = "W")
+moran.test(residuals_sn_urch_ratio_protection_model_glm_fe, lw_inverse,
+           alternative = "two.sided")
+```
+</div>
+
+No autocorrelation.
+
+
+##### Testing for the VIF of the model
+```{r Testing for multicollinearity of the predictors snail to urchin}
+#Using this function because there was a problem with the vif function
+performance::check_collinearity(sn_urch_ratio_protection_model_glm_fe,
+                   component = c("all"))
+```
+
+Correlation does not seem to be problematic.
+
+
+### Comparing the snail to urchin ratio models
+
+```{r AIC of the snail urchin ratio models without openness}
+AICc(sn_urch_ratio_protection_model_glm,
+     sn_urch_ratio_protection_model_glmm,
+    sn_urch_ratio_protection_model_glm_fe)%>%
+  arrange(AICc)%>%
+  mutate(delta_AICc = AICc - AICc[1])
+```
+
+
+AIC indicated that the fixed effect region was the best model but we ultimately decided that it was not asking the question we wanted to look at. The random effect model was marginally better than the one without the random effect and it corrected for the spatial autocorrelation.
+
+
+# Creating figures for the thesis
+
+## Making a theme for all subsequent figures
+
+```{r Making theme for all subsequent figures, echo=FALSE}
+theme.figure.report <- function (){
+  theme_bw(base_size = 12) +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    #axis.line = element_line(colour = "black"),
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 14, face = "plain"),
+    legend.text = element_text(size = 12, face = "plain"),
+    legend.title = element_text(size = 14, face = "bold")) 
+}
+```
+
+## Set up for site maps
+
+### Making the map ranges
+
+```{r Seting the ranges for the maps}
+#In this chunk I made limits for the maps so that they show the view of 
+#Barkley Sound that I want
+lat_min = min(env_mod_data_hon$latitude) - 0.05
+lat_max = max(env_mod_data_hon$latitude) + 0.05
+
+long_min = min(env_mod_data_hon$longitude) - 0.05
+long_max = max(env_mod_data_hon$longitude) + 0.05
+```
+
+### Loading in the low res shape file
+
+```{r Loading in the base layer}
+#I loaded in a lower res shape file that shows all of BC in order to make a
+#large inset plot of Vancouver Island. Similar to the high res shape file I 
+#subsetted it to only include the area around Vancouver Island.
+
+VI_base_layer <- read_sf(dsn = here("./01_raw_data/canada_sf_data", ""), 
+                         stringsAsFactors = F)
+VI_base_layer_sf <- st_as_sf(VI_base_layer)
+
+#specifying the projection for the sf
+st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
+
+
+shp_xmin_low <- -129
+shp_xmax_low <- -122.5
+shp_ymin_low <- 48
+shp_ymax_low <- 52
+
+bbox_low <- st_bbox(c(xmin = shp_xmin_low, ymin = shp_ymin_low, xmax = shp_xmax_low, ymax = shp_ymax_low))
+
+bbox_low_sf <- st_as_sfc(bbox_low)
+
+VI_base_layer_sf_subset <- st_crop(VI_base_layer_sf, bbox_low_sf)
+#plot(VI_base_layer_sf_subset)
+```
+
+
+### Loading in the shapefiles for the protected areas
+
+In order to show the protected areas within Barkley Sound I used Google Earth to make kml files with polygons of the protected areas.
+
+```{r loading in the RCA polygon}
+#st_read loads in the kml file and stores it as a polygon
+broken_group_RCA <- st_read(here("./01_raw_data/Broken_group_RCA.kml"))
+```
+
+```{r Loading in the Numukamis area}
+numukamis_area <- st_read(here("./01_raw_data/Numukamis_closed_area.kml"))
+```
+
+```{r Loading in the Baeria rocks}
+baeria_rocks_er <- st_read(here("./01_raw_data/baeria_rocks.kml"))
+```
+
+### Loading in the flight track for the DFO surveys
+
+I also traced the DFO flight path used for the DFO flyover surveys in Barkley Sound using Google Earth and saved it as a kml file.
+
+```{r Loading in the DFO flight track for Barkley Sound}
+#This loads in the flight path so that it can be put on the plot.
+dfo_flight_track <- st_read(here("./01_raw_data/dfo_new_flight_path.kml"))
+```
+
+
+###Shifting a couple of the sites to make it clearer
+
+In order to not have a bunch of the sites overlapping each other when plotting maps I shifted some of the points slightly.
+
+```{r Shifting some sites}
+env_mod_data_hon_minor_shifted <- env_mod_data_hon%>%
+  #These lines of code change the lat or long of the specified site to the given value
+ mutate(longitude = if_else(site_code == "BMSC11", -125.153, longitude))%>%
+  mutate(latitude = if_else(site_code == "BMSC5", 48.82333, latitude))%>%
+  mutate(latitude = if_else(site_code == "BMSC9", 48.83179, latitude))%>%
+  mutate(longitude = if_else(site_code == "BMSC9", -125.1490, longitude))
+```
+
+## Figure 1: Overall site map
+
+```{r Making the inset map}
+#This makes a map of Vancouver Island
+(van_isl_map <- ggplot(VI_base_layer_sf_subset) +
+   #allows visualization of sf objects
+  geom_sf() +
+   #Sets limits for the plot
+  coord_sf(ylim = c(48.3, 50.8), xlim = c(-128.2, -123.2)) +
+  theme.figure.report() +
+   #Makes a red rectangle around Barkley Sound
+  geom_rect(xmin = long_min, xmax = long_max, ymin = lat_min, ymax = lat_max,
+            color = "red", fill = NA, linewidth = 1) +
+  labs(x = "Longitude", y = "Latitude")+
+   theme(axis.text = element_blank(),
+         axis.title = element_blank(),
+         axis.ticks = element_blank()))
+```
+
+
+```{r Overall site map with the site locations}
+(overall_site_map <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "darkgrey", fill = "lightgrey")+
+   #The lines below plot the pl=olygons of the different protected areas within
+   #the sound
+     geom_sf(data = broken_group_RCA, fill = "blue", colour ="blue", alpha = 0.1)+
+   geom_sf(data = numukamis_area, fill = "blue", colour = "blue", alpha = 0.2)+
+   geom_sf(data = baeria_rocks_er, fill = "blue", colour = "blue", alpha = 0.2)+
+   #This adds in the points of the survey sites, shifted slightly to be not 
+   #overlapping
+     geom_point(env_mod_data_hon_minor_shifted, 
+              mapping = aes(x = longitude, y = latitude, fill = protect_status,
+                            shape = region1), size = 3)+
+   #This specifies the different shapes to be used to differentiate
+   #between the different regions
+   scale_shape_manual(values = c(24, 21, 22, 23))+
+   #Specifies the colours for unprotected and protected sites
+   scale_fill_manual(values = c("#F46864", "#1CB8BC"))+
+       coord_sf(xlim = c(long_min + 0.03, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.04)) +
+  labs(x = "Longitude", y = "Latitude", shape = "Region",
+       fill = "Protection\nStatus") +
+  theme.figure.report() +
+  scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
+ # scale_y_continuous(breaks = c(48.80, 48.85, 48.90, 48.95, 49.00))+
+  #Adds in an arrow indicating north
+   annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+   #adds in a scale bar
+  annotation_scale(location = "br", text_cex = 1.3)+
+    theme(legend.position = "inside",
+      legend.position.inside = c(0.84, 0.2),
+         axis.text.y = element_text(angle = 45),
+      legend.text = element_text(size = 12),
+      legend.title = element_text(size = 14),
+      legend.margin = margin(0.3, 0.3, 0.3, 0.3)))
+```
+
+
+```{r Making the site map with the van isl inset, fig.cap= Figure 1. Locations of Reef Life Survey study sites (n = 26) within Barkley Sound, BC, Canada, which were sampled in April and May of 2024. The colours indicate the protection-from-fishing status of each site. Some sites have been shifted slightly to prevent overlap. Region classifications are indicated by the shapes with the region codes corresponding to: BG = Broken Group, DIEC = Deep Imperial Eagle Channel, DGB = Deer Group/Bamfield, and NMB = Numukamis Bay. Areas protected from fishing are shown with blue shade: farthest west = Broken Group Rockfish Conservation Area, central north = Baeria Rocks Ecological Reserve, farthest east = Numukamis Bay Finfish Closure Area. Inset is a map of Vancouver Island illustrating the location of Barkley Sound (red square).}
+(site_map_w_inset <- ggdraw(overall_site_map) +
+  draw_plot(van_isl_map, x = 0.1, y = 0.15, width = 0.5, height = 0.3))
+```
+
+This was the rough version of the plot and then I saved it as a pdf and used inkscape to fine tune the locations of the legends and inset.
+
+```{r Saving the site map}
+ggsave("site_map_with_inset_regions.pdf", plot = site_map_w_inset,
+       path = here("./04_plots/report_figures"), width = 165, height = 130, units = "mm")
+```
+
+
+## Figure 2: Temperature plot for Barkley Sound
+
+```{r Converting the raster to a data frame so ggplot can use it}
+avg_temp_df <- as.data.frame(average_temperature, xy = TRUE, na.rm = TRUE)
+colnames(avg_temp_df) <- c("longitude", "latitude", "average_temp")
+
+avg_temp_df <- avg_temp_df%>%
+  mutate(avg_temp_c = average_temp - 273.15)
+```
+
+```{r Making the temperature map, fig.cap=Figure 2. Mean sea surface temperature (SST) in Barkley Sound, BC, Canada, from daily temperature measurements from the Global Ocean OSTIA Sea Surface Temperature and Sea Ice Analysis product (European Union-Copernicus Marine Service, 2015). Mean SST was calculated by averaging the daily temperatures within 0.05º latitude x 0.05º longitude cells for the year before Reef Life Survey subtidal surveys within Barkley Sound in April and May of 2024 (2023-04-22 to 2024-05-03).}
+(temp_map_23_24 <- ggplot() +
+   #Plotting the temp data as a raster with the shape file
+  geom_raster(data = avg_temp_df, aes(x = longitude, y = latitude, fill = avg_temp_c)) +
+   geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "#424A4E", fill = "lightgrey")+
+  coord_sf(xlim = c(long_min + 0.029, long_max - 0.032),
+           ylim = c(lat_min , lat_max - 0.025)) +
+     scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
+   #Setting a colour gradient from low to high temp
+     scale_fill_gradient(
+    low = "lightblue",          
+    high = "#E95E48"
+  ) +
+  theme.figure.report() +
+  labs(x = "Longitude",
+       y = "Latitude",
+       fill = "Mean SST (ºC)") +
+  theme(legend.position = "inside",
+        axis.text = element_text(size = 14),
+        axis.title = element_text(size = 16),
+        axis.text.y = element_text(angle = 45))+
+  annotation_scale(location = "br", text_cex = 1.3)+
+   annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering))
+```
+
+Fine tuning of the legend location and text was done in inkscape.
+
+```{r Saving the site map}
+ggsave("temp_map_23_24.pdf", plot = temp_map_23_24,
+       path = here("./04_plots/report_figures"), width = 165, height = 130, units = "mm")
+```
+
+
+## Figure 3: Example of Rec boats with radii
+
+For this plot we used 2023 and 1.5 km radii as examples of the data we saw for the rec boat counts
+
+```{r total rec boats within 1.5 km, fig.cap=Figure 3. Example of the raw data from DFO flyover surveys (June 1–September 30, 2023) indicating the locations of recreational boats fishing (black dots) with 1.5 km radii (red-filled circles) around each Reef Life Survey site (open black dots) in Barkley Sound, BC, Canada. Subtidal surveys were conducted at each site in April and May of 2024. The DFO surveys sometimes grouped boats that were close together as one point, so some points indicate multiple boats, but this has been omitted for ease of viewing. The flight path taken by DFO surveyors is shown (dashed blue line) with arrows showing the direction of flight. DFO surveys were completed in the summers of 2021-23. The mean numbers of recreational boats fishing within 1.0, 1.5, and 2.0 km radii per year were calculated to compare fishing activity between protected and unprotected sites.}
+(total_rec_boats_map_2023_test <- ggplot()+
+    geom_sf(data = VI_base_layer_hi_res_sf_subset, colour = "darkgrey", fill = "lightgrey")+
+   #This plots the DFO plane flight path
+   geom_sf(data = dfo_flight_track, colour =  "#355173", size = 3)+
+  geom_point(data = rec_boats_fishing2023, 
+             mapping = aes(x = Longitude, y = Latitude),
+             size = 0.8, fill = "#070707")+
+   #This plots the 1.5km radii around each RLS site
+    geom_sf(data = site_locations_radius_1.5km, fill = "#E95E48", alpha = 0.3)+
+   #this plots the RLS sites
+    geom_point(env_mod_data_hon, 
+              mapping = aes(x = longitude, y = latitude),
+              shape = 21, size = 3, colour = "black")+
+    coord_sf(xlim = c(long_min + 0.02, long_max - 0.035),
+           ylim = c(lat_min + 0.01, lat_max - 0.03)) +
+  labs(x = "Longitude", y = "Latitude") +
+  theme.figure.report() +
+   theme(axis.text.y = element_text(angle = 45))+
+ scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
+  annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(location = "br", text_cex = 1.3))
+```
+
+A legend was added and the flight path line styling was edited using inkscape.
+
+```{r Saving the rec boats plot with dfo flight track}
+ggsave("total_rec_boat_map_2023_1.5km_track.pdf", plot = total_rec_boats_map_2023_test,
+       path = here("./04_plots/report_figures"), width = 160, height = 120, units = "mm")
+```
+
+
+## Figure 4: Boxplots of number of boats between protected and unprotected sites
+
+```{r Boxplot of mean rec boats between protection levels 1.5 km}
+(rec_boats_boxplot_1.5km <- ggplot(unique_site_df, aes(x = protect_status,
+                                                     y = mean_rec_boat_counts_1.5km,
+                                                     fill = protect_status))+
+  geom_boxplot(alpha = 0.6, width = 0.4)+
+   #Adding jittered raw data but only jittering on the x axis so it is the 
+   #true boat count values
+  geom_jitter(height = 0, width = 0.2, colour = "darkgrey", alpha = 0.5)+
+  labs(x = "Protection Status", y = "Mean rec.\nboat counts")+
+     scale_fill_manual(values = c("#E95E48", "#355173"))+
+  theme.figure.report()+
+   theme(legend.position = "none",
+     #    axis.text.x = element_blank(),
+         axis.title.y = element_blank()))
+      #   axis.ticks.x = element_blank()))
+```
+
+```{r Boxplot of mean rec boats between protection levels 1 km}
+(rec_boats_boxplot_1km <- ggplot(unique_site_df, aes(x = protect_status,
+                                                     y = mean_rec_boat_counts_1km,
+                                                     fill = protect_status))+
+  geom_boxplot(alpha = 0.6, width = 0.4)+
+  geom_jitter(height = 0, width = 0.2, colour = "darkgrey", alpha = 0.5)+
+  labs(x = "Protection Status", y = "Mean rec.\nboat counts")+
+     scale_fill_manual(values = c("#E95E48", "#355173"))+
+  theme.figure.report()+
+   theme(legend.position = "none"))
+     #    axis.text.x = element_blank(),
+         #axis.title.y = element_blank()))
+      #   axis.ticks.x = element_blank()))
+```
+
+```{r Boxplot of mean rec boats between protection levels 2 km}
+(rec_boats_boxplot_2km <- ggplot(unique_site_df, aes(x = protect_status,
+                                                     y = mean_rec_boat_counts_2km,
+                                                     fill = protect_status))+
+  geom_boxplot(alpha = 0.6, width = 0.4)+
+  geom_jitter(height = 0, width = 0.2, colour = "darkgrey", alpha = 0.5)+
+  labs(x = "Protection Status", y = "Mean rec.\nboat counts",
+       fill = "Protection Status")+
+     scale_fill_manual(values = c("#E95E48", "#355173"))+
+  theme.figure.report()+
+   theme(legend.position = "none",
+     axis.title.y = element_blank()))
+```
+
+```{r Combining the three plots into one, fig.cap=Figure 4. Distributions of the mean number of recreational boats fishing (per year) within A) 1.0, B) 1.5, and C) 2.0 km of Reef Life Survey sites in Barkley Sound, BC, Canada, separated by protection-from-fishing status (NP = No Protection, P = Protected). Raw data are shown with grey circles and have been jittered across the x-axis for ease of viewing. Means were calculated from DFO flyover survey data of recreational fishing boat locations from 2021-23. Asterisks indicate level of significance based on Wilcoxon rank sum tests (* = P < 0.05, ** = P < 0.01, *** = P < 0.001).}
+rec_boats_overall_boxplots <- rec_boats_boxplot_1km + rec_boats_boxplot_1.5km + rec_boats_boxplot_2km
+
+rec_boats_overall_boxplots
+```
+
+This was imported to inkscape where labels for the radii used were added (1, 1.5, 2, from left to right). Also the x axis labels were edited to just be Np and P
+
+```{r Saving the rec boat counts boxplot figure}
+ggsave("rec_boats_boxplot_overall.pdf", plot = rec_boats_overall_boxplots,
+       path = here("./04_plots/report_figures"), width = 180, height = 80, units = "mm")
+```
+
+
+## Figure 5: Relationship of snail density with openness
+
+```{r Making a plot of the effect of openness on log snails, fig.cap=Figure 5. The relationship of openness (normalized) with the log-transformed red turban snail (P. gibberosus) density from Reef Life Survey sites in Barkley Sound, BC, Canada, in April and May of 2024. Raw data (black points) are shown with a line of best fit (blue line) and 95% confidence intervals (blue shade).}
+(pred_snail_openness_plot_log <- ggplot(env_mod_data_hon, aes(x = norm_openness, y = log(snail_dens + 0.01)))+
+  geom_point()+
+   #This fits a linear trend line with 95% CI
+  geom_smooth(method = "lm", colour = "#637683", fill = "#8EBAD2")+
+  labs(x = "Normalized Openness", y = "Snail density (log(n/m2 + 0.01))")+
+  theme.figure.report())
+```
+
+Figure was further refined in inkscape
+
+```{r Saving the snail openness plot}
+ggsave("pred_snail_openness_plot_log.pdf", plot = pred_snail_openness_plot_log,
+       path = here("./04_plots/report_figures"), width = 100, height = 100, units = "mm")
+```
+
+
+## Figure 6: Environmental trends for urchins
+
+For this figure we were trying to show some of the trends in the urchin density data based on the environmental predictors of openness and substrate type. We did this by predicting data from the GAM run for the urchin density and then creating the plots with the predicted and raw data.
+
+
+#### Plot of effect of seafloor type
+
+
+##### Generating predicted data for plot
+
+```{r predicting urchin density based on dominant seafloor}
+#This block of code creates a df with data necessary to supply to the predict
+#function in order to have it predict the fitted values of the urchin density
+urchin_ecology_data_for_seafloor <- data.frame(
+  #This supplies the two levels of the seafloor type
+  dominant_score = levels(env_mod_data_hon$dominant_score),
+  #This supplies the mean value of the scaled temperature data
+  sst_scale = mean(env_mod_data_hon$sst_scale),
+  #This supplies the mean value of the scaled openness data
+  norm_openness_scale = mean(env_mod_data_hon$norm_openness_scale),
+  #This supplies the Deer Group bamfield region as this was set as the reference
+  #level in the model
+  region1 = factor("DGB", levels = levels(env_mod_data_hon$region1))
+)
+#The resulting df has two rows, one each for loose and solid seafloor type, and
+#then columns for seafloor type, temp, openness, and region
+
+
+#This block of code is used to actually predict the fitted values of the urchin
+#density data based on the dataframe we made above.
+
+#This uses the predict function to predict from the GAM, using the data frame
+#we supplied above as the data to predict upon. Setting se.fit to TRUE means
+#that it will also estimate the standard error for each prediction.
+predicted_sf_effect_urchin <- predict(ecology_urchin_mod_re, newdata = urchin_ecology_data_for_seafloor, se.fit = TRUE)
+
+#This adds a column with the fitted values to the urchin ecology data for 
+#seafloor that we made above
+urchin_ecology_data_for_seafloor$fit <- predicted_sf_effect_urchin$fit
+
+#This adds a column with the upper 95% CL for the predicted value based on the 
+#estimated SE
+urchin_ecology_data_for_seafloor$upper <- predicted_sf_effect_urchin$fit + 1.96 * predicted_sf_effect_urchin$se.fit
+
+#This adds a column for the lower 95% Cl
+urchin_ecology_data_for_seafloor$lower <- predicted_sf_effect_urchin$fit - 1.96 * predicted_sf_effect_urchin$se.fit
+```
+
+##### Creating Plot
+
+```{r Plotting the predicted urchin density from seafloor type}
+(predicted_urch_dens_dom_score <- ggplot(urchin_ecology_data_for_seafloor, aes(x = dominant_score, y = fit))+
+   #This adds a greyed out boxplot in the background that shows the raw data
+  geom_boxplot(data = env_mod_data_hon, mapping = aes(x = dominant_score, y = urchin_dens),
+                alpha = 0.6, width = 0.5, colour = "grey")+
+   #Adds 95% CI
+    geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.15, linewidth = 1.2)+
+   #Adds predicted points from the model predictions
+  geom_point(aes(colour = dominant_score), size = 4)+
+   scale_colour_manual(values = c("#EAB964", "#5E666F"))+
+  labs(x = "Dominant seafloor type", y = "Urchin density (n/m2)")+
+  theme.figure.report()+
+   theme(legend.position = "none"))
+```
+
+So ultimately, for this plot the model predictions are the predicted urchin density between the two seafloor types within the Deer Group Bamfield region.
+
+
+
+#### Plot of effect of openness
+
+##### Generating predicted data for plot
+
+```{r Trying to predict the urchin counts from openness}
+#This block of code generates a df that is used in the predict function as the 
+#data to predict upon.
+urchin_ecology_data_for_openness <- data.frame(
+  #This supplies the level of seafloor type as loose as this was the reference
+  #level
+  dominant_score = factor("loose", levels = levels(env_mod_data_hon$dominant_score)),
+  #This supplies the mean of the scaled temperature data
+  sst_scale = mean(env_mod_data_hon$sst_scale),
+  #This generates a sequence of 100 equally spaced openness values between the 
+  #max and min values in the scaled openness column
+  norm_openness_scale = seq(min(env_mod_data_hon$norm_openness_scale), max(env_mod_data_hon$norm_openness_scale), length.out = 100),
+  #This supplies the region level to be Deer Group Bamfield as this was the 
+  #reference level
+  region1 = factor("DGB", levels = levels(env_mod_data_hon$region1))
+)
+#The resulting DF has 100 rows of the different openness values and then also
+#has a column for region, temp, and seafloor that are all the constants supplied
+#above
+
+
+#getting mean and sd for norm_openness
+norm_openness_mean <- mean(env_mod_data_hon$norm_openness)
+norm_openness_sd <- sd(env_mod_data_hon$norm_openness)
+
+#This code uses the data supplied above to predict the urchin density at the 
+#different openness values from the GAM. se.fit as TRUE means that SE estimates 
+#are generated
+predicted_openness_effect_urchin <- predict(ecology_urchin_mod_re, newdata = urchin_ecology_data_for_openness, se.fit = TRUE)
+#This adds the fitted urchin density values to the df we made above
+urchin_ecology_data_for_openness$fit <- predicted_openness_effect_urchin$fit
+#This adds a column of upper 95% CL using the SE estimates
+urchin_ecology_data_for_openness$upper <- predicted_openness_effect_urchin$fit + 1.96 * predicted_openness_effect_urchin$se.fit
+#This adds a column of lower 95% CL using the SE estimates
+urchin_ecology_data_for_openness$lower <- predicted_openness_effect_urchin$fit - 1.96 * predicted_openness_effect_urchin$se.fit
+
+#These two lines return the mean and sd of the openness values used in order to 
+#backcalculate the scaled openness values to the unscaled form for plotting
+norm_openness_mean <- mean(env_mod_data_hon$norm_openness)
+norm_openness_sd <- sd(env_mod_data_hon$norm_openness)
+
+#This adds a column of the scaled openness sequence that has been back 
+#transformed to the raw openness scale using the mean and SD
+urchin_ecology_data_for_openness$norm_openness_original <- urchin_ecology_data_for_openness$norm_openness_scale * norm_openness_sd + norm_openness_mean
+```
+
+
+##### Creating Plot
+
+```{r Plotting the predicted urchin density from openness}
+(predicted_openness_effect_urchin <- ggplot(env_mod_data_hon, aes(x = norm_openness, y = urchin_dens))+
+   #adds line of the predicted urchin density values against the backcalculated
+   #openness sequence
+  geom_line(data = urchin_ecology_data_for_openness, 
+            mapping = aes(x = norm_openness_original, y = fit), colour = "black", linewidth = 1.25)+
+   #adds a 95% confidence band for the predicted values
+  geom_ribbon(data = urchin_ecology_data_for_openness, 
+            mapping = aes(x = norm_openness_original, y = fit, ymin = lower, ymax = upper), alpha = 0.5, fill = "#E95E48")+
+  geom_point()+
+  labs(x = "Normalized openness", y = "Urchin density (n/m2)")+
+  theme.figure.report())
+```
+
+
+Ultimately, this plot is showing the predicted urchin densities as a function of openness for urchins on loose seafloor in Deer Group Bamfield.
+
+#### Combining to two plots into a multi-panel
+
+```{r Combining the two plots into one, fig.cap=Figure 6. A) Distributions of red sea urchin (M. franciscanus) density between seafloor types (Loose = loose rubble substrate and solid = solid rock substrate) with model predictions (coloured points) and 95% confidence intervals (black error bars) from a generalized additive mixed model (GAMM). B) Relationship of red sea urchin density and openness (normalized) with raw data (black points) and GAMM predictions (black line) with a 95% confidence interval (red shade) shown. Predictions made by holding other continuous variables at their mean, and categorical and random variables at their reference level. For openness predictions, a sequence of 100 openness values was generated. Urchin densities were obtained from subtidal Reef Life Surveys at sites in Barkley Sound, BC, Canada, in April and May of 2024.}
+(urchin_gam_plot_updated <- (predicted_urch_dens_dom_score)/(predicted_openness_effect_urchin))
+```
+
+This plot was then further cleaned up in inkscape (e.g., added panel letters and urchin symbols)
+
+```{r Saving the plot}
+ggsave("urchin_gam_plot_updated.pdf", plot = urchin_gam_plot_updated,
+       path = here("./04_plots/report_figures"), width = 100, height = 180, units = "mm")
+```
+
+
+
+## Figure 7: Plots of denisities and ratios between protection levels
+
+For this figure we were showing the effects of protection from fishing on the urchin and snail densities, and on the ratio of snails to urchins. We did this by predicting the output from the glmmTMB models and then plotting the predictions along with the raw data.
+
+#### Plot of snail density
+
+##### Creating the plot
+
+The predicted values for this plot were already generated previously when we made the plots of the snail fishing models in order to visualize the effects of fishing from the models. 
+
+```{r Making a boxplot of snail counts between protection status}
+(snail_fishing_boxplot <- ggplot(env_mod_data_hon, aes(x = protect_status, y = snail_dens))+
+   #adds greyed out boxplots in the background with the raw data. Outlier.shape
+   #as NA means that outlier points are hidden but the axis is the full height 
+   #of the data range
+  geom_boxplot(env_mod_data_hon, mapping = aes(x = protect_status, y = snail_dens),
+               alpha = 0.6, width = 0.5, colour = "grey", outlier.shape = NA)+
+   #This adds the 95% CI. The CL from the prediction are squared to put them 
+   #back onto the raw scale
+  geom_errorbar(pred_snail_fishing_mod, mapping =
+                  aes(ymin = (conf.low^2), ymax = (conf.high^2), x = x, y = predicted),
+                width = 0.15, linewidth = 1.2)+
+   #Adds the model predictions
+   geom_point(pred_snail_fishing_mod, mapping = 
+              aes(x = x, y = predicted, colour = x), size = 4)+
+  labs(x = "Protection Status", y = expression(Snail~density~(n/m^2)))+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
+   scale_colour_manual(values = c("#E95E48", "#355173"))+
+  coord_cartesian(ylim = c(0, 4.7))+
+  theme.figure.report()+
+    theme(legend.position = "none",
+          axis.text.x = element_blank(),
+         axis.title.x = element_blank(),
+         axis.ticks.x = element_blank()))
+```
+#### Plot of urchin density 
+
+##### Creating the plot
+
+```{r Making a boxplot of urchin counts between protection status}
+(urchin_fishing_boxplot <- ggplot(env_mod_data_hon, aes(x = protect_status, y = urchin_dens))+
+   #Adds greyed out boxplots in the background with the raw data. 
+  geom_boxplot(env_mod_data_hon, mapping = aes(x = protect_status, y = urchin_dens),
+               alpha = 0.6, width = 0.5, colour = "grey")+
+   #Adds the 95% CI from the model prediction
+  geom_errorbar(pred_urchin_fishing_mod_glmm, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = x, y = predicted),
+                width = 0.15, linewidth = 1.2)+
+   #adds the points for the model predictions
+   geom_point(pred_urchin_fishing_mod_glmm, mapping = 
+              aes(x = x, y = predicted, colour = x), size = 4)+
+  labs(x = "Protection Status", y = expression(Urchin~density~(n/m^2)))+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
+   scale_colour_manual(values = c("#E95E48", "#355173"))+
+  theme.figure.report()+
+    theme(legend.position = "none",
+          axis.text = element_text(size = 16),
+          axis.text.x = element_blank(),
+         axis.title.x = element_blank(),
+         axis.ticks.x = element_blank()))
+```
+
+#### Plot of snail to urchin ratio
+
+##### Creating the plot 
+
+```{r Making the snail to urchin ratio boxplot}
+(snail_urchin_ratio_box <- ggplot(env_mod_data_hon, aes(x = protect_status, y = sn_urch_ratio))+
+  geom_boxplot(env_mod_data_hon, mapping = aes(x = protect_status, y = sn_urch_ratio),
+               alpha = 0.6, width = 0.5, colour = "grey")+
+  geom_errorbar(pred_sn_urch_ratio_protection_model_glmm, mapping =
+                  aes(ymin = conf.low, ymax = conf.high, x = x, y = predicted),
+                width = 0.15, linewidth = 1.2)+
+   geom_point(pred_sn_urch_ratio_protection_model_glmm, mapping = 
+              aes(x = x, y = predicted, colour = x), size = 4)+
+  labs(x = "Protection Status", y = "Log snail:urchin\nratio")+
+   scale_fill_manual(values = c("#E95E48", "#355173"))+
+      scale_colour_manual(values = c("#E95E48", "#355173"))+
+  theme.figure.report()+
+    theme(legend.position = "none",
+          axis.text = element_text(size = 16)))
+```
+
+####Combining the three plots into one multi-panel
+
+```{r Combining the snail, urchin, snail:urchin ratio boxplots, fig.cap=Figure 7. Distributions of the A) red turban snail (P. gibberosus) density, B) red sea urchin (M. franciscanus) density, and C) log snail-to-urchin ratios at Reef Life Survey sites in Barkley Sound, BC, Canada, separated by protection-from-fishing status (NP = No Protection, P = Protected). Coloured points are model predictions (A = linear model with square-root-transformed response, B and C = linear mixed-effects models) with 95% confidence intervals (black error bars), and the asterisk indicates P < 0.05. Predictions in B) and C) were averaged over the levels of the random effect of region. One outlier was removed in A).}
+#This code assembles the three plots in a stacked fashion.
+(snail_urchin_sn_urch_box_plot <- (snail_fishing_boxplot)/
+  (urchin_fishing_boxplot)/
+  (snail_urchin_ratio_box))
+```
+
+```{r Saving the protection status plots}
+ggsave("snail_urchin_sn_urch_box_plot.pdf", plot = snail_urchin_sn_urch_box_plot,
+       path = here("./04_plots/report_figures"), width = 100, height = 185, units = "mm")
+```
+
+This figure was further edited in inkscape to add the panel letters and adjust the text of the axis titles etc.

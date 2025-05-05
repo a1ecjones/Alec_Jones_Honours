@@ -82,7 +82,6 @@ theme.figure.report <- function (){
     legend.text = element_text(size = 12, face = "plain"),
     legend.title = element_text(size = 14, face = "bold")) 
 }
-
 ```
 
 
@@ -676,7 +675,7 @@ ggsave("total_rec_boat_map_2023_1.5km_track.pdf", plot = total_rec_boats_map_202
       #   axis.ticks.x = element_blank()))
 ```
 
-```{r Boxplot of mean rec boats between protection levels 1.5 km}
+```{r Boxplot of mean rec boats between protection levels 1 km}
 (rec_boats_boxplot_1km <- ggplot(unique_site_df, aes(x = protect_status,
                                                      y = mean_rec_boat_counts_1km,
                                                      fill = protect_status))+
@@ -691,7 +690,7 @@ ggsave("total_rec_boat_map_2023_1.5km_track.pdf", plot = total_rec_boats_map_202
       #   axis.ticks.x = element_blank()))
 ```
 
-```{r Boxplot of mean rec boats between protection levels 1.5 km}
+```{r Boxplot of mean rec boats between protection levels 2 km}
 (rec_boats_boxplot_2km <- ggplot(unique_site_df, aes(x = protect_status,
                                                      y = mean_rec_boat_counts_2km,
                                                      fill = protect_status))+
