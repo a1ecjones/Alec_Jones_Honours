@@ -9,6 +9,9 @@
    viewBox="0 0 604 453.33334"
    sodipodi:docname="rec_boats_2023_1.5km_map_track.svg"
    inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   inkscape:export-filename="/Users/alecjones/Documents/GitHub/Alec_Jones_Urchin_manuscript/Supplementary_materials_Do_fishers_follow_the_rules/04_plots/manuscript_figures/total_rec_boat_map_2023_1.5km_track.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -10015,7 +10018,7 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="1.2362662"
-     inkscape:cx="327.59935"
+     inkscape:cx="328.00379"
      inkscape:cy="204.64848"
      inkscape:window-width="1920"
      inkscape:window-height="1027"
@@ -18871,14 +18874,14 @@
          transform="matrix(0.9025,0,0,0.9025,45.569822,3.675125)"><tspan
            x="514.11963"
            y="273.97354"
-           id="tspan15"><tspan
+           id="tspan4"><tspan
              style="font-family:Helvetica"
-             id="tspan2">Site with </tspan></tspan><tspan
+             id="tspan3">Site with </tspan></tspan><tspan
            x="514.11963"
            y="292.35565"
-           id="tspan17"><tspan
+           id="tspan6"><tspan
              style="font-family:Helvetica"
-             id="tspan16">1.5km radius</tspan></tspan></text>
+             id="tspan5">1.5km radius</tspan></tspan></text>
       <text
          id="text1433"
          xml:space="preserve"
@@ -18888,14 +18891,14 @@
          transform="matrix(0.9025,0,0,0.9025,40.311756,2.0479936)"><tspan
            x="520.41132"
            y="318.13724"
-           id="tspan19"><tspan
+           id="tspan8"><tspan
              style="font-family:Helvetica"
-             id="tspan18">Recreational </tspan></tspan><tspan
+             id="tspan7">Recreational </tspan></tspan><tspan
            x="520.41132"
            y="336.51935"
-           id="tspan21"><tspan
+           id="tspan10"><tspan
              style="font-family:Helvetica"
-             id="tspan20">boat fishing</tspan></tspan></text>
+             id="tspan9">boat fishing</tspan></tspan></text>
       <text
          id="text1433-0"
          xml:space="preserve"
@@ -18905,14 +18908,14 @@
          transform="matrix(0.9025,0,0,0.9025,40.846726,43.143669)"><tspan
            x="520.41132"
            y="318.13724"
-           id="tspan23"><tspan
+           id="tspan12"><tspan
              style="font-family:Helvetica"
-             id="tspan22">DFO flight </tspan></tspan><tspan
+             id="tspan11">DFO flight </tspan></tspan><tspan
            x="520.41132"
            y="336.51935"
-           id="tspan25"><tspan
+           id="tspan14"><tspan
              style="font-family:Helvetica"
-             id="tspan24">path</tspan></tspan></text>
+             id="tspan13">path</tspan></tspan></text>
       <rect
          style="fill:#355173;fill-opacity:1;stroke:#355173;stroke-width:1.86789;stroke-opacity:1;paint-order:stroke fill markers"
          id="rect2878"

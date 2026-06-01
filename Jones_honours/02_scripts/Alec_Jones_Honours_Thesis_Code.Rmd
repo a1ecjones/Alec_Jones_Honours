@@ -39,6 +39,7 @@ library(cowplot)
 library(sp)
 library(raster)
 library(waver)
+library(ncdf4)
 #library(patchwork)
 
 conflict_prefer("select", "dplyr")
@@ -2975,7 +2976,7 @@ ggsave("urchin_gam_plot_updated.pdf", plot = urchin_gam_plot_updated,
 
 
 
-## Figure 7: Plots of denisities and ratios between protection levels
+## Figure 7: Plots of densities and ratios between protection levels
 
 For this figure we were showing the effects of protection from fishing on the urchin and snail densities, and on the ratio of snails to urchins. We did this by predicting the output from the glmmTMB models and then plotting the predictions along with the raw data.
 

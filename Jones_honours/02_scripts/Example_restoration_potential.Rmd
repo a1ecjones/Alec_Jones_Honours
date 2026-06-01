@@ -1,0 +1,160 @@
+---
+title: "Example Restoration potential map"
+author: "Alec Jones"
+date: "2025-12-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(mgcv)
+library(DHARMa)
+library(mgcViz)
+library(ggeffects)
+library(gratia)
+library(geoR)
+library(geosphere)
+library(gstat)
+library(sf)
+library(car)
+library(MuMIn)
+library(lme4)
+library(spdep)
+library(ggpubr)
+library(glmmTMB)
+library(emmeans)
+library(conflicted)
+library(performance)
+library(ufs)
+library(ggspatial)
+library(ggrepel)
+library(cowplot)
+library(sp)
+library(raster)
+library(ncdf4)
+```
+
+
+```{r Loading in the temp .nc file downloaded from Copernicus, include=FALSE}
+#Loading in the data
+temp <- brick(here("./01_raw_data/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2_1764615366952.nc"))
+
+#Setting the coordinate system for the temperature data
+crs(temp) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+```
+
+```{r Calculating the average temperature for each pixel, echo=TRUE, results='hide'}
+average_temperature_van_isl <- calc(temp, fun = mean, na.rm = TRUE)
+
+writeRaster(average_temperature_van_isl, 
+            here("./01_raw_data/average_temperature_van_isl.nc"), 
+            format = "CDF", 
+            overwrite = TRUE)
+```
+```{r Extracting temperature data from the raster}
+#This pipe makes a df with the lat and long of all of the different sites
+site_points_df_van_isl <- urch_sn_ratio_mod_2024%>%
+   ungroup()%>%
+  select(longitude, latitude)
+ 
+#This sets the long and lat as coordinates
+coordinates(site_points_df_van_isl) <- ~longitude+latitude
+
+#This sets the projection of the site locations to be on the same projection
+#as the average temperature raster
+proj4string(site_points_df_van_isl) <- crs(average_temperature_van_isl)
+
+#This extracts the average temperature for where each site is located and then 
+#subtracts the constant to convert from Kelvin to celsius
+sst_values_van_isl <- raster::extract(average_temperature_van_isl, site_points_df_van_isl) - 273.15
+
+#Makes a column with the sst values in the modelling df
+urch_sn_ratio_mod_2024$sst <- sst_values_van_isl
+```
+
+
+```{r Making theme for all subsequent figures, echo=FALSE}
+theme.figure.report <- function (){
+  theme_bw(base_size = 12) +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    #axis.line = element_line(colour = "black"),
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 14, face = "plain"),
+    legend.text = element_text(size = 12, face = "plain"),
+    legend.title = element_text(size = 14, face = "bold")) 
+}
+```
+
+```{r Loading in the base layer}
+#I loaded in a lower res shape file that shows all of BC in order to make a
+#large inset plot of Vancouver Island. Similar to the high res shape file I 
+#subsetted it to only include the area around Vancouver Island.
+
+VI_base_layer <- read_sf(dsn = here("./01_raw_data/canada_sf_data", ""), 
+                         stringsAsFactors = F)
+VI_base_layer_sf <- st_as_sf(VI_base_layer)
+
+#specifying the projection for the sf
+st_crs(VI_base_layer_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
+
+
+shp_xmin_low <- -129
+shp_xmax_low <- -122.5
+shp_ymin_low <- 48
+shp_ymax_low <- 52
+
+bbox_low <- st_bbox(c(xmin = shp_xmin_low, ymin = shp_ymin_low, xmax = shp_xmax_low, ymax = shp_ymax_low))
+
+bbox_low_sf <- st_as_sfc(bbox_low)
+
+VI_base_layer_sf_subset <- st_crop(VI_base_layer_sf, bbox_low_sf)
+plot(VI_base_layer_sf_subset)
+```
+
+
+```{r Converting the raster to a data frame so ggplot can use it}
+avg_temp_df_van_isl <- as.data.frame(average_temperature_van_isl, xy = TRUE, na.rm = TRUE)
+colnames(avg_temp_df_van_isl) <- c("longitude", "latitude", "average_temp")
+
+avg_temp_df_van_isl <- avg_temp_df_van_isl%>%
+  mutate(avg_temp_c_van_isl = average_temp - 273.15)
+```
+
+
+```{r}
+(temp_map <- ggplot() +
+   #Plotting the temp data as a raster with the shape file
+  geom_raster(data = avg_temp_df_van_isl, aes(x = longitude, y = latitude, fill = avg_temp_c_van_isl)) +
+   geom_sf(data = VI_base_layer_sf_subset, colour = "#424A4E", fill = "lightgrey")+
+  coord_sf(xlim = c(-128, -123),
+           ylim = c(48.5 , 51.5)) +
+  #   scale_x_continuous(breaks = c(-125.35, -125.20, -125.05)) +
+   #Setting a colour gradient from low to high temp
+    # scale_fill_gradient(
+    #low = "lightblue",          
+    #high = "#E95E48"
+  #) +
+   scale_fill_viridis_c(direction = -1)+
+  theme.figure.report() +
+  labs(x = "Longitude",
+       y = "Latitude",
+       fill = "Mean SST (ºC)") +
+  theme(legend.position = "inside",
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank())+
+  annotation_scale(location = "br", text_cex = 1.3)+
+   annotation_north_arrow(
+    location = "tr",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering))
+```
+
+```{r Saving the site map}
+ggsave("temp_map.pdf", plot = temp_map,
+       path = here("./04_plots/report_figures"), width = 112, height = 94, units = "mm")
+```
