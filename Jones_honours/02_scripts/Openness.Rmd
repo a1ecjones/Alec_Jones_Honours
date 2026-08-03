@@ -1,0 +1,169 @@
+---
+title: "Openness"
+author: "Alec Jones"
+date: "2026-08-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(waver)
+library(sf)
+```
+
+## Predictor 1: Wave exposure (via metric called Openness)
+
+To get a measure of wave exposure for each of the RLS sites, I used a metric 
+called openness from Hill et al. (2010)(10.3354/meps08815).
+
+### Set up prior to calculating fetch for openness
+
+
+
+****THIS CHUNK YOU NEED TO USE THE COORDINATES FROM YOUR OWN SITES****
+
+```{r Making dfs of the unique sites and then just the lat and long, echo=FALSE, include=FALSE}
+#Making a df with just the unique site info
+site_data_2024 <- RLS_data_2024_clean%>%
+  distinct(site_code, site_name, latitude, longitude)
+
+#Making a df with just the unique lat and longs
+site_coords_2024 <- site_data_2024%>%
+  ungroup()%>%
+  select(latitude, longitude)%>%
+  distinct()
+
+#This converts the site coordinates into a sf object and specifies the 
+#coordinate reference system to be the same as the shape file
+site_sp_2024 <- st_as_sf(site_coords_2024, coords = c("longitude", "latitude"), crs = 4326)
+```
+
+```{r Loading in the shapefiles to do the fetch calculations, include=FALSE}
+#This is a high resolution shape file from Hakai. This code loads in the shape
+#file and saves it as the proper shape file object
+VI_base_layer_hi_res <- read_sf(dsn = here("./01_raw_data/hakai_zip"),
+                                stringsAsFactors = F)
+
+VI_base_layer_hi_res_sf <- st_as_sf(VI_base_layer_hi_res)
+
+#specifying the projection to use for the sf
+st_crs(VI_base_layer_hi_res_sf) <- "+proj=longlat +datum=WGS84 +no_defs"
+
+
+#This subsets the shape file to only be of Barkley Sound to make plotting more
+#efficient
+
+#This makes coordinate limits to subset the shapefile
+shp_xmin <- -125.4
+shp_xmax <- -124.95
+shp_ymin <- 48.7
+shp_ymax <- 49.0
+
+#This makes a bounding of the coordinates that I just made
+bbox <- st_bbox(c(xmin = shp_xmin, ymin = shp_ymin, xmax = shp_xmax, ymax = shp_ymax))
+
+#This converts the boundary box to an SFC object
+bbox_sf <- st_as_sfc(bbox)
+
+#This crops the shape file to the area of the bounding box
+VI_base_layer_hi_res_sf_subset <- st_crop(VI_base_layer_hi_res_sf, bbox_sf)
+
+#This plots as a sanity check
+plot(VI_base_layer_hi_res_sf_subset)
+```
+
+### Calculating the fetch for the sites
+
+```{r Calculating the fetch for the sites, eval=FALSE}
+#Makes an object of all the bearings to calculate fetch along
+bearings_openness <- seq(7.5, 360, by = 7.5)
+
+#Specifies to use the GEOS engine
+sf::sf_use_s2(FALSE)
+
+#This calculates the fetch for each site along each of the bearings calculated
+#above. Max possible fetch is 650,000 meters. It is using the shape file from 
+#above to know where land is. This will likely take a very long time to run
+#so do not worry.
+#I have ## this code out because it takes way too long to run. There is code in
+#the chunk below that will load in the data from a .csv that has already been
+#made by running the fetch_len_multi function
+
+fetch_df_2024_openness <- fetch_len_multi(site_sp_2024,
+                                          #the bearings you specified above
+                                          bearings = bearings_openness,
+                                          #the max distance you want to calculate fetch for
+                                          dmax = 650000,
+                                          #the shape file used for the shore
+                                          shoreline = VI_base_layer_hi_res_sf, 
+                                          #whether the shapefile is on a projected coordinate system
+                                          projected = FALSE)
+
+#Converting the raw fetch data into a df
+fetch_df_2024_openness <- as.data.frame(fetch_df_2024_openness)
+
+#Saving the fetch data to a .csv so that the fetch function does not need to be
+#run
+write_csv(fetch_df_2024_openness, here("./01_raw_data/fetch_df_2024_openness.csv"))
+```
+
+
+### Downloading the fetch data that is already saved
+
+```{r Loading in the pre calculated fetch data, echo=FALSE}
+fetch_df_2024_openness <- read_csv(here("./01_raw_data/fetch_df_2024_openness.csv"))
+```
+
+
+### Turning the raw fetch data into a dataframe with column labels
+
+```{r Turning the raw openness fetch data into a dataframe with column labels}
+#Making an object with all of the site code names listed to be able to make a
+#column of site codes in the fetch df below
+site_code <- c("BMSC1", "BMSC10", "BMSC11", "BMSC12", "BMSC13", "BMSC14", "BMSC15", "BMSC16",
+               "BMSC17", "BMSC18", "BMSC19", "BMSC2", "BMSC20", "BMSC21", "BMSC22", "BMSC23", "BMSC24",
+               "BMSC25", "BMSC26", "BMSC27", "BMSC3", "BMSC4", "BMSC5", "BMSC6", "BMSC8", "BMSC9")
+
+#Adding a column with the site codes
+fetch_df_2024_openness$site_code <- site_code
+#Adding a column with the site lat
+fetch_df_2024_openness$latitude <- site_coords_2024$latitude
+#Adding a column with the site long
+fetch_df_2024_openness$longitude <- site_coords_2024$longitude
+
+#Reorganizing the order of the columns so that site code, lat, and long are 
+#first
+fetch_df_2024_openness_final <- fetch_df_2024_openness[, c(49, 50, 51, seq(1, 48, by = 1))]
+
+#Converting into long format for further analysis and adding to the RLS data
+fetch_df_2024_openness_long <- fetch_df_2024_openness_final%>%
+  #Makes column with bearing degree and column with corresponding fetch
+  pivot_longer(cols = `7.5`: `360`, 
+               names_to = "degree", 
+               values_to = "fetch", 
+               #Removes the prefix "degree" from the values going into the 
+               #degree column
+               names_prefix = "degree")
+```
+
+
+```{r Summing the fetch vectors for each site then dividing by the largest openness value}
+#Calculates the openness of each site
+openness <- fetch_df_2024_openness_long%>%
+  #grouping by each site
+  group_by(site_code, latitude, longitude)%>%
+  #adding up all of the fetch vectors for each site
+  summarise(openness = sum(fetch))
+  
+#identifying the largest openness score within the dataset
+max_openness <- max(openness$openness)
+
+#Making a column of normalized openness by dividing by the max observed openness
+openness <- openness%>%
+mutate(norm_openness = openness / max_openness)
+
+#Merging the modelling df with the openness df by each site
+urch_sn_ratio_mod_2024 <- merge(urch_sn_ratio_mod_2024, openness, by = c("site_code", "latitude", "longitude"))
+```
